@@ -87,6 +87,14 @@ const ProductFilter: React.FC<{
     });
   };
 
+  const handlePriceRangeChange = (min: number, max: number) => {
+    setFilters((prev) => ({
+      ...prev,
+      minPrice: min,
+      maxPrice: max,
+    }));
+    console.log(filters)
+  };
   const applyFilters = () => {
     /*  handleFilter(filters); */
     console.log(filters);
@@ -156,7 +164,7 @@ const ProductFilter: React.FC<{
 
             {/* Price range filter */}
 
-            <PriceRangeSelector min={0} max={highestPrice}></PriceRangeSelector>
+            <PriceRangeSelector min={0} max={highestPrice} priceRange={handlePriceRangeChange} ></PriceRangeSelector>
 
             {/* On sale filter */}
             <div className="flex items-center gap-1">

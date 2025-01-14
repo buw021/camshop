@@ -1,9 +1,14 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
-const PriceRangeSelector: React.FC<{ min: number; max: number }> = ({
-  min,
-  max,
-}) => {
+//Add Debounce for onchange
+//Update Input
+
+
+const PriceRangeSelector: React.FC<{
+  min: number;
+  max: number;
+  priceRange: (min: number, max: number) => void;
+}> = ({ min, max, priceRange }) => {
   const [minVal, setMinVal] = useState(min);
   const [maxVal, setMaxVal] = useState(max);
   const minValRef = useRef(min);
@@ -15,6 +20,10 @@ const PriceRangeSelector: React.FC<{ min: number; max: number }> = ({
     (value: number) => Math.round(((value - min) / (max - min)) * 100),
     [min, max],
   );
+
+  const handleChange = () => {
+    priceRange(minVal, maxVal);
+  };
 
   // Set width of the range to decrease from the left side
   useEffect(() => {
@@ -50,8 +59,9 @@ const PriceRangeSelector: React.FC<{ min: number; max: number }> = ({
               const value = Math.min(Number(event.target.value), maxVal - 1);
               setMinVal(value);
               minValRef.current = value;
+              handleChange();
             }}
-            className="thumb thumb--left cursor-grab active:cursor-grabbing"
+            className="thumb thumb--left cursor-pointer"
             style={{ zIndex: minVal > max - 100 ? "5" : undefined }}
           />
           <input
@@ -63,8 +73,9 @@ const PriceRangeSelector: React.FC<{ min: number; max: number }> = ({
               const value = Math.max(Number(event.target.value), minVal + 1);
               setMaxVal(value);
               maxValRef.current = value;
+               handleChange();
             }}
-            className="thumb thumb--right cursor-grab active:cursor-grabbing"
+            className="thumb thumb--right cursor-pointer"
           />
           <div className="mt-[1.75px]">
             <div className="slider__track absolute" />
