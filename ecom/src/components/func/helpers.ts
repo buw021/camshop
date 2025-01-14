@@ -1,0 +1,1 @@
+export const getToken = () => { const token = document.cookie .split('; ') .find(row => row.startsWith('usertoken=')) ?.split('=')[1]; return token; };

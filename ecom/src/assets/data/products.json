@@ -1,0 +1,168 @@
+[
+  {
+    "productId": 0,
+    "name": "Fujifilm X-T50 II",
+    "category": "camera",
+    "brand": "Fujifilm",
+    "variant": [
+      {
+        "variantId":0,
+        "variantName": "(Body Only)",
+        "variantColor": "Black",
+        "variantStocks": 2,
+        "inTheBox": [
+          "Li-ion battery NP-W126S",
+          "USB cable",
+          "Headphones adapter",
+          "Shoulder strap",
+          "Body cap"
+        ],
+        "variantImg": [
+          "src/Components/img/xt50/black/body/front.jpg",
+          "src/Components/img/xt50/black/body/fujifilm-x-t50-black_1384088_910676.1719595651728.jpg",
+          "src/Components/img/xt50/black/body/fujifilm-x-t50-black_1384093_910676.1719595651728.jpg",
+          "src/Components/img/xt50/black/body/fujifilm-x-t50-black_1384088_910676.1719595651728.jpg",
+          "src/Components/img/xt50/black/body/fujifilm-x-t50-black_1384093_910676.1719595651728.jpg",
+          "src/Components/img/xt50/black/body/front.jpg",
+          "src/Components/img/xt50/black/body/fujifilm-x-t50-black_1384088_910676.1719595651728.jpg",
+          "src/Components/img/xt50/black/body/fujifilm-x-t50-black_1384093_910676.1719595651728.jpg",
+          "src/Components/img/xt50/black/body/fujifilm-x-t50-black_1384088_910676.1719595651728.jpg",
+          "src/Components/img/xt50/black/body/fujifilm-x-t50-black_1384093_910676.1719595651728.jpg"
+        ],
+        "variantPrice": 1299
+      },
+      {
+        "variantId": 1,
+        "variantName": "(Body Only)",
+        "variantColor": "Silver",
+        "variantStocks": 1,
+        "inTheBox": [
+          "Li-ion battery NP-W126S",
+          "USB cable",
+          "Headphones adapter",
+          "Shoulder strap",
+          "Body cap"
+        ],
+        "variantImg": [
+          "src/Components/img/xt50/silver/body/fujifilm-x-t50-silver_1384121_910686.1719595651728.jpg",
+          "src/Components/img/xt50/silver/body/fujifilm-x-t50-silver_1384115_910686.1719595651728.jpg",
+          "src/Components/img/xt50/silver/body/fujifilm-x-t50-silver_1384120_910686.1719595651728.jpg",
+          "src/Components/img/xt50/silver/body/fujifilm-x-t50-silver_1384116_910686.1719595651728.jpg",
+          "src/Components/img/xt50/silver/body/fujifilm-x-t50-silver_1384117_910686.1719595651728.jpg",
+          "src/Components/img/xt50/silver/body/fujifilm-x-t50-silver_1384118_910686.1719595651728.jpg",
+          "src/Components/img/xt50/silver/body/fujifilm-x-t50-silver_1384119_910686.1719595651728.jpg"
+        ],
+        "variantPrice": 1299
+      }
+    ],
+    "type": "Mirrorless",
+    "subtype": "APS-C",
+    "specs": {
+      "description": "The FUJIFILM X-T50 places astounding 40-megapixel resolution and advanced image-making specifications within an exceptionally sleek and manageable body. Featuring an all-new Film Simulation dial, this camera puts boundless creativity right in the palm of your hand.",
+      "highlights": ["highlight1", "highlight2"],
+      "specification": [
+        ["Resolution", "40.2 megapixels"],
+        ["Sensor Size", "23.5mm x 15.6mm (APS-C)"],
+        ["Sensor Type", "X-Trans CMOS 5 HR with primary colour filter"],
+        ["Image Size", "7728x5152 pixels"],
+        ["ISO Range", "125-12,800 (extended to ISO 64 and 51,200)"],
+        ["Metering System", "TTL 256-zone with multi, spot, centre weighted and average options"],
+        ["Shutter Range", "15 mins to 1/180,000 sec, plus B. Flash sync at all speeds up to 1/180 sec"],
+        ["Continuous Shooting", "Up to approx. 20fps (1.29x crop)"],
+        ["Exposure Modes", "PASM"],
+        ["Exposure Compensation", "+/-5EV in 1/3EV steps (Movie: +/-2EV in 1/3EV steps)"],
+        ["Monitor", "3.0inc touch LCD touchscreen with 1.84 million dots"],
+        ["Focusing", "Single and continuous AF, manual"],
+        ["Video", "6.2K at 30p, Full HD at 240p"],
+        ["Connectivity", "Bluetooth, Wi-Fi, USB-C, HDMI Type D, audio in"],
+        ["Storage Media", "SD/SDHC/SDXC card, UHS-I compatible"],
+        ["Dimensions (WxHxD)", "123.8x84x48.8mm"],
+        ["Weight", "438g (with battery and card)"]
+      ]
+    }
+  },
+  {
+    "productId": 2,
+    "subId": 0,
+    "name": "Fujifilm X-T50 II",
+    "model": "X-T50 II",
+    "category": "camera",
+    "brand": "Fujifilm",
+    "variant": [
+      {
+        "variantId": 0,
+        "variantName": "(Body Only)",
+        "variantColor": "Black",
+        "variantStocks": 2,
+        "inTheBox": [
+          "Li-ion battery NP-W126S",
+          "USB cable",
+          "Headphones adapter",
+          "Shoulder strap",
+          "Body cap"
+        ],
+        "variantImg": [
+          "src/Components/img/xt50/black/body/front.jpg",
+          "src/Components/img/xt50/black/body/fujifilm-x-t50-black_1384088_910676.1719595651728.jpg",
+          "src/Components/img/xt50/black/body/fujifilm-x-t50-black_1384093_910676.1719595651728.jpg",
+          "src/Components/img/xt50/black/body/fujifilm-x-t50-black_1384088_910676.1719595651728.jpg",
+          "src/Components/img/xt50/black/body/fujifilm-x-t50-black_1384093_910676.1719595651728.jpg",
+          "src/Components/img/xt50/black/body/front.jpg",
+          "src/Components/img/xt50/black/body/fujifilm-x-t50-black_1384088_910676.1719595651728.jpg",
+          "src/Components/img/xt50/black/body/fujifilm-x-t50-black_1384093_910676.1719595651728.jpg",
+          "src/Components/img/xt50/black/body/fujifilm-x-t50-black_1384088_910676.1719595651728.jpg",
+          "src/Components/img/xt50/black/body/fujifilm-x-t50-black_1384093_910676.1719595651728.jpg"
+        ],
+        "variantPrice": 1299
+      },
+      {
+        "variantId": 1,
+        "variantName": "(Body Only)",
+        "variantColor": "Silver",
+        "variantStocks": 1,
+        "inTheBox": [
+          "Li-ion battery NP-W126S",
+          "USB cable",
+          "Headphones adapter",
+          "Shoulder strap",
+          "Body cap"
+        ],
+        "variantImg": [
+          "src/Components/img/xt50/silver/body/fujifilm-x-t50-silver_1384121_910686.1719595651728.jpg",
+          "src/Components/img/xt50/silver/body/fujifilm-x-t50-silver_1384115_910686.1719595651728.jpg",
+          "src/Components/img/xt50/silver/body/fujifilm-x-t50-silver_1384120_910686.1719595651728.jpg",
+          "src/Components/img/xt50/silver/body/fujifilm-x-t50-silver_1384116_910686.1719595651728.jpg",
+          "src/Components/img/xt50/silver/body/fujifilm-x-t50-silver_1384117_910686.1719595651728.jpg",
+          "src/Components/img/xt50/silver/body/fujifilm-x-t50-silver_1384118_910686.1719595651728.jpg",
+          "src/Components/img/xt50/silver/body/fujifilm-x-t50-silver_1384119_910686.1719595651728.jpg"
+        ],
+        "variantPrice": 1299
+      }
+    ],
+    "type": "Mirrorless",
+    "subtype": "APS-C",
+    "specs": {
+      "description": "The FUJIFILM X-T50 places astounding 40-megapixel resolution and advanced image-making specifications within an exceptionally sleek and manageable body. Featuring an all-new Film Simulation dial, this camera puts boundless creativity right in the palm of your hand.",
+      "highlights": ["highlight1", "highlight2"],
+      "specification": [
+        ["Resolution", "40.2 megapixels"],
+        ["Sensor Size", "23.5mm x 15.6mm (APS-C)"],
+        ["Sensor Type", "X-Trans CMOS 5 HR with primary colour filter"],
+        ["Image Size", "7728x5152 pixels"],
+        ["ISO Range", "125-12,800 (extended to ISO 64 and 51,200)"],
+        ["Metering System", "TTL 256-zone with multi, spot, centre weighted and average options"],
+        ["Shutter Range", "15 mins to 1/180,000 sec, plus B. Flash sync at all speeds up to 1/180 sec"],
+        ["Continuous Shooting", "Up to approx. 20fps (1.29x crop)"],
+        ["Exposure Modes", "PASM"],
+        ["Exposure Compensation", "+/-5EV in 1/3EV steps (Movie: +/-2EV in 1/3EV steps)"],
+        ["Monitor", "3.0inc touch LCD touchscreen with 1.84 million dots"],
+        ["Focusing", "Single and continuous AF, manual"],
+        ["Video", "6.2K at 30p, Full HD at 240p"],
+        ["Connectivity", "Bluetooth, Wi-Fi, USB-C, HDMI Type D, audio in"],
+        ["Storage Media", "SD/SDHC/SDXC card, UHS-I compatible"],
+        ["Dimensions (WxHxD)", "123.8x84x48.8mm"],
+        ["Weight", "438g (with battery and card)"]
+      ]
+    }
+  }
+]
