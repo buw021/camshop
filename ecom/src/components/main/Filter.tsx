@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-
+// bug in pricerange change value
 import { Filter } from "../../interfaces/filter";
 import { AnimatePresence, motion } from "framer-motion";
 
 import axiosInstance from "../../services/axiosInstance";
 import PriceRangeSelector from "./PriceRangeSelector";
+import { b } from "framer-motion/client";
 
 interface FilterList {
   subcategories: { subCategory: string }[];
@@ -93,12 +94,11 @@ const ProductFilter: React.FC<{
       minPrice: min,
       maxPrice: max,
     }));
-    console.log(filters)
+    console.log(filters);
   };
   const applyFilters = () => {
-    /*  handleFilter(filters); */
+    handleFilter(filters);
     console.log(filters);
-    console.log(filterList.subcategories);
   };
 
   return (
@@ -164,7 +164,11 @@ const ProductFilter: React.FC<{
 
             {/* Price range filter */}
 
-            <PriceRangeSelector min={0} max={highestPrice} priceRange={handlePriceRangeChange} ></PriceRangeSelector>
+            <PriceRangeSelector
+              min={0}
+              max={highestPrice}
+              priceRange={handlePriceRangeChange}
+            ></PriceRangeSelector>
 
             {/* On sale filter */}
             <div className="flex items-center gap-1">

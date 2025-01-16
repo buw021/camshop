@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import useDebounce from "../func/debouncer";
 
 //Add Debounce for onchange
 //Update Input
-
 
 const PriceRangeSelector: React.FC<{
   min: number;
@@ -46,6 +46,20 @@ const PriceRangeSelector: React.FC<{
     }
   }, [maxVal, getPercent]);
 
+  const minChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Math.min(Number(event.target.value), maxVal - 1);
+    setMinVal(value);
+    minValRef.current = value;
+    handleChange();
+  };
+
+  const maxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Math.max(Number(event.target.value), minVal + 1);
+    setMaxVal(value);
+    maxValRef.current = value;
+    handleChange();
+  };
+
   return (
     <div className="flex flex-col items-center">
       <div className="relative flex w-[200px] items-center">
@@ -56,10 +70,7 @@ const PriceRangeSelector: React.FC<{
             max={max - 10}
             value={minVal}
             onChange={(event) => {
-              const value = Math.min(Number(event.target.value), maxVal - 1);
-              setMinVal(value);
-              minValRef.current = value;
-              handleChange();
+              minChange(event);
             }}
             className="thumb thumb--left cursor-pointer"
             style={{ zIndex: minVal > max - 100 ? "5" : undefined }}
@@ -70,10 +81,7 @@ const PriceRangeSelector: React.FC<{
             max={max}
             value={maxVal}
             onChange={(event) => {
-              const value = Math.max(Number(event.target.value), minVal + 1);
-              setMaxVal(value);
-              maxValRef.current = value;
-               handleChange();
+              maxChange(event);
             }}
             className="thumb thumb--right cursor-pointer"
           />
@@ -85,28 +93,45 @@ const PriceRangeSelector: React.FC<{
       </div>
       <div className="relative flex w-[200px] justify-between pt-5">
         <div className="relative flex w-20 flex-col items-center gap-1">
-          <span className="text-xs font-medium tracking-wide text-zinc-500">
+          <label className="text-xs font-medium tracking-wide text-zinc-500">
             Min.
-          </span>
-          <div className="">
-            <input
-              type="number"
-              className="price w-16 max-w-20 rounded-lg border-[1px] border-zinc-200 py-1 text-center"
-              value={minVal}
-            />
-          </div>
+          </label>
+
+          <input
+            type="number"
+            name="min"
+            className="price w-16 max-w-20 rounded-lg border-[1px] border-zinc-200 py-1 text-center"
+            min={min}
+            max={max - 10}
+            value={minVal}
+            onChange={(event) => minChange(event)}
+          />
         </div>
         <div className="relative flex w-20 flex-col items-center gap-1">
-          <span className="text-xs font-medium tracking-wide text-zinc-500">
+          <label
+            htmlFor="max"
+            className="text-xs font-medium tracking-wide text-zinc-500"
+          >
             Max.
-          </span>
-          <div className="">
-            <input
-              type="number"
-              className="price w-16 max-w-20 rounded-lg border-[1px] border-zinc-200 py-1 text-center"
-              value={maxVal}
-            />
-          </div>
+          </label>
+
+          <input
+            type="number"
+            name="max"
+            className="price w-16 max-w-20 rounded-lg border-[1px] border-zinc-200 py-1 text-center"
+            min={min + 10}
+            max={max}
+            value={maxVal}
+            onChange={(event) => {
+              const value = Number(event.target.value);
+              if (value > max) {
+                event.target.value = max.toString();
+                maxChange(event);
+              } else {
+                maxChange(event);
+              }
+            }}
+          />
         </div>
       </div>
     </div>
