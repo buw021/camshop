@@ -53,7 +53,7 @@ const Product_List: React.FC<Category> = ({ category }) => {
   const fetchProducts = useCallback(
     async (retryCount = 0) => {
       try {
-        setLoading(true); // Set loading to true before fetching
+        // Set loading to true before fetching
         const searchParams = new URLSearchParams(location.search);
         if (!searchParams.has("sort")) {
           searchParams.set("sort", "default");
@@ -156,8 +156,13 @@ const Product_List: React.FC<Category> = ({ category }) => {
   }, [location, pageParam, sortParam]);
 
   useEffect(() => {
+    setLoading(true);
     fetchProducts();
   }, [fetchProducts]);
+
+  useEffect(() => {
+    setFilter(false); // Close filter when category changes
+  }, [category]);
 
   return (
     <div className="relative mb-4 mt-2 flex flex-col gap-2">
@@ -204,6 +209,7 @@ const Product_List: React.FC<Category> = ({ category }) => {
                       name={variant.productName}
                       variantId={variant._id}
                       price={variant.variantPrice}
+                      salePrice={variant.salePrice}
                       brand={variant.productBrand}
                       thumbnail={variant.variantImgs[0]}
                       variantName={variant.variantName}
@@ -238,9 +244,12 @@ const Product_List: React.FC<Category> = ({ category }) => {
                   Home
                 </Link>
                 <span>{`/`}</span>
-                <Link to={`/${category}`} className="text-blue-500 underline">
+                <button
+                  onClick={() => navigate(-1)}
+                  className="text-blue-500 underline"
+                >
                   Go back
-                </Link>
+                </button>
               </div>
             )}
           </div>

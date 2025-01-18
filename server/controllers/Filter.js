@@ -44,7 +44,6 @@ const getFilters = async (req, res) => {
       brands,
     };
     res.json(filters);
-    console.log(filters)
   } catch (error) {
     console.error("Error fetching filters:", error);
     res.status(500).json({ error: error.message });

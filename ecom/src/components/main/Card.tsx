@@ -6,6 +6,7 @@ export const ProductCard: React.FC<{
   name: string;
   variantId?: string;
   price: number | null;
+  salePrice: number | null;
   brand: string;
   thumbnail: string;
   color: string;
@@ -26,7 +27,7 @@ export const ProductCard: React.FC<{
       </Link>
       <div className="flex flex-col gap-2">
         <Link to={`/product/${productSlug}_${id}_${variantId}`}>
-          <h1 className="roboto-medium text-sm hover:underline">
+          <h1 className="roboto-medium text-sm hover:underline truncate">
             {name} {variantName} {color}
           </h1>
         </Link>

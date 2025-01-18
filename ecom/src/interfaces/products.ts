@@ -11,6 +11,8 @@ export interface Variant {
   selectedImgFiles: File[];
   previewUrl: string[];
   variantPrice: number | null;
+  isOnSale: boolean;
+  salePrice: number | null;
   _id?: string;
 }
 

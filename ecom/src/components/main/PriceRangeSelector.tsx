@@ -1,8 +1,4 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import useDebounce from "../func/debouncer";
-
-//Add Debounce for onchange
-//Update Input
 
 const PriceRangeSelector: React.FC<{
   min: number;
@@ -20,10 +16,6 @@ const PriceRangeSelector: React.FC<{
     (value: number) => Math.round(((value - min) / (max - min)) * 100),
     [min, max],
   );
-
-  const handleChange = () => {
-    priceRange(minVal, maxVal);
-  };
 
   // Set width of the range to decrease from the left side
   useEffect(() => {
@@ -47,17 +39,17 @@ const PriceRangeSelector: React.FC<{
   }, [maxVal, getPercent]);
 
   const minChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = Math.min(Number(event.target.value), maxVal - 1);
+    const value = Math.min(Number(event.target.value), maxVal - 10);
     setMinVal(value);
     minValRef.current = value;
-    handleChange();
+    priceRange(value, maxVal);
   };
 
   const maxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = Math.max(Number(event.target.value), minVal + 1);
+    const value = Math.max(Number(event.target.value), minVal + 10);
     setMaxVal(value);
     maxValRef.current = value;
-    handleChange();
+    priceRange(minVal, value);
   };
 
   return (

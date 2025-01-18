@@ -34,6 +34,8 @@ const cartItemSchema = new Schema({
   variantName: String,
   variantColor: String,
   variantImg: String,
+  isOnSale: { type: Boolean, required: false },
+  salePrice: { type: Number, require: false },
   price: Number,
   quantity: { type: Number, required: true, min: 1 },
 });

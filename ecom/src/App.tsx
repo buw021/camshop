@@ -10,10 +10,16 @@ import Product from "./pages/Main/Product";
 import Home from "./pages/Main/Home";
 import Category from "./pages/Main/Category";
 import { AuthProvider } from "./contexts/AuthContext"; // Import the AuthProvider
+import Checkout from "./pages/Main/Checkout";
 
 const Profile = React.lazy(() => import("./pages/Profile/Profile"));
 const Admin = React.lazy(() => import("./pages/Admin/Admin"));
-const CATEGORIES = ["camera", "lens", "accessories", "other"];
+const CATEGORIES: Array<"camera" | "lens" | "accesories" | "others"> = [
+  "camera",
+  "lens",
+  "accesories",
+  "others",
+];
 
 const App: React.FC = () => {
   return (
@@ -50,6 +56,16 @@ const App: React.FC = () => {
                       <ProtectedRoute>
                         <Layout>
                           <Profile />
+                        </Layout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/checkout"
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <Checkout />
                         </Layout>
                       </ProtectedRoute>
                     }

@@ -27,7 +27,7 @@ const addProduct = async (req, res) => {
       variants,
       tags,
     } = product;
-    console.log(fileImgs);
+
     if (!name || !category || !brand || !description) {
       return res.status(400).json({ error: "Missing required fields." });
     }
@@ -212,9 +212,94 @@ const archiveProducts = async (req, res) => {
   }
 }; */
 
+/* const getVariants = async (req, res) => {
+  const {
+    page = 1,
+    limit = 10,
+    sort = "default",
+    subCategory,
+    brand,
+    minPrice,
+    maxPrice,
+    onSale,
+    colors,
+    specs,
+  } = req.query;
+  console.log(minPrice, maxPrice);
+  const category = req.headers["category"];
+
+  try {
+    let query = {};
+
+    if (category && category !== "all") query.category = category;
+    if (subCategory) query.subCategory = subCategory;
+    if (brand) query.brand = brand;
+    if (onSale === "true") query["variants.isOnSale"] = true;
+
+    if (minPrice || maxPrice) {
+      query.variants = { $elemMatch: {} };
+      if (minPrice) query.variants.$elemMatch.variantPrice = { ...query.variants.$elemMatch.variantPrice, $gte: parseFloat(minPrice) };
+      if (maxPrice) query.variants.$elemMatch.variantPrice = { ...query.variants.$elemMatch.variantPrice, $lte: parseFloat(maxPrice) };
+    }
+
+    if (colors) {
+      query["variants.variantColor"] = { $in: colors.split(",") };
+    }
+
+    if (specs) {
+      const specifications = JSON.parse(specs);
+      Object.keys(specifications).forEach((key) => {
+        query[`specifications.${key}`] = specifications[key];
+      });
+    }
+
+    console.log(query);
+    const products = await Product.find(query);
+    const variants = products.flatMap((product) =>
+      product.variants.filter(variant => {
+        const meetsPriceCriteria = (!minPrice || variant.variantPrice >= parseFloat(minPrice)) &&
+                                   (!maxPrice || variant.variantPrice <= parseFloat(maxPrice));
+        return meetsPriceCriteria;
+      }).map((variant) => ({
+        ...variant._doc,
+        productName: product.name,
+        productId: product._id,
+        productBrand: product.brand,
+      }))
+    );
+
+    // Sorting logic
+    const sortedVariants = variants.sort((a, b) => {
+      switch (sort) {
+        case "price-asc":
+          return a.variantPrice - b.variantPrice;
+        case "price-desc":
+          return b.variantPrice - a.variantPrice;
+        case "name-az":
+          return a.productName.localeCompare(b.productName);
+        case "name-za":
+          return b.productName.localeCompare(a.productName);
+        default:
+          return 0; // No sorting for default
+      }
+    });
+
+    // Pagination logic
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    const paginatedVariants = sortedVariants.slice(startIndex, endIndex);
+
+    const total = variants.length; // Total number of variants
+    res.json({ variants: paginatedVariants, total });
+  } catch (error) {
+    console.error("Error fetching variants:", error);
+    res.status(500).json({ error: error.message });
+  }
+}; */
+
 const getVariants = async (req, res) => {
   const {
-    page,
+    page = 1,
     limit = 10,
     sort = "default",
     subCategory,
@@ -229,35 +314,56 @@ const getVariants = async (req, res) => {
   const category = req.headers["category"];
 
   try {
-    let query = {};
-
-    if (category && category !== "all") query.category = category;
-    if (subCategory) query.subCategory = subCategory;
-    if (brand) query.brand = brand;
-    if (onSale === "true") query["variants.isOnSale"] = true;
-    if (minPrice || maxPrice) {
-      query["variants.variantPrice"] = {};
-      if (minPrice) query["variants.variantPrice"].$gte = parseFloat(minPrice);
-      if (maxPrice) query["variants.variantPrice"].$lte = parseFloat(maxPrice);
-    }
-    if (colors) {
-      query["variants.variantColor"] = { $in: colors.split(",") };
-    }
+    // Product level filters
+    let productQuery = {};
+    if (category && category !== "all") productQuery.category = category;
+    if (subCategory) productQuery.subCategory = subCategory;
+    if (brand) productQuery.brand = brand;
     if (specs) {
       const specifications = JSON.parse(specs);
       Object.keys(specifications).forEach((key) => {
-        query[`specifications.${key}`] = specifications[key];
+        productQuery[`specifications.${key}`] = specifications[key];
       });
     }
 
-    const products = await Product.find(query);
+    // Variant level filters
+    let variantQuery = {};
+    if (onSale === "true") variantQuery.isOnSale = true;
+    if (minPrice)
+      variantQuery.variantPrice = {
+        ...variantQuery.variantPrice,
+        $gte: parseFloat(minPrice),
+      };
+    if (maxPrice)
+      variantQuery.variantPrice = {
+        ...variantQuery.variantPrice,
+        $lte: parseFloat(maxPrice),
+      };
+    if (colors) variantQuery.variantColor = { $in: colors.split(",") };
+
+    const products = await Product.find(productQuery);
     const variants = products.flatMap((product) =>
-      product.variants.map((variant) => ({
-        ...variant._doc,
-        productName: product.name,
-        productId: product._id,
-        productBrand: product.brand,
-      }))
+      product.variants
+        .filter((variant) => {
+          const price =
+            variant.isOnSale && variant.salePrice
+              ? variant.salePrice
+              : variant.variantPrice;
+          const meetsVariantCriteria =
+            (!variantQuery.isOnSale ||
+              variant.isOnSale === variantQuery.isOnSale) &&
+            (!minPrice || price >= parseFloat(minPrice)) &&
+            (!maxPrice || price <= parseFloat(maxPrice)) &&
+            (!variantQuery.variantColor ||
+              variantQuery.variantColor.$in.includes(variant.variantColor));
+          return meetsVariantCriteria;
+        })
+        .map((variant) => ({
+          ...variant._doc,
+          productName: product.name,
+          productId: product._id,
+          productBrand: product.brand,
+        }))
     );
 
     // Sorting logic

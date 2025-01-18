@@ -5,7 +5,6 @@ import { AnimatePresence, motion } from "framer-motion";
 
 import axiosInstance from "../../services/axiosInstance";
 import PriceRangeSelector from "./PriceRangeSelector";
-import { b } from "framer-motion/client";
 
 interface FilterList {
   subcategories: { subCategory: string }[];
@@ -98,7 +97,6 @@ const ProductFilter: React.FC<{
   };
   const applyFilters = () => {
     handleFilter(filters);
-    console.log(filters);
   };
 
   return (

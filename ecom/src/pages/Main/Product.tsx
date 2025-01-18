@@ -71,6 +71,8 @@ const ProductDisplay: React.FC = () => {
   const variantImgs = variant?.variantImgs || [""];
   const inTheBox = variant?.variantContent || [""];
   const variantId = variant?._id || "";
+  const isOnSale = variant?.isOnSale ?? false;
+  const salePrice = variant?.salePrice || null;
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -178,6 +180,8 @@ const ProductDisplay: React.FC = () => {
       variantColor: variantColor,
       variantImg: variantImgs[0],
       price: variantPrice,
+      isOnSale: isOnSale,
+      salePrice: salePrice ?? null,
       quantity: 1,
     };
 
@@ -193,7 +197,17 @@ const ProductDisplay: React.FC = () => {
           item.productId === cartItem.productId &&
           item.variantId === cartItem.variantId,
       );
-
+      toast.success(`Successfully added to Cart`, {
+        position: "bottom-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+        transition: Bounce,
+      });
       if (existingItemIndex >= 0) {
         storedCart[existingItemIndex].quantity += 1;
       } else {
@@ -230,7 +244,17 @@ const ProductDisplay: React.FC = () => {
           item.productId === Item.productId &&
           item.variantId === Item.variantId,
       );
-
+      toast.success(`Successfully added to Cart`, {
+        position: "bottom-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+        transition: Bounce,
+      });
       if (!existingItemIndex) {
         storedWishlist.push(Item);
       }
@@ -276,9 +300,13 @@ const ProductDisplay: React.FC = () => {
               </div>
             </div>
             <div className="flex max-w-[500px] flex-1 flex-col justify-center gap-2">
-              <span className="roboto-medium mt-1 text-3xl">
-                {name} {variantName} {variantColor}
-              </span>
+              <div className="roboto-medium mt-1 flex w-full flex-wrap text-3xl">
+                <span>
+                  {name} {variantName}
+                </span>{" "}
+                <span>{variantColor}</span>
+              </div>
+
               <div className="flex gap-2">
                 <div className="flex items-center">
                   <Rating
@@ -308,9 +336,25 @@ const ProductDisplay: React.FC = () => {
                 }
               </div>
 
-              <p className="roboto-black flex-0 text-4xl">
-                € {variantPrice?.toFixed(2) ?? "0.00"}
-              </p>
+              {variant?.isOnSale ? (
+                <>
+                  <p className="roboto-black flex-0 flex gap-2 text-4xl">
+                    <span>€ {variantPrice?.toFixed(2) ?? "0.00"}</span>{" "}
+                    <span className="relative flex text-sm">
+                      <s className="text-zinc-400">
+                        € {variantPrice?.toFixed(2) ?? "0.00"}
+                      </s>
+                      <span className="absolute -right-10 top-0 flex bg-red-700 px-0.5 text-xs text-white">
+                        -50%
+                      </span>
+                    </span>
+                  </p>
+                </>
+              ) : (
+                <p className="roboto-black flex-0 text-4xl">
+                  € {variantPrice?.toFixed(2) ?? "0.00"}
+                </p>
+              )}
               <div className="buttons mb-2 flex w-full flex-col justify-center gap-4 md:flex-row md:items-center">
                 <div className="flex w-full flex-1 gap-4">
                   <button
@@ -336,7 +380,7 @@ const ProductDisplay: React.FC = () => {
                 {variants.length > 1 && (
                   <>
                     <p className="roboto-medium text-lg">Select Variation :</p>
-                    <div className="flex flex-row justify-center gap-1">
+                    <div className="flex flex-row justify-start gap-1">
                       {variants.map((variant, index) => (
                         <Link
                           key={index}
@@ -347,11 +391,14 @@ const ProductDisplay: React.FC = () => {
                           }
                           className="group group-hover:cursor-pointer"
                         >
-                          <div className="relative flex w-auto flex-wrap items-center justify-center rounded-sm border-2 bg-white px-2 py-2">
+                          <div
+                            className="relative flex h-36 w-32 flex-col items-center justify-center rounded-sm border-2 bg-white px-2 py-2"
+                            title={`${name} ${variant.variantName} ${variant.variantColor}`}
+                          >
                             <div
                               className={`absolute h-full w-full group-hover:bg-zinc-500/10 ${variantId === variant._id && "bg-zinc-500/10"}`}
                             ></div>
-                            <div className="flex-2 w-[100px]">
+                            <div className="flex-2 max-h-20 w-[100px]">
                               <div>
                                 <ImagePreview
                                   images={variant.variantImgs}
@@ -368,7 +415,7 @@ const ProductDisplay: React.FC = () => {
                               <p className="whitespace-nowrap text-center text-sm">
                                 {name}
                               </p>
-                              <p className="text-center text-xs">
+                              <p className="max-w-24 truncate text-center text-xs">
                                 {variant.variantName} {variant.variantColor}
                               </p>
                             </div>

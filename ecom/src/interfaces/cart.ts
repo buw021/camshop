@@ -7,4 +7,6 @@ export interface Cart {
     variantImg: string;
     price: number;
     quantity: number;
+    isOnSale: boolean;
+    salePrice: number | null
   }

@@ -3,11 +3,13 @@ const jwt = require("jsonwebtoken");
 const { hashPassword, comparePassword, decodeJWT } = require("../helpers/auth");
 
 const getUserData = async (req, res) => {
-  const { userId } = req.query;
+  const { usertoken } = req.cookies;
   try {
+    const userId = decodeJWT(usertoken);
     const user = await User.findById(userId);
-
-    return res.json(user);
+    const { firstName, lastName, phoneNo, address, cart } = user;
+    const userData = { firstName, lastName, phoneNo, address, cart };
+    return res.json(userData);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

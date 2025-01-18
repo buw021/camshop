@@ -5,9 +5,12 @@ import { slugify } from "../func/slugify";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import axiosInstance from "../../services/axiosInstance";
+import { showToast } from "../func/showToast";
+import { useNavigate } from "react-router-dom";
 
 const Cart: React.FC = () => {
-  const {token} = useAuth();
+  const { token } = useAuth();
+  const navigate = useNavigate();
   const storedCart = JSON.parse(localStorage.getItem("cart") || "[]");
   const [cart, setCart] = useState<Cart[]>(storedCart);
 
@@ -43,7 +46,10 @@ const Cart: React.FC = () => {
       document.cookie = `cart=${JSON.stringify(cart)}; path=/;`;
     }
     const calculatedTotal = cart.reduce(
-      (acc, item) => acc + item.price * item.quantity,
+      (acc, item) =>
+        acc +
+        ((item.isOnSale ? item.salePrice : item.price) ?? item.price) *
+          item.quantity,
       0,
     );
     setTotalPrice(calculatedTotal);
@@ -89,6 +95,16 @@ const Cart: React.FC = () => {
     }
   };
 
+  const handleCheckout = async () => {
+    if (!token) {
+      showToast("You need to be logged in to checkout", "warning");
+      return;
+    }
+    if (token) {
+      navigate("/checkout");
+    }
+  };
+
   return (
     <div
       ref={scrollRef}
@@ -113,7 +129,7 @@ const Cart: React.FC = () => {
                   <div className="relative flex h-28 w-28 select-none flex-col justify-center overflow-hidden rounded-xl border-zinc-500 shadow-inner">
                     <img
                       className="h-full object-scale-down p-2"
-                      src={`http://localhost:3000${item.variantImg}`}
+                      src={`http://localhost:3000/uploads/${item.variantImg}`}
                     ></img>
                   </div>
                 </Link>
@@ -201,7 +217,7 @@ const Cart: React.FC = () => {
             <button
               className="roboto-medium rounded-md bg-zinc-900 px-4 py-1 text-white transition-all duration-200 hover:bg-zinc-700 md:max-w-[300px]"
               type="button"
-              onClick={handleClear}
+              onClick={handleCheckout}
             >
               Check out
             </button>

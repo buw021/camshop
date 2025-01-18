@@ -33,6 +33,14 @@ const orderItemSchema = new Schema(
       type: Number,
       required: true,
     },
+    isOnSale: { 
+      type: Boolean, 
+      default: false 
+    },
+    salePrice: { 
+      type: Number, 
+      default: null 
+    },
     quantity: {
       type: Number,
       required: true,
