@@ -207,7 +207,7 @@ const Navbar = () => {
           )}
           {expandCart && (
             <>
-              <Cart></Cart>
+              <Cart token={token} checkout={false}></Cart>
             </>
           )}
           {expandMenu && (

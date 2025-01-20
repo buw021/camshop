@@ -1,23 +1,33 @@
 import { useEffect, useState } from "react";
 import { useDragToScroll } from "../func/DragtoScroll";
-import type { Cart } from "../../interfaces/cart";
+import type { CartInterface } from "../../interfaces/cart";
 import { slugify } from "../func/slugify";
 import { Link } from "react-router-dom";
-import { useAuth } from "../../contexts/AuthContext";
 import axiosInstance from "../../services/axiosInstance";
 import { showToast } from "../func/showToast";
 import { useNavigate } from "react-router-dom";
 
-const Cart: React.FC = () => {
-  const { token } = useAuth();
+interface CheckoutCart {
+  token: string | null;
+  checkout: boolean;
+  onTotalPriceChange?: (totalPrice: number) => void;
+}
+
+const Cart: React.FC<CheckoutCart> = ({
+  token,
+  checkout,
+  onTotalPriceChange,
+}) => {
   const navigate = useNavigate();
   const storedCart = JSON.parse(localStorage.getItem("cart") || "[]");
-  const [cart, setCart] = useState<Cart[]>(storedCart);
+  const [cart, setCart] = useState<CartInterface[]>(storedCart);
 
   const [totalPrice, setTotalPrice] = useState<number>(0);
   const scrollRef = useDragToScroll();
 
-  const fetchUserCart = async (setUserCart: (cart: Cart[]) => void) => {
+  const fetchUserCart = async (
+    setUserCart: (cart: CartInterface[]) => void,
+  ) => {
     try {
       const response = await axiosInstance.get("/user-cart");
       setUserCart(response.data.cart);
@@ -25,13 +35,16 @@ const Cart: React.FC = () => {
       console.error("Error fetching user cart:", error);
     }
   };
-  const saveUserCart = async (cart: Cart[]) => {
+
+  const saveUserCart = async (cart: CartInterface[]) => {
     try {
       await axiosInstance.post("/save-cart", { cart });
     } catch (error) {
       console.error("Error saving cart:", error);
     }
   };
+
+  const refresh = () => {};
 
   // Usage Example in React Component
   useEffect(() => {
@@ -53,7 +66,10 @@ const Cart: React.FC = () => {
       0,
     );
     setTotalPrice(calculatedTotal);
-  }, [cart, token]);
+    if (onTotalPriceChange) {
+      onTotalPriceChange(calculatedTotal);
+    }
+  }, [cart, token, onTotalPriceChange]);
 
   const handleClear = () => {
     if (token) {
@@ -78,10 +94,11 @@ const Cart: React.FC = () => {
         acc.push(item);
       }
       return acc;
-    }, [] as Cart[]);
+    }, [] as CartInterface[]);
     setCart(updatedCart);
     if (token) {
       saveUserCart(updatedCart);
+      refresh();
     }
   };
 
@@ -92,6 +109,7 @@ const Cart: React.FC = () => {
     setCart(updatedCart);
     if (token) {
       saveUserCart(updatedCart);
+      refresh();
     }
   };
 
@@ -122,9 +140,17 @@ const Cart: React.FC = () => {
               >
                 <Link
                   to={`/product/${productSlug}_${item.productId}_${item.variantId}`}
-                  onClick={() =>
-                    (window.location.href = `/product/${productSlug}_${item.productId}_${item.variantId}`)
-                  }
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (checkout) {
+                      window.open(
+                        `/product/${productSlug}_${item.productId}_${item.variantId}`,
+                        "_blank",
+                      );
+                    } else {
+                      window.location.href = `/product/${productSlug}_${item.productId}_${item.variantId}`;
+                    }
+                  }}
                 >
                   <div className="relative flex h-28 w-28 select-none flex-col justify-center overflow-hidden rounded-xl border-zinc-500 shadow-inner">
                     <img
@@ -137,9 +163,18 @@ const Cart: React.FC = () => {
                 <div className="flex flex-col justify-between text-right text-zinc-700">
                   <Link
                     to={`/product/${productSlug}_${item.productId}_${item.variantId}`}
-                    onClick={() =>
-                      (window.location.href = `/product/${productSlug}_${item.productId}_${item.variantId}`)
-                    }
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (checkout) {
+                        window.open(
+                          `/product/${productSlug}_${item.productId}_${item.variantId}`,
+                          "_blank",
+                        );
+                      }
+                      if (!checkout) {
+                        window.location.href = `/product/${productSlug}_${item.productId}_${item.variantId}`;
+                      }
+                    }}
                   >
                     <h1 className="roboto-medium text-sm text-zinc-800 hover:underline">
                       {item.name} {item.variantName} {item.variantColor}
@@ -155,26 +190,30 @@ const Cart: React.FC = () => {
                   </p>
                   <div className="relative flex items-center justify-end gap-1 pt-2">
                     <button
-                      onClick={() =>
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
                         updateCartItemQuantity(
                           item.productId,
                           item.variantId,
                           item.quantity - 1,
-                        )
-                      }
+                        );
+                      }}
                     >
                       <span className="material-symbols-outlined h-6 w-6 rounded-full bg-white text-center text-xl leading-[26px] hover:cursor-pointer hover:bg-zinc-100">
                         remove
                       </span>
                     </button>
                     <button
-                      onClick={() =>
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
                         updateCartItemQuantity(
                           item.productId,
                           item.variantId,
                           item.quantity + 1,
-                        )
-                      }
+                        );
+                      }}
                     >
                       <span className="material-symbols-outlined h-6 w-6 rounded-full bg-white text-center text-xl leading-6 hover:cursor-pointer hover:bg-zinc-100">
                         add
@@ -182,6 +221,7 @@ const Cart: React.FC = () => {
                     </button>
 
                     <button
+                      type="button"
                       onClick={() =>
                         removeFromCart(item.productId, item.variantId)
                       }
@@ -201,26 +241,35 @@ const Cart: React.FC = () => {
       </div>
       {cart.length > 0 && (
         <div className="total mt-4 flex flex-col gap-2 justify-self-end text-right">
-          <div className="total text-right">
-            {" "}
-            <h2>Total Price: €{totalPrice.toFixed(2)}</h2>{" "}
-            <div className="divider"></div>{" "}
-          </div>
+          {!checkout && (
+            <>
+              <div className="total text-right">
+                <h2>Total Price: €{totalPrice.toFixed(2)}</h2>
+                <div className="divider"></div>
+              </div>
+            </>
+          )}
           <div className="flex justify-between">
-            <button
-              className="roboto-medium rounded-md bg-zinc-900 px-6 py-1 text-white transition-all duration-200 hover:bg-zinc-700 md:max-w-[300px]"
-              type="button"
-              onClick={handleClear}
-            >
-              Clear
-            </button>
-            <button
-              className="roboto-medium rounded-md bg-zinc-900 px-4 py-1 text-white transition-all duration-200 hover:bg-zinc-700 md:max-w-[300px]"
-              type="button"
-              onClick={handleCheckout}
-            >
-              Check out
-            </button>
+            {checkout ? (
+              <></>
+            ) : (
+              <>
+                <button
+                  className="roboto-medium rounded-md bg-zinc-900 px-6 py-1 text-white transition-all duration-200 hover:bg-zinc-700 md:max-w-[300px]"
+                  type="button"
+                  onClick={handleClear}
+                >
+                  Clear
+                </button>
+                <button
+                  className="roboto-medium rounded-md bg-zinc-900 px-4 py-1 text-white transition-all duration-200 hover:bg-zinc-700 md:max-w-[300px]"
+                  type="button"
+                  onClick={handleCheckout}
+                >
+                  Check out
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}

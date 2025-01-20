@@ -33,13 +33,13 @@ const orderItemSchema = new Schema(
       type: Number,
       required: true,
     },
-    isOnSale: { 
-      type: Boolean, 
-      default: false 
+    isOnSale: {
+      type: Boolean,
+      default: false,
     },
-    salePrice: { 
-      type: Number, 
-      default: null 
+    salePrice: {
+      type: Number,
+      default: null,
     },
     quantity: {
       type: Number,
@@ -61,6 +61,12 @@ const orderSchema = new Schema(
     totalAmount: {
       type: Number,
       required: true,
+    },
+    shippingCost: { type: Number, required: true },
+    shippingOption: {
+      type: String,
+      required: true,
+      enum: ["standard", "express"],
     },
     shippingAddress: {
       street: String,
