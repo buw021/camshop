@@ -3,10 +3,10 @@ export interface User {
     firstName: string
     lastName:string
     phoneNo: string;
-    address: Address[];
+    address: AddressInterface[];
   }
 
-  export interface Address {
+  export interface AddressInterface {
     firstName: string;
     lastName: string;
     phoneNo: string;

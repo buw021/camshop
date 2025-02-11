@@ -12,11 +12,6 @@ const wishlistSchema = new Schema({
     ref: "Product.variants",
     required: true,
   },
-  name: String,
-  variantName: String,
-  variantColor: String,
-  variantImg: String,
-  price: Number,
 });
 
 const cartItemSchema = new Schema({
@@ -30,13 +25,6 @@ const cartItemSchema = new Schema({
     ref: "Product.variants",
     required: true,
   },
-  name: String,
-  variantName: String,
-  variantColor: String,
-  variantImg: String,
-  isOnSale: { type: Boolean, required: false },
-  salePrice: { type: Number, require: false },
-  price: Number,
   quantity: { type: Number, required: true, min: 1 },
 });
 

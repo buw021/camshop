@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
+
 const promoCodeSchema = new Schema({
   code: {
     type: String,
@@ -25,7 +26,12 @@ const promoCodeSchema = new Schema({
   },
   endDate: {
     type: Date,
-    required: true,
+    required: false,
+    default: null,
+  },
+  minimumOrderValue: {
+    type: Number,
+    default: 0,
   },
   usageLimit: {
     type: Number,
@@ -41,28 +47,24 @@ const promoCodeSchema = new Schema({
   },
 });
 
-const promoCodeUsage = new Schema({
+const promoCodeUsed = new Schema({
   code: {
     type: String,
     required: true,
   },
-  usageCount: {
-    type: Number,
-    default: 0,
-  },
 });
 
-const promoCodeUsageSchema = new Schema({
+const promoCodeUsedSchema = new Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true,
   },
-  promoCodeUsage: [promoCodeUsage],
+  promoCodeUsed: [promoCodeUsed],
 });
 
 const PromoCode = mongoose.model("PromoCode", promoCodeSchema);
-const PromoCodeUsage = mongoose.model("PromoCodeUsage", promoCodeUsageSchema);
+const PromoCodeUsed = mongoose.model("PromoCodeUsed", promoCodeUsedSchema);
 
 //Module Export
-module.exports = { PromoCode, PromoCodeUsage };
+module.exports = { PromoCode, PromoCodeUsed };

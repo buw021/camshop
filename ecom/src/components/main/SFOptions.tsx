@@ -27,7 +27,7 @@ const SFOptions: React.FC<ShippingOptionsProps> = ({
                   target: { value: option.id },
                 } as React.ChangeEvent<HTMLInputElement>)
               }
-              className={`flex w-36 flex-col rounded-md border-[1px] p-2.5 ${selectedSFOption === option.id ? "border-zinc-300 bg-zinc-200" : "bg-zinc-50"}`}
+              className={`flex w-36 flex-col rounded-md border-[1px] p-2.5 ${selectedSFOption === option.id ? "border-zinc-200 bg-zinc-100" : ""}`}
             >
               <span className="w-full text-right font-medium tracking-wide">
                 {option.label.split(" ").slice(0, 2).join(" ")}

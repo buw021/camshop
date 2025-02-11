@@ -1,3 +1,9 @@
+export interface CartID { 
+    productId: string;
+    variantId: string;
+    quantity: number;
+}
+
 export interface CartInterface {
     productId: string;
     variantId: string;
@@ -7,6 +13,6 @@ export interface CartInterface {
     variantImg: string;
     price: number;
     quantity: number;
-    isOnSale: boolean;
-    salePrice: number | null
-  }
+    saleId: {salePrice: number | null} | null;
+    discountedPrice?: number;
+}

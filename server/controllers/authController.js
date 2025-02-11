@@ -1,5 +1,6 @@
 const User = require("../models/user");
 const Admin = require("../models/admin");
+const Product = require("../models/products");
 const { hashPassword, comparePassword, decodeJWT } = require("../helpers/auth");
 const jwt = require("jsonwebtoken");
 
@@ -42,15 +43,14 @@ const checkEmail = async (req, res) => {
 
 //LoginUser
 const loginUser = async (req, res) => {
+  const { email, password, rememberMe } = req.body;
+  const tokenOptions = rememberMe ? { expiresIn: "7d" } : {};
+  //check user
+  const user = await User.findOne({ email });
+  if (!user) {
+    return res.json({ error: "Invalid email or password" });
+  }
   try {
-    const { email, password, rememberMe } = req.body;
-    const tokenOptions = rememberMe ? { expiresIn: "7d" } : {};
-    //check user
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.json({ error: "Invalid email or password" });
-    }
-    //check password
     const match = await comparePassword(password, user.password);
     if (match) {
       jwt.sign(
@@ -60,53 +60,59 @@ const loginUser = async (req, res) => {
         async (err, token) => {
           if (err) throw err;
 
-          const localCart = req.cookies.cart
-            ? JSON.parse(req.cookies.cart)
-            : [];
+          res.cookie("usertoken", token, {
+            httpOnly: true,
+            secure: false, // set this to true in production
+            maxAge: rememberMe ? 7 * 24 * 60 * 60 * 1000 : undefined,
+          });
+          // Set cookie expiration to 7 days if "Remember Me" is checked
 
-          const mergedCart = mergeCarts(localCart, user.cart || []);
-          user.cart = mergedCart;
-          await user.save();
-          res.cookie("cart", "", { maxAge: 0 });
-
-          res
-            .cookie("usertoken", token, {
-              httpOnly: true,
-              secure: false,
-              maxAge: rememberMe ? 7 * 24 * 60 * 60 * 1000 : undefined,
-            })
-            .json(user); // Set cookie expiration to 7 days if "Remember Me" is checked
+          try {
+            const localCart = req.cookies.cart
+              ? JSON.parse(req.cookies.cart)
+              : [];
+            const mergedCart = mergeCarts(localCart, user.cart || []);
+            user.cart = mergedCart;
+            await user.save();
+            res.cookie("cart", "", { maxAge: 0 });
+            res.json(user);
+          } catch (innerError) {
+            console.error("Error merging carts:", innerError);
+          }
         }
       );
     } else {
       return res.json({ error: "Invalid email or password" });
     }
   } catch (error) {
-    return res.json({
-      error: "Internal server error",
-    });
+    return res.json({ error: "Internal server error" });
   }
 };
 
 const mergeCarts = (localCart, userCart) => {
-  const cartMap = new Map();
-  localCart.forEach((item) => {
-    const key = `${item.productId}-${item.variantId}`;
-    if (cartMap.has(key)) {
-      cartMap.get(key).quantity += item.quantity;
-    } else {
-      cartMap.set(key, { ...item });
-    }
-  });
-  userCart.forEach((item) => {
-    const key = `${item.productId}-${item.variantId}`;
-    if (cartMap.has(key)) {
-      cartMap.get(key).quantity += item.quantity;
-    } else {
-      cartMap.set(key, { ...item });
-    }
-  });
-  return Array.from(cartMap.values());
+  try {
+    const cartMap = new Map();
+    localCart.forEach((item) => {
+      const key = `${item.productId}-${item.variantId}`;
+      if (cartMap.has(key)) {
+        cartMap.get(key).quantity += item.quantity;
+      } else {
+        cartMap.set(key, { ...item });
+      }
+    });
+    userCart.forEach((item) => {
+      const key = `${item.productId}-${item.variantId}`;
+      if (cartMap.has(key)) {
+        cartMap.get(key).quantity += item.quantity;
+      } else {
+        cartMap.set(key, { ...item });
+      }
+    });
+    return Array.from(cartMap.values());
+  } catch (error) {
+    console.error("Error merging carts:", error);
+    throw new Error("Failed to merge carts");
+  }
 };
 
 //getUser
@@ -156,15 +162,51 @@ const getUser = async (req, res) => {
 //Get user Cart
 const getUserCart = async (req, res) => {
   const { usertoken } = req.cookies;
-
+  const localCart = req.cookies.cart ? JSON.parse(req.cookies.cart) : [];
+  let cart = [];
+  let productIds = [];
   if (usertoken) {
     const id = decodeJWT(usertoken);
     const user = await User.findById(id).select("cart");
-    if (!user) return res.status(404).json({ error: "User not found" });
-    return res.json({ cart: user.cart });
-  } else {
-    res.status(400).json({ error: "User ID is required" });
+    if (user.cart.length === 0) {
+      return res.json({ cart: [] });
+    }
+    productIds = user.cart.map((item) => item.productId);
+    cart = user.cart;
+  } else if (!usertoken) {
+    productIds = localCart.map((item) => item.productId);
+    cart = localCart;
   }
+
+  const products = await Product.find({ _id: { $in: productIds } })
+    .populate({
+      path: "variants.saleId",
+      model: "Sale",
+      match: { isOnSale: true },
+      select: "salePrice saleStartDate saleExpiryDate",
+    })
+    .select("_id category name variants");
+
+  const cartWithDetails = cart.map((cartItem) => {
+    const product = products.find(
+      (p) => p._id.toString() === cartItem.productId.toString()
+    );
+    const variant = product.variants.find(
+      (v) => v._id.toString() === cartItem.variantId.toString()
+    );
+    return {
+      productId: cartItem.productId,
+      variantId: cartItem.variantId,
+      name: product.name,
+      variantName: variant.variantName,
+      variantColor: variant.variantColor,
+      variantImg: variant.variantImgs[0],
+      price: variant.variantPrice,
+      quantity: cartItem.quantity,
+      saleId: variant.saleId ? { salePrice: variant.saleId.salePrice } : null,
+    };
+  });
+  return res.json({ cart: cartWithDetails });
 };
 
 const addToCart = async (req, res) => {
@@ -201,9 +243,7 @@ const addToCart = async (req, res) => {
     }
 
     await user.save();
-    return res
-      .status(200)
-      .json({ message: "Product added to cart", cart: user.cart });
+    return res.status(200).json({ success: "Product added to cart" });
   } catch (error) {
     return res.status(500).json({ error: "Internal server error" });
   }
@@ -235,16 +275,54 @@ const saveUserCart = async (req, res) => {
 
 const getUserFavs = async (req, res) => {
   const { usertoken } = req.cookies;
-
+  const localWishlist = req.cookies.wishlist
+    ? JSON.parse(req.cookies.wishlist)
+    : [];
+  let wishlist = [];
+  let productIds = [];
   if (usertoken) {
     const id = decodeJWT(usertoken);
     const user = await User.findById(id).select("wishlist");
-
-    if (!user) return res.status(404).json({ error: "User not found" });
-    return res.json({ wishlist: user.wishlist });
-  } else {
-    res.status(400).json({ error: "User ID is required" });
+    if (user.wishlist.length === 0) {
+      return res.json({ wishlist: [] });
+    }
+    productIds = user.wishlist.map((item) => item.productId);
+    wishlist = user.wishlist;
+  } else if (!usertoken) {
+    productIds = localWishlist.map((item) => item.productId);
+    wishlist = localWishlist;
   }
+
+  const products = await Product.find({ _id: { $in: productIds } })
+    .populate({
+      path: "variants.saleId",
+      model: "Sale",
+      match: { isOnSale: true },
+      select: "salePrice saleStartDate saleExpiryDate",
+    })
+    .select("_id category name variants");
+
+  const wishlistWithDetails = wishlist.map((wishlistItem) => {
+    const product = products.find(
+      (p) => p._id.toString() === wishlistItem.productId.toString()
+    );
+    const variant = product.variants.find(
+      (v) => v._id.toString() === wishlistItem.variantId.toString()
+    );
+    return {
+      productId: wishlistItem.productId,
+      variantId: wishlistItem.variantId,
+      name: product.name,
+      variantName: variant.variantName,
+      variantColor: variant.variantColor,
+      variantImg: variant.variantImgs[0],
+      price: variant.variantPrice,
+      quantity: wishlistItem.quantity,
+      saleId: variant.saleId ? { salePrice: variant.saleId.salePrice } : null,
+    };
+  });
+  return res.json({ favs: wishlistWithDetails });
+  console.log(wishlistWithDetails);
 };
 
 const addToFavs = async (req, res) => {
@@ -285,14 +363,14 @@ const addToFavs = async (req, res) => {
 };
 
 const saveUserFavs = async (req, res) => {
-  const { wishlist } = req.body;
+  const { favs } = req.body;
   const { usertoken } = req.cookies;
-  if (usertoken && wishlist) {
+  if (usertoken && favs) {
     try {
       const id = decodeJWT(usertoken);
       const user = await User.findById(id);
       if (!user) return res.status(404).json({ error: "User not found" });
-      user.wishlist = wishlist;
+      user.wishlist = favs;
       await user.save();
       return res.status(200).json({ message: "Cart updated successfully" });
     } catch (error) {
@@ -315,7 +393,7 @@ const addAllToCart = async (req, res) => {
 
     const wishlist = user.wishlist.map((item) => ({
       ...item.toObject(),
-      quantity: 1,
+      quantity: item.quantity || 1,
     }));
     wishlist.forEach((item) => {
       if (!item.productId || !item.variantId) {
@@ -375,7 +453,7 @@ const loginAdmin = async (req, res) => {
           res
             .cookie("admintoken", token, {
               httpOnly: true,
-              secure: false,
+              secure: false, // set this to true in production
               maxAge: rememberMe ? 7 * 24 * 60 * 60 * 1000 : undefined,
             })
             .json(user); // Set cookie expiration to 7 days if "Remember Me" is checked
@@ -394,12 +472,16 @@ const loginAdmin = async (req, res) => {
 const getUserAdmin = async (req, res) => {
   const { admintoken } = req.cookies;
   if (admintoken) {
-    const decoded = jwt.verify(admintoken, process.env.JWT_ADMINSECRET);
-    const admin = await Admin.findById(decoded.id).select("username");
-    if (!admin) {
-      return res.status(404).json({ error: "user not found" });
+    try {
+      const decoded = jwt.verify(admintoken, process.env.JWT_ADMINSECRET);
+      const admin = await Admin.findById(decoded.id).select("username");
+      if (!admin) {
+        return res.status(404).json({ error: "user not found" });
+      }
+      return res.json({ admin, token: admintoken });
+    } catch (error) {
+      return res.status(403).json({ error: "Invalid token" });
     }
-    return res.json({ admin, token: admintoken });
   } else {
     res.json({ user: null });
   }

@@ -3,7 +3,7 @@ import { User } from "../../interfaces/user";
 import { Link } from "react-router-dom";
 import { ChangePassword } from "./Change";
 import { Loading } from "../../components/main/Loading";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../contexts/useAuth";
 import axiosInstance from "../../services/axiosInstance";
 
 const Security: React.FC = () => {

@@ -34,6 +34,8 @@ export interface PromoCode {
   value: number | null;
   startDate: Date | null;
   endDate: Date | null;
+  minimumOrderValue: number;
   usageLimit: number | null;
+  usageCount?: number;
   keywords: string[] ;
 }

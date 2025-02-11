@@ -1,4 +1,5 @@
 const Product = require("../models/products");
+const Sale = require("../models/sale");
 const path = require("path");
 const fs = require("fs");
 /* const addProduct = async (req, res) => {
@@ -69,8 +70,6 @@ const addProduct = async (req, res) => {
         variantStocks: variant.variantStocks,
         variantImgs: fileImgs[index],
         variantContent: variant.variantContent,
-        isOnSale: false,
-        salePrice: null,
       })),
       tags: tags || [],
     });
@@ -100,6 +99,12 @@ const getProducts = async (req, res) => {
       "_id category name variants.variantPrice variants.variantStocks variants.variantImgs"
     );
 
+    /*const product = await Product.findById(productId).populate({
+    path: 'variants.saleId',
+    model: 'Sale',
+    match: { isOnSale: true }, // Only populate if isOnSale is true
+    select: 'salePrice saleStartDate saleExpiryDate', // Select specific fields if needed
+  }).lean();*/
     const productSummaries = products.map((product) => ({
       _id: product._id,
       category: product.category,
@@ -158,145 +163,6 @@ const archiveProducts = async (req, res) => {
   }
 };
 
-/* const getVariants = async (req, res) => {
-  const { page = 1, limit = 20, sort = "default", category } = req.query;
-  console.log(page, limit, sort, category);
-  try {
-    if (category === "all") {
-      const products = await Product.find();
-      variants = products.flatMap((product) =>
-        product.variants.map((variant) => ({
-          ...variant._doc,
-          productName: product.name,
-          productId: product._id,
-          productBrand: product.brand,
-        }))
-      );
-    } else {
-      const products = await Product.find({ category: category });
-      variants = products.flatMap((product) =>
-        product.variants.map((variant) => ({
-          ...variant._doc,
-          productName: product.name,
-          productId: product._id,
-          productBrand: product.brand,
-        }))
-      );
-    }
-    // Sort variants
-    const sortedVariants = variants.sort((a, b) => {
-      switch (sort) {
-        case "price-asc":
-          return a.variantPrice - b.variantPrice;
-        case "price-desc":
-          return b.variantPrice - a.variantPrice;
-        case "name-az":
-          return a.productName.localeCompare(b.productName);
-        case "name-za":
-          return b.productName.localeCompare(a.productName);
-        // Add more sorting criteria as needed
-        default:
-          return 0; // No sorting for default
-      }
-    });
-
-    // Pagination logic
-    const startIndex = (page - 1) * limit;
-    const endIndex = page * limit;
-    const paginatedVariants = sortedVariants.slice(startIndex, endIndex);
-
-    const total = variants.length; // Total number of variants
-    res.json({ variants: paginatedVariants, total });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-}; */
-
-/* const getVariants = async (req, res) => {
-  const {
-    page = 1,
-    limit = 10,
-    sort = "default",
-    subCategory,
-    brand,
-    minPrice,
-    maxPrice,
-    onSale,
-    colors,
-    specs,
-  } = req.query;
-  console.log(minPrice, maxPrice);
-  const category = req.headers["category"];
-
-  try {
-    let query = {};
-
-    if (category && category !== "all") query.category = category;
-    if (subCategory) query.subCategory = subCategory;
-    if (brand) query.brand = brand;
-    if (onSale === "true") query["variants.isOnSale"] = true;
-
-    if (minPrice || maxPrice) {
-      query.variants = { $elemMatch: {} };
-      if (minPrice) query.variants.$elemMatch.variantPrice = { ...query.variants.$elemMatch.variantPrice, $gte: parseFloat(minPrice) };
-      if (maxPrice) query.variants.$elemMatch.variantPrice = { ...query.variants.$elemMatch.variantPrice, $lte: parseFloat(maxPrice) };
-    }
-
-    if (colors) {
-      query["variants.variantColor"] = { $in: colors.split(",") };
-    }
-
-    if (specs) {
-      const specifications = JSON.parse(specs);
-      Object.keys(specifications).forEach((key) => {
-        query[`specifications.${key}`] = specifications[key];
-      });
-    }
-
-    console.log(query);
-    const products = await Product.find(query);
-    const variants = products.flatMap((product) =>
-      product.variants.filter(variant => {
-        const meetsPriceCriteria = (!minPrice || variant.variantPrice >= parseFloat(minPrice)) &&
-                                   (!maxPrice || variant.variantPrice <= parseFloat(maxPrice));
-        return meetsPriceCriteria;
-      }).map((variant) => ({
-        ...variant._doc,
-        productName: product.name,
-        productId: product._id,
-        productBrand: product.brand,
-      }))
-    );
-
-    // Sorting logic
-    const sortedVariants = variants.sort((a, b) => {
-      switch (sort) {
-        case "price-asc":
-          return a.variantPrice - b.variantPrice;
-        case "price-desc":
-          return b.variantPrice - a.variantPrice;
-        case "name-az":
-          return a.productName.localeCompare(b.productName);
-        case "name-za":
-          return b.productName.localeCompare(a.productName);
-        default:
-          return 0; // No sorting for default
-      }
-    });
-
-    // Pagination logic
-    const startIndex = (page - 1) * limit;
-    const endIndex = page * limit;
-    const paginatedVariants = sortedVariants.slice(startIndex, endIndex);
-
-    const total = variants.length; // Total number of variants
-    res.json({ variants: paginatedVariants, total });
-  } catch (error) {
-    console.error("Error fetching variants:", error);
-    res.status(500).json({ error: error.message });
-  }
-}; */
-
 const getVariants = async (req, res) => {
   const {
     page = 1,
@@ -306,7 +172,7 @@ const getVariants = async (req, res) => {
     brand,
     minPrice,
     maxPrice,
-    onSale,
+    onSale, //////rewrite this  saleID<
     colors,
     specs,
   } = req.query;
@@ -341,17 +207,27 @@ const getVariants = async (req, res) => {
       };
     if (colors) variantQuery.variantColor = { $in: colors.split(",") };
 
-    const products = await Product.find(productQuery);
+    const products = await Product.find(productQuery)
+      .populate({
+        path: "variants.saleId",
+        model: "Sale",
+        match: { isOnSale: true }, // Only populate if isOnSale is true
+        select: "salePrice saleStartDate saleExpiryDate", // Select specific fields if needed
+      })
+      .lean();
     const variants = products.flatMap((product) =>
       product.variants
         .filter((variant) => {
           const price =
-            variant.isOnSale && variant.salePrice
-              ? variant.salePrice
+            variant.saleId &&
+            variant.saleId.isOnSale &&
+            variant.saleId.salePrice
+              ? variant.saleId.salePrice
               : variant.variantPrice;
           const meetsVariantCriteria =
             (!variantQuery.isOnSale ||
-              variant.isOnSale === variantQuery.isOnSale) &&
+              (variant.saleId && variant.saleId.isOnSale) ===
+                variantQuery.isOnSale) &&
             (!minPrice || price >= parseFloat(minPrice)) &&
             (!maxPrice || price <= parseFloat(maxPrice)) &&
             (!variantQuery.variantColor ||
@@ -359,7 +235,7 @@ const getVariants = async (req, res) => {
           return meetsVariantCriteria;
         })
         .map((variant) => ({
-          ...variant._doc,
+          ...variant,
           productName: product.name,
           productId: product._id,
           productBrand: product.brand,
@@ -399,12 +275,21 @@ const getProduct = async (req, res) => {
   const [productName, productId, variantId] = req.params.details.split("_");
 
   try {
-    const product = await Product.findById(productId);
+    const product = await Product.findById(productId)
+      .populate({
+        path: "variants.saleId",
+        model: "Sale",
+        match: { isOnSale: true }, // Only populate if isOnSale is true
+        select: "salePrice saleStartDate saleExpiryDate", // Select specific fields if needed
+      })
+      .lean();
     if (!product) {
       return res.status(404).json({ error: "Product not found" });
     }
 
-    const variant = product.variants.id(variantId.toString());
+    const variant = product.variants.find(
+      (v) => v._id.toString() === variantId
+    );
 
     res.json({
       product,
@@ -461,7 +346,6 @@ const updateProduct = async (req, res) => {
 
         if (existingVariant) {
           // Add new images if provided
-
           const updatedImgs =
             fileImgs && fileImgs[index]
               ? [...variant.variantImgs, ...fileImgs[index]]
@@ -483,14 +367,6 @@ const updateProduct = async (req, res) => {
             variantImgs: updatedImgs,
             variantContent:
               variant.variantContent || existingVariant.variantContent,
-            isOnSale:
-              variant.isOnSale !== undefined
-                ? variant.isOnSale
-                : existingVariant.isOnSale,
-            salePrice:
-              variant.salePrice !== undefined
-                ? variant.salePrice
-                : existingVariant.salePrice,
           };
         }
       } else {

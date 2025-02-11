@@ -8,7 +8,11 @@ import { Filter } from "../../interfaces/filter";
 import ProductFilter from "../../components/main/Filter";
 
 interface Category {
-  category: "camera" | "lens" | "accesories" | "others" | "all";
+  category: "camera" | "lens" | "accessories" | "other" | "all";
+}
+
+interface saleId {
+  salePrice: number | null;
 }
 
 interface ProductList {
@@ -20,8 +24,7 @@ interface ProductList {
   variantColor: string;
   variantPrice: number;
   variantImgs: string[];
-  isOnSale: boolean;
-  salePrice: number | null;
+  saleId: saleId | null;
   variantStocks: number;
   variantContent: string[];
 }
@@ -209,7 +212,7 @@ const Product_List: React.FC<Category> = ({ category }) => {
                       name={variant.productName}
                       variantId={variant._id}
                       price={variant.variantPrice}
-                      salePrice={variant.salePrice}
+                      salePrice={variant.saleId?.salePrice ?? null}
                       brand={variant.productBrand}
                       thumbnail={variant.variantImgs[0]}
                       variantName={variant.variantName}

@@ -78,6 +78,7 @@ const orderSchema = new Schema(
     paymentMethod: {
       type: String,
       required: true,
+      default: "card",
     },
     promoCode: {
       type: String,
@@ -90,7 +91,7 @@ const orderSchema = new Schema(
     status: {
       type: String,
       required: true,
-      enum: ["Pending", "Shipped", "Delivered", "Cancelled"],
+      enum: ["ordered", "paid", "pending", "shipped", "delivered", "cancelled"],
     },
     placedAt: {
       type: Date,

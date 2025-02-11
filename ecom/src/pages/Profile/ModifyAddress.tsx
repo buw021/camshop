@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Address } from "../../interfaces/user";
+import { AddressInterface } from "../../interfaces/user";
 
 const AddressInputBox: React.FC<{
   value: string | number;
@@ -27,11 +27,11 @@ const AddressInputBox: React.FC<{
 
 const ModifyAddress: React.FC<{
   toggleClose: () => void;
-  address: Address | null;
-  modifiedAddress: (modifiedAddress: Address) => void;
+  address: AddressInterface | null;
+  modifiedAddress: (modifiedAddress: AddressInterface) => void;
 }> = ({ toggleClose, address, modifiedAddress }) => {
   // Initialize state with default values for all fields except 'default'
-  const [editAddress, setNewAddress] = useState<Address>(address as Address);
+  const [editAddress, setNewAddress] = useState<AddressInterface>(address as AddressInterface);
   const split = editAddress.address.split("_");
   const [lineAddress, setLineAddress] = useState({
     lineAddress1: split[0],
@@ -71,8 +71,11 @@ const ModifyAddress: React.FC<{
   };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    modifiedAddress(editAddress);
-    toggleClose();
+    const shouldSubmit = window.confirm("Are you sure you want to save the changes?");
+    if (shouldSubmit) {
+      modifiedAddress(editAddress);
+      toggleClose();
+    }
   };
 
   return (

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Address } from "../../interfaces/user";
+import { AddressInterface } from "../../interfaces/user";
 
 const AddressInputBox: React.FC<{
   value: string | number;
@@ -28,10 +28,10 @@ const AddressInputBox: React.FC<{
 
 const NewAddress: React.FC<{
   toggleClose: () => void;
-  onAddAddress: (newAddress: Address) => void;
+  onAddAddress: (newAddress: AddressInterface) => void;
 }> = ({ toggleClose, onAddAddress }) => {
   // Initialize state with default values for all fields except 'default'
-  const [newAddress, setNewAddress] = useState<Address>({
+  const [newAddress, setNewAddress] = useState<AddressInterface>({
     firstName: "",
     lastName: "",
     phoneNo: "",

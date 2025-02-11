@@ -2,6 +2,11 @@ export interface Attributes {
   [key: string]: string;
 }
 
+export interface saleId {
+  salePrice: number | null;
+}
+
+
 export interface Variant {
   variantName: string;
   variantColor: string;
@@ -11,8 +16,7 @@ export interface Variant {
   selectedImgFiles: File[];
   previewUrl: string[];
   variantPrice: number | null;
-  isOnSale: boolean;
-  salePrice: number | null;
+  saleId: saleId | null;
   _id?: string;
 }
 

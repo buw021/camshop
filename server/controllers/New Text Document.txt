@@ -1,0 +1,103 @@
+npm install aws-sdk multer-s3
+
+
+
+const AWS = require('aws-sdk');
+const multer = require('multer');
+const multerS3 = require('multer-s3');
+const sanitize = require('sanitize-filename');
+const path = require('path');
+
+AWS.config.update({
+  accessKeyId: process.env.AWS_ACCESS_KEY, // Load from environment variables
+  secretAccessKey: process.env.AWS_SECRET_KEY, // Load from environment variables
+  region: 'your-region' // e.g., 'us-west-1'
+});
+
+const s3 = new AWS.S3();
+
+const storage = multerS3({
+  s3,
+  bucket: 'your-bucket-name',
+  acl: 'public-read',
+  contentType: multerS3.AUTO_CONTENT_TYPE,
+  key: (req, file, cb) => {
+    const sanitizedFilename = sanitize(file.originalname);
+    const fileKey = Date.now().toString() + '-' + sanitizedFilename;
+    cb(null, fileKey);
+  }
+});
+
+const fileFilter = (req, file, cb) => {
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Invalid file type'), false);
+  }
+};
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB limit
+  fileFilter,
+});
+
+const uploadImg = async (req, res) => {
+  try {
+    const fileGroups = req.files.reduce((groups, file) => {
+      const sanitizedFilename = sanitize(file.key);
+      const idx = file.fieldname.replace('variant', '');
+      if (!groups[idx]) {
+        groups[idx] = [];
+      }
+      groups[idx].push(sanitizedFilename);
+      return groups;
+    }, {});
+    res.json({ filePaths: fileGroups, success: true });
+  } catch (error) {
+    console.error('Error uploading files:', error);
+    res.status(500).json({ error: 'File upload failed.' });
+  }
+};
+
+const deleteUpImg = async (req, res) => {
+  const { filePaths } = req.body;
+  console.log(filePaths);
+  try {
+    Object.keys(filePaths).forEach(async (key) => {
+      const files = filePaths[key];
+      for (const file of files) {
+        const params = {
+          Bucket: 'your-bucket-name',
+          Key: file
+        };
+        await s3.deleteObject(params).promise();
+      }
+    });
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting files:', error);
+    res.status(500).json({ success: false, error: 'Failed to delete files.' });
+  }
+};
+
+const deleteOldImg = async (req, res) => {
+  const { url } = req.body;
+  try {
+    const deletePromises = url.map(async (file) => {
+      const params = {
+        Bucket: 'your-bucket-name',
+        Key: file
+      };
+      await s3.deleteObject(params).promise();
+    });
+    await Promise.all(deletePromises);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting files:', error);
+    res.status(500).json({ success: false, error: 'Failed to delete files.' });
+  }
+};
+
+module.exports = { upload, uploadImg, deleteUpImg, deleteOldImg };

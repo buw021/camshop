@@ -8,11 +8,12 @@ import Navigation from "../../components/main/Navigation";
 import { Bounce, toast } from "react-toastify";
 import { Product, Variant } from "../../interfaces/products";
 import { slugify } from "../../components/func/slugify";
-import { Cart } from "../../interfaces/cart";
-import { Wishlist } from "../../interfaces/wishlist";
+import { useCart } from "../../contexts/useCart";
+import { WishlistID } from "../../interfaces/wishlist";
 import { Loading } from "../../components/main/Loading";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../contexts/useAuth";
 import axiosInstance from "../../services/axiosInstance";
+import { useWishlist } from "../../contexts/useWishlist";
 
 const reviewData = [
   {
@@ -51,6 +52,8 @@ const reviewData = [
 const ProductDisplay: React.FC = () => {
   const { token } = useAuth();
   const { details } = useParams();
+  const { addToCart } = useCart();
+  const { addToFavs } = useWishlist();
   const [product, setProduct] = useState<Product | null>(null);
   const [variant, setVariant] = useState<Variant | null>(null);
 
@@ -71,8 +74,8 @@ const ProductDisplay: React.FC = () => {
   const variantImgs = variant?.variantImgs || [""];
   const inTheBox = variant?.variantContent || [""];
   const variantId = variant?._id || "";
-  const isOnSale = variant?.isOnSale ?? false;
-  const salePrice = variant?.salePrice || null;
+  const isOnSale = variant?.saleId || false;
+  const salePrice = variant?.saleId?.salePrice || null;
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -87,180 +90,22 @@ const ProductDisplay: React.FC = () => {
     fetchProduct();
   }, [details]);
 
-  const addToCart = async (cartItem: Cart) => {
-    try {
-      await axiosInstance.post(
-        "/add-to-cart",
-        { cartItem },
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
-
-      toast.success(`Successfully added to Cart`, {
-        position: "bottom-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-        transition: Bounce,
-      });
-    } catch (error) {
-      console.error("Error saving cart:", error);
-      toast.error(`Error response: ${error}`, {
-        position: "bottom-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-        transition: Bounce,
-      });
-    }
-  };
-
-  const addToFavs = async (item: Wishlist) => {
-    try {
-      const response = await axiosInstance.post(
-        "/add-to-wishlist",
-        { item },
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
-      if (response.data.warning) {
-        toast.warning(response.data.warning, {
-          position: "bottom-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          theme: "light",
-          transition: Bounce,
-        });
-      } else {
-        toast.success(`Successfully added to Wishlist`, {
-          position: "bottom-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          theme: "light",
-          transition: Bounce,
-        });
-      }
-    } catch (error) {
-      console.error("Error saving favs:", error);
-      toast.error(`Error response: ${error}`, {
-        position: "bottom-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-        transition: Bounce,
-      });
-    }
+  const handleAddToFavs = async () => {
+    const item = {
+      productId: prodId,
+      variantId: variantId,
+      quantity: 1,
+    };
+    addToFavs(item);
   };
 
   const handleAddToCart = () => {
-    //add if function here if the user is loggged in
     const cartItem = {
       productId: prodId,
       variantId: variantId,
-      name: name,
-      variantName: variantName,
-      variantColor: variantColor,
-      variantImg: variantImgs[0],
-      price: variantPrice,
-      isOnSale: isOnSale,
-      salePrice: salePrice ?? null,
       quantity: 1,
     };
-
-    if (token) {
-      addToCart(cartItem);
-    } else {
-      const storedCart = JSON.parse(localStorage.getItem("cart") || "[]");
-      const existingItemIndex = storedCart.findIndex(
-        (item: {
-          productId: string | undefined;
-          variantId: string | undefined;
-        }) =>
-          item.productId === cartItem.productId &&
-          item.variantId === cartItem.variantId,
-      );
-      toast.success(`Successfully added to Cart`, {
-        position: "bottom-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-        transition: Bounce,
-      });
-      if (existingItemIndex >= 0) {
-        storedCart[existingItemIndex].quantity += 1;
-      } else {
-        storedCart.push(cartItem);
-      }
-      localStorage.setItem("cart", JSON.stringify(storedCart));
-      document.cookie = `cart=${JSON.stringify(storedCart)}; path=/;`;
-    }
-  };
-
-  const handleAddToFavs = () => {
-    //add if function here if the user is loggged in
-    const Item = {
-      productId: prodId,
-      variantId: variantId,
-      name: name,
-      variantName: variantName,
-      variantColor: variantColor,
-      variantImg: variantImgs[0],
-      price: variantPrice,
-    };
-
-    if (token) {
-      addToFavs(Item);
-    } else {
-      const storedWishlist = JSON.parse(
-        localStorage.getItem("wishlist") || "[]",
-      );
-      const existingItemIndex = storedWishlist.findIndex(
-        (item: {
-          productId: string | undefined;
-          variantId: string | undefined;
-        }) =>
-          item.productId === Item.productId &&
-          item.variantId === Item.variantId,
-      );
-      toast.success(`Successfully added to Cart`, {
-        position: "bottom-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-        transition: Bounce,
-      });
-      if (!existingItemIndex) {
-        storedWishlist.push(Item);
-      }
-      localStorage.setItem("wishlist", JSON.stringify(storedWishlist));
-      document.cookie = `wishlist=${JSON.stringify(storedWishlist)}; path=/;`;
-    }
+    addToCart(cartItem);
   };
 
   const filteredRating = reviewData
@@ -307,7 +152,7 @@ const ProductDisplay: React.FC = () => {
                 <span>{variantColor}</span>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <div className="flex items-center">
                   <Rating
                     filledStars={Math.floor(stats.totalAverage)}
@@ -336,17 +181,23 @@ const ProductDisplay: React.FC = () => {
                 }
               </div>
 
-              {variant?.isOnSale ? (
+              {isOnSale ? (
                 <>
-                  <p className="roboto-black flex-0 flex gap-2 text-4xl">
-                    <span>€ {variantPrice?.toFixed(2) ?? "0.00"}</span>{" "}
-                    <span className="relative flex text-sm">
+                  <p className="roboto-black flex-0 flex flex-wrap gap-2 text-4xl">
+                    <span>€ {salePrice?.toFixed(2) ?? "0.00"}</span>{" "}
+                    <span className="relative flex gap-2 text-sm">
                       <s className="text-zinc-400">
                         € {variantPrice?.toFixed(2) ?? "0.00"}
                       </s>
-                      <span className="absolute -right-10 top-0 flex bg-red-700 px-0.5 text-xs text-white">
-                        -50%
-                      </span>
+                      {salePrice && (
+                        <span className="flex h-4 bg-red-700 px-1.5 text-center text-xs text-white">
+                          -
+                          {Math.round(
+                            ((variantPrice - salePrice) / variantPrice) * 100,
+                          )}
+                          %
+                        </span>
+                      )}
                     </span>
                   </p>
                 </>
@@ -472,6 +323,7 @@ const ProductDisplay: React.FC = () => {
           <span className="roboto-bold mb-2 border-b-[1px] border-zinc-200 px-4 py-1 text-center text-2xl uppercase tracking-tighter">
             Reviews
           </span>
+
           <div className="flex flex-col items-center justify-center gap-2">
             <div className="mb-4 flex gap-4 border-b-[1px] border-zinc-200 pb-4">
               <ul className="flex flex-row flex-wrap items-center justify-center gap-2">

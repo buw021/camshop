@@ -1,17 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { User, Address } from "../../interfaces/user";
+import { User } from "../../interfaces/user";
 import AddressContent from "./Address";
-import NewAddress from "./NewAddress";
 
-import { Bounce, toast } from "react-toastify";
 import { Link } from "react-router-dom";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../contexts/useAuth";
 import axiosInstance from "../../services/axiosInstance";
 
 const Profile: React.FC = () => {
   const { token } = useAuth();
   const [data, setData] = useState<User | null>(null);
-  const [toggleNewAddress, setToggleNewAddress] = useState(false);
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isPhoneValid, setIsPhoneValid] = useState<boolean>(true);
   const [isEditing, setIsEditing] = useState<boolean>(false);
@@ -30,18 +28,11 @@ const Profile: React.FC = () => {
       setData({ ...data, [name]: value });
     }
   };
+
   const getUser = async () => {
     try {
       const response = await axiosInstance.get("/get-user");
       setData(response.data.user);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  const updateAddress = async (updatedAddresses: Address[]) => {
-    try {
-      await axiosInstance.post("/update-address", { updatedAddresses });
     } catch (error) {
       console.log(error);
     }
@@ -69,66 +60,6 @@ const Profile: React.FC = () => {
     getUser();
   }, []);
 
-  const handleNewAddress = () => {
-    if (data?.address && data?.address.length > 4) {
-      toast.warning("You can only add up to 5 Address", {
-        position: "bottom-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-        transition: Bounce,
-      });
-      return;
-    } else {
-      setToggleNewAddress(!toggleNewAddress);
-    }
-  };
-
-  useEffect(() => {
-    if (toggleNewAddress) {
-      document.body.classList.add("overflow-hidden");
-    } else {
-      document.body.classList.remove("overflow-hidden");
-    }
-  }, [toggleNewAddress]);
-
-  const addNewAddress = async (newAddress: Address) => {
-    if (token && data?.address) {
-      try {
-        const response = await axiosInstance.post("/save-new-address", { newAddress });
-        if (response.status === 200) {
-          getUser();
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    }
-  };
-
-  const deleteAddress = (addressId: string) => {
-    if (data) {
-      const updatedAddresses = data.address.filter(
-        (address) => address._id !== addressId,
-      );
-      setData({ ...data, address: updatedAddresses });
-    }
-  };
-
-  const modifyAddress = (updatedAddress: Address) => {
-    if (data) {
-      const updatedAddresses = data.address.map((address) =>
-        address._id === updatedAddress._id ? updatedAddress : address,
-      );
-      const newData = { ...data, address: updatedAddresses };
-      setData(newData);
-      updateAddress(newData.address);
-    }
-  };
-
   const handleSaveProfile = () => {
     if (data) {
       updateProfile(data.firstName, data.lastName, data.phoneNo);
@@ -151,18 +82,6 @@ const Profile: React.FC = () => {
 
   return (
     <div className={`flex h-full w-full flex-col gap-2`}>
-      {toggleNewAddress && (
-        <>
-          <div className="fixed inset-0 z-50 h-screen w-screen select-none bg-zinc-700/50">
-            <div className="flex h-full w-full flex-col items-center justify-center">
-              <NewAddress
-                toggleClose={handleNewAddress}
-                onAddAddress={addNewAddress}
-              ></NewAddress>
-            </div>
-          </div>
-        </>
-      )}
       <div>
         <div className="relative mb-2 flex items-center justify-between border-b-[1px]">
           <div className="flex gap-2">
@@ -261,22 +180,7 @@ const Profile: React.FC = () => {
         </div>
       </div>
 
-      <div>
-        <div className="relative mb-2 flex items-center justify-between border-b-[1px]">
-          <p className="roboto-medium text-lg">Shipping Address</p>
-          <button
-            className="rounded bg-zinc-500 px-2 py-0.5 text-xs text-white hover:bg-zinc-700"
-            onClick={() => handleNewAddress()}
-          >
-            Add New Address
-          </button>
-        </div>
-        <AddressContent
-          userAddresses={data.address}
-          onDeleteAddress={deleteAddress}
-          onModifyAddress={modifyAddress}
-        ></AddressContent>
-      </div>
+      <AddressContent checkout={false}></AddressContent>
     </div>
   );
 };

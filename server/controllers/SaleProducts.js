@@ -1,43 +1,126 @@
-const Product = require("./models/Product"); // Adjust the import path as needed
+const Product = require("../models/products");
+const Sale = require("../models/sale");
 
-const setProductOnSale = async (productId, salePrice) => {
+const browseProducts = async (req, res) => {
   try {
-    const product = await Product.findById(productId);
+    const products = await Product.find({ isArchived: false })
+      .populate({
+        path: "variants.saleId",
+        model: "Sale",
+        match: { isOnSale: true }, // Only populate if isOnSale is true
+        select: "salePrice saleStartDate saleExpiryDate", // Select specific fields if needed
+      })
+      .select("_id category name variants");
 
-    if (!product) {
-      throw new Error("Product not found");
-    }
+    const productVariants = products.map((product) => ({
+      _id: product._id,
+      name: product.name,
+      category: product.category,
+      variants: product.variants
+        .filter((variant) => !variant.saleId || !variant.saleId.isOnSale) // Exclude variants with saleId and isOnSale true
+        .map((variant) => ({
+          _id: variant._id,
+          variantName: variant.variantName,
+          variantColor: variant.variantColor,
+          variantPrice: variant.variantPrice,
+        })),
+    }));
 
-    product.isOnSale = true;
-    product.salePrice = salePrice;
-
-    await product.save();
-    console.log(`Product ${product.name} is now on sale for ${salePrice}`);
+    res.json(productVariants);
   } catch (error) {
-    console.error("Error setting product on sale:", error);
+    console.error("Error fetching product variants:", error);
+    res.status(500).json({ error: "Failed to fetch product variants." });
   }
 };
 
-// Example usage:
-setProductOnSale("60c72b2f9b1d8e4e4c8b4567", 19.99);
-
-const removeProductFromSale = async (productId) => {
+const setProductOnSale = async (req, res) => {
+  const { SaleList } = req.body;
   try {
-    const product = await Product.findById(productId);
+    const sales = await Sale.insertMany(
+      SaleList.selectedProducts.map((product) => ({
+        productId: product.productId,
+        variantId: product.variantId,
+        saleStartDate: SaleList.startDate,
+        saleExpiryDate: SaleList.endDate,
+        salePrice:
+          SaleList.discountType === "percentage"
+            ? (product.variantPrice - (product.variantPrice * SaleList.discount) / 100).toFixed(2)
+            : (product.variantPrice - SaleList.discount).toFixed(2),
+        isOnSale: true,
+      }))
+    );
 
-    if (!product) {
-      throw new Error("Product not found");
-    }
+    // Update the product variants with the sale IDs
+    await Promise.all(
+      sales.map(async (sale) => {
+        await Product.updateOne(
+          { _id: sale.productId, "variants._id": sale.variantId },
+          { $set: { "variants.$.saleId": sale._id } }
+        );
+      })
+    );
 
-    product.isOnSale = false;
-    product.salePrice = null;
-
-    await product.save();
-    console.log(`Product ${product.name} is no longer on sale`);
+    res.json(sales);
   } catch (error) {
-    console.error("Error removing product from sale:", error);
+    console.error("Error setting products on sale:", error);
+    res.status(500).json({ error: "Failed to set products on sale." });
   }
 };
 
-// Example usage:
-removeProductFromSale("60c72b2f9b1d8e4e4c8b4567");
+const getSaleList = async (req, res) => {
+  try {
+    const salesWithProductDetails = await Sale.aggregate([
+      {
+        $lookup: {
+          from: "products",
+          localField: "productId",
+          foreignField: "_id",
+          as: "productInfo",
+        },
+      },
+      { $unwind: "$productInfo" },
+      {
+        $unwind: {
+          path: "$productInfo.variants",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $match: {
+          $expr: {
+            $eq: ["$productInfo.variants._id", "$variantId"],
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          productId: 1,
+          variantId: 1,
+          isOnSale: 1,
+          salePrice: 1,
+          saleStartDate: 1,
+          saleExpiryDate: 1,
+          "productInfo.name": 1,
+          "productInfo.category": 1,
+          "productInfo.variants.variantName": 1,
+          "productInfo.variants.variantColor": 1,
+          "productInfo.variants.variantPrice": 1,
+        },
+      },
+    ]);
+
+    res.json(salesWithProductDetails);
+  } catch (error) {
+    console.error("Error fetching sales with product details:", error);
+    res
+      .status(500)
+      .json({ error: "Failed to fetch sales with product details." });
+  }
+};
+
+module.exports = {
+  browseProducts,
+  setProductOnSale,
+  getSaleList,
+};

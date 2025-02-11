@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import Admin_Orders from "../Components/Admin_Orders";
+import Admin_Orders from "../Pages/Admin_Orders";
 import { useAuth } from "../Context/adminAuth";
 import { useState } from "react";
 import Admin_Layout from "../Pages/Admin_Layout";

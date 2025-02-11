@@ -18,34 +18,26 @@ mongoose
   .catch((err) => console.log("db not connecteed", err));
 
 //middleware
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: false }));
 
 //router connection
 app.use("/", require("./routes/authRoutes"));
+app.use("/", require("./routes/orderRoutes"));
+app.use("/", require("./routes/promoRoutes"));
+app.use("/", require("./routes/saleRoutes"));
 
-app.use('/uploads', express.static('uploads'));
+app.use("/uploads", express.static("uploads"));
 
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
 });
 
 //admin
-
-async function createAdmin() {
-  const username = process.env.ADMIN_USERNAME;
-  const password = process.env.ADMIN_PS;
-  const hashedPassword = await hashPassword(password);
-
-  const newAdmin = new Admin({
-    username,
-    password: hashedPassword,
-    role: "admin",
-  });
-
-  await newAdmin.save();
-  console.log("Admin created");
-}
-
-/*createAdmin().catch((err) => console.error(err));*/

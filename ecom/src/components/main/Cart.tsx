@@ -1,137 +1,59 @@
-import { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useDragToScroll } from "../func/DragtoScroll";
-import type { CartInterface } from "../../interfaces/cart";
 import { slugify } from "../func/slugify";
-import { Link } from "react-router-dom";
-import axiosInstance from "../../services/axiosInstance";
+import { Link, useNavigate } from "react-router-dom";
+import { useCart } from "../../contexts/useCart";
+import { useAuth } from "../../contexts/useAuth";
 import { showToast } from "../func/showToast";
-import { useNavigate } from "react-router-dom";
 
 interface CheckoutCart {
-  token: string | null;
   checkout: boolean;
-  onTotalPriceChange?: (totalPrice: number) => void;
+  toggleClose?: () => void;
+  quantityChange?: () => void;
 }
 
 const Cart: React.FC<CheckoutCart> = ({
-  token,
   checkout,
-  onTotalPriceChange,
+  toggleClose,
+  quantityChange,
 }) => {
+  const {
+    cartInfo,
+    totalPrice,
+    updateCartItemQuantity,
+    removeFromCart,
+    clearCart,
+  } = useCart();
+  const { token } = useAuth();
   const navigate = useNavigate();
-  const storedCart = JSON.parse(localStorage.getItem("cart") || "[]");
-  const [cart, setCart] = useState<CartInterface[]>(storedCart);
-
-  const [totalPrice, setTotalPrice] = useState<number>(0);
   const scrollRef = useDragToScroll();
 
-  const fetchUserCart = async (
-    setUserCart: (cart: CartInterface[]) => void,
-  ) => {
-    try {
-      const response = await axiosInstance.get("/user-cart");
-      setUserCart(response.data.cart);
-    } catch (error) {
-      console.error("Error fetching user cart:", error);
-    }
-  };
-
-  const saveUserCart = async (cart: CartInterface[]) => {
-    try {
-      await axiosInstance.post("/save-cart", { cart });
-    } catch (error) {
-      console.error("Error saving cart:", error);
-    }
-  };
-
-  const refresh = () => {};
-
-  // Usage Example in React Component
-  useEffect(() => {
-    if (token) {
-      fetchUserCart(setCart);
-    }
-  }, [token]);
-
-  useEffect(() => {
-    if (!token) {
-      localStorage.setItem("cart", JSON.stringify(cart));
-      document.cookie = `cart=${JSON.stringify(cart)}; path=/;`;
-    }
-    const calculatedTotal = cart.reduce(
-      (acc, item) =>
-        acc +
-        ((item.isOnSale ? item.salePrice : item.price) ?? item.price) *
-          item.quantity,
-      0,
-    );
-    setTotalPrice(calculatedTotal);
-    if (onTotalPriceChange) {
-      onTotalPriceChange(calculatedTotal);
-    }
-  }, [cart, token, onTotalPriceChange]);
-
   const handleClear = () => {
-    if (token) {
-      saveUserCart([]);
-    }
-    localStorage.setItem("cart", JSON.stringify([]));
-    document.cookie = "cart=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-    setCart([]);
-  };
-
-  const updateCartItemQuantity = (
-    productId: string,
-    variantId: string,
-    quantity: number,
-  ) => {
-    const updatedCart = cart.reduce((acc, item) => {
-      if (item.productId === productId && item.variantId === variantId) {
-        if (quantity > 0) {
-          acc.push({ ...item, quantity });
-        }
-      } else {
-        acc.push(item);
-      }
-      return acc;
-    }, [] as CartInterface[]);
-    setCart(updatedCart);
-    if (token) {
-      saveUserCart(updatedCart);
-      refresh();
-    }
-  };
-
-  const removeFromCart = (productId: string, variantId: string) => {
-    const updatedCart = cart.filter(
-      (item) => !(item.productId === productId && item.variantId === variantId),
-    );
-    setCart(updatedCart);
-    if (token) {
-      saveUserCart(updatedCart);
-      refresh();
-    }
+    clearCart();
   };
 
   const handleCheckout = async () => {
     if (!token) {
       showToast("You need to be logged in to checkout", "warning");
+      toggleClose?.();
       return;
     }
     if (token) {
+      toggleClose?.();
       navigate("/checkout");
     }
   };
 
   return (
-    <div
-      ref={scrollRef}
-      className="relative flex h-full w-full flex-col sm:px-[10vw]"
-    >
-      <p className="roboto-medium mb-4 text-center text-lg">Cart</p>
-      <div className="products scrollbar-hide flex flex-col gap-4 overflow-auto pb-2">
-        {cart?.length > 0 ? (
-          cart?.map((item, index) => {
+    <div ref={scrollRef} className="relative flex h-full w-full flex-col">
+      {!checkout && (
+        <>
+          <p className="roboto-medium mb-4 text-center text-lg">Cart</p>
+        </>
+      )}
+      <div className="products scrollbar-hide flex max-h-80 flex-col gap-4 overflow-auto pb-2">
+        {cartInfo?.length > 0 ? (
+          cartInfo?.map((item, index) => {
             const productSlug = slugify(item.name);
             return (
               <div
@@ -181,13 +103,49 @@ const Cart: React.FC<CheckoutCart> = ({
                     </h1>
                   </Link>
 
-                  <p className="text-xs">
-                    {item.quantity} x € <span>{item.price}</span>
-                  </p>
+                  {item.saleId?.salePrice ? (
+                    <>
+                      <p className="text-xs">
+                        {item.quantity} x €{" "}
+                        <span>
+                          {item.discountedPrice && item.discountedPrice > 0
+                            ? item.discountedPrice.toFixed(2)
+                            : item.saleId.salePrice.toFixed(2)}
+                        </span>
+                      </p>
 
-                  <p className="text-xs text-zinc-800">
-                    Total: € {item.quantity * item.price}
-                  </p>
+                      <p className="text-xs text-zinc-800">
+                        Total: €{" "}
+                        {(
+                          item.quantity *
+                          (item.discountedPrice && item.discountedPrice > 0
+                            ? item.discountedPrice
+                            : item.saleId.salePrice)
+                        ).toFixed(2)}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-xs">
+                        {item.quantity} x €{" "}
+                        <span>
+                          {item.discountedPrice && item.discountedPrice > 0
+                            ? item.discountedPrice.toFixed(2)
+                            : item.price.toFixed(2)}
+                        </span>
+                      </p>
+                      <p className="text-xs text-zinc-800">
+                        Total: €{" "}
+                        {(
+                          item.quantity *
+                          (item.discountedPrice && item.discountedPrice > 0
+                            ? item.discountedPrice
+                            : item.price)
+                        ).toFixed(2)}
+                      </p>
+                    </>
+                  )}
+
                   <div className="relative flex items-center justify-end gap-1 pt-2">
                     <button
                       type="button"
@@ -198,9 +156,10 @@ const Cart: React.FC<CheckoutCart> = ({
                           item.variantId,
                           item.quantity - 1,
                         );
+                        quantityChange?.();
                       }}
                     >
-                      <span className="material-symbols-outlined h-6 w-6 rounded-full bg-white text-center text-xl leading-[26px] hover:cursor-pointer hover:bg-zinc-100">
+                      <span className="material-symbols-outlined h-6 w-6 rounded-full bg-zinc-100 text-center text-xl leading-[26px] hover:cursor-pointer hover:bg-zinc-200">
                         remove
                       </span>
                     </button>
@@ -213,9 +172,10 @@ const Cart: React.FC<CheckoutCart> = ({
                           item.variantId,
                           item.quantity + 1,
                         );
+                        quantityChange?.();
                       }}
                     >
-                      <span className="material-symbols-outlined h-6 w-6 rounded-full bg-white text-center text-xl leading-6 hover:cursor-pointer hover:bg-zinc-100">
+                      <span className="material-symbols-outlined h-6 w-6 rounded-full bg-zinc-100 text-center text-xl leading-6 hover:cursor-pointer hover:bg-zinc-200">
                         add
                       </span>
                     </button>
@@ -239,7 +199,7 @@ const Cart: React.FC<CheckoutCart> = ({
           <div className="text-right">Your cart is empty</div>
         )}
       </div>
-      {cart.length > 0 && (
+      {cartInfo.length > 0 && (
         <div className="total mt-4 flex flex-col gap-2 justify-self-end text-right">
           {!checkout && (
             <>
@@ -249,11 +209,12 @@ const Cart: React.FC<CheckoutCart> = ({
               </div>
             </>
           )}
-          <div className="flex justify-between">
-            {checkout ? (
-              <></>
-            ) : (
-              <>
+
+          {checkout ? (
+            <></>
+          ) : (
+            <>
+              <div className="flex justify-between">
                 <button
                   className="roboto-medium rounded-md bg-zinc-900 px-6 py-1 text-white transition-all duration-200 hover:bg-zinc-700 md:max-w-[300px]"
                   type="button"
@@ -268,9 +229,9 @@ const Cart: React.FC<CheckoutCart> = ({
                 >
                   Check out
                 </button>
-              </>
-            )}
-          </div>
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>

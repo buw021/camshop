@@ -17,6 +17,7 @@ const Admin_ProductTable: React.FC<Table_Content> = ({
   const itemsPerPage = 10;
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const ref = useRef<HTMLTableCellElement>(null);
+
   const handleClickOutside = (event: MouseEvent) => {
     if (ref.current && !ref.current.contains(event.target as Node)) {
       setIsExpanded(false);
@@ -61,14 +62,14 @@ const Admin_ProductTable: React.FC<Table_Content> = ({
       {/* <td className="overflow-hidden overflow-ellipsis whitespace-nowrap px-6">
         <span className=""> {variant._id}</span>
       </td> */}
-      <td className="flex justify-center whitespace-nowrap px-6">
+      {/* <td className="flex justify-center whitespace-nowrap px-6">
         <div className="h-8 w-8 items-center bg-black">
           <img
             src={`http://localhost:3000/uploads/${product.variants[0].variantImgs}`}
             alt="thumbnail"
           />
         </div>
-      </td>
+      </td> */}
       <td className="whitespace-nowrap px-6">{product.name}</td>
       <td className="whitespace-nowrap px-6 capitalize">{product.category}</td>
       <td className="whitespace-nowrap px-6 font-medium">
@@ -120,7 +121,7 @@ const Admin_ProductTable: React.FC<Table_Content> = ({
         <div className="flex h-full w-full justify-center">
           <div className="relative h-full w-full overflow-auto rounded">
             <table className="w-full table-auto divide-y divide-gray-300 text-sm">
-              <thead className="bg-zinc-200">
+              <thead className="h-8 bg-zinc-200">
                 <tr className="">
                   <th scope="col" className="px-4">
                     <div className="flex items-center rounded">
@@ -154,9 +155,9 @@ const Admin_ProductTable: React.FC<Table_Content> = ({
                   {/* <th className="px-6 text-left font-medium uppercase tracking-wider text-zinc-500">
                     ID No.
                   </th> */}
-                  <th className="px-6 text-center font-medium uppercase tracking-wider text-zinc-500">
+                  {/*  <th className="px-6 text-center font-medium uppercase tracking-wider text-zinc-500">
                     Thumbnail
-                  </th>
+                  </th> */}
                   <th className="px-6 text-left font-medium uppercase tracking-wider text-zinc-500">
                     Name
                   </th>
@@ -174,7 +175,7 @@ const Admin_ProductTable: React.FC<Table_Content> = ({
                   </th>
                   <th
                     scope="col"
-                    className="relative flex items-center justify-center p-4"
+                    className="flex h-8 items-center justify-center"
                     ref={ref}
                   >
                     <button

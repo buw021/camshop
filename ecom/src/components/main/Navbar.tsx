@@ -5,9 +5,10 @@ import Wishlist from "./Wishlist";
 import Cart from "./Cart";
 import MiniAuth from "./MiniAuth";
 import axiosInstance from "../../services/axiosInstance";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../contexts/useAuth";
 import { showToast } from "../func/showToast";
 import { SearchBar } from "./SearchBar";
+import { useCart } from "../../contexts/useCart";
 
 interface IconButtonProps {
   icon: string;
@@ -17,6 +18,7 @@ interface IconButtonProps {
 
 const Navbar = () => {
   const { token } = useAuth();
+  const { cartIDs } = useCart();
   const searchRef = useRef<HTMLInputElement | null>(null);
   const [expand, setExpand] = useState(false);
   const [expandSearch, setExpandSearch] = useState(false);
@@ -103,15 +105,14 @@ const Navbar = () => {
       className={`material-symbols-outlined text-zinc-800 transition-all duration-100 ease-linear hover:cursor-pointer hover:text-zinc-500 ${expand ? "invisible -z-50 opacity-0" : ""} ${additionalClasses}`}
       onClick={onClick}
     >
-      {" "}
-      {icon}{" "}
+      {icon}
     </span>
   );
 
   return (
     <nav
       ref={navRef}
-      className={`fixed z-50 flex w-full transform select-none flex-col bg-white shadow backdrop-blur-lg transition-all duration-700 ${expand ? "h-[100vh] md:h-[500px]" : "h-14"}`}
+      className={`transit</span>ion-all fixed z-50 flex w-full transform select-none flex-col bg-white shadow backdrop-blur-lg duration-700 ${expand ? "h-[100vh] md:h-[500px]" : "h-14"}`}
     >
       <div className="flex h-auto w-full flex-col overflow-hidden px-5 py-3 md:px-[10vw]">
         <div className="flex flex-row items-center justify-between">
@@ -171,11 +172,21 @@ const Navbar = () => {
               onClick={toggleFav}
               additionalClasses="filled"
             />
-            <IconButton
-              icon="shopping_cart"
-              onClick={toggleCart}
-              additionalClasses="filled"
-            />
+            <div className="group relative flex items-center">
+              {cartIDs.reduce((total, item) => total + item.quantity, 0) >
+                0 && (
+                <span
+                  className={`absolute -right-1 -top-1 rounded-full bg-red-500 px-1 text-[8px] text-white transition-all duration-100 ease-linear group-hover:bg-red-400 ${expand ? "invisible -z-50 opacity-0" : ""}`}
+                >
+                  {cartIDs.reduce((total, item) => total + item.quantity, 0)}
+                </span>
+              )}
+              <IconButton
+                icon="shopping_cart"
+                onClick={toggleCart}
+                additionalClasses="filled"
+              />
+            </div>
             <IconButton
               icon="person"
               onClick={toggleProfile}
@@ -200,16 +211,13 @@ const Navbar = () => {
               ></SearchBar>
             </div>
           )}
-          {expantFav && (
-            <>
-              <Wishlist></Wishlist>
-            </>
-          )}
+
+          {expantFav && <Wishlist></Wishlist>}
+
           {expandCart && (
-            <>
-              <Cart token={token} checkout={false}></Cart>
-            </>
+            <Cart checkout={false} toggleClose={toggleClose}></Cart>
           )}
+
           {expandMenu && (
             <>
               <ul className="flex flex-col">

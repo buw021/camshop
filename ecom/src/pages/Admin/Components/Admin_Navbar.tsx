@@ -103,9 +103,9 @@ const Admin_Navbar: React.FC<Navbar> = ({
   const menuItems = [
     { content: "dashboard", icon: "dashboard" },
     { content: "products", icon: "inventory_2" },
-    { content: "promotions", icon: "sell" },
-    { content: "customers", icon: "group" },
     { content: "orders", icon: "orders" },
+    { content: "customers", icon: "group" },
+    { content: "promotions", icon: "sell" },
     { content: "reports", icon: "bar_chart" },
   ];
 

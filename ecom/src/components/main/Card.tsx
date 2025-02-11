@@ -11,7 +11,17 @@ export const ProductCard: React.FC<{
   thumbnail: string;
   color: string;
   variantName: string;
-}> = ({ id, name, variantId, price, brand, thumbnail, color, variantName }) => {
+}> = ({
+  id,
+  name,
+  variantId,
+  price,
+  brand,
+  thumbnail,
+  color,
+  variantName,
+  salePrice,
+}) => {
   const productSlug = slugify(name);
   return (
     <div className="flex flex-col gap-4">
@@ -27,14 +37,28 @@ export const ProductCard: React.FC<{
       </Link>
       <div className="flex flex-col gap-2">
         <Link to={`/product/${productSlug}_${id}_${variantId}`}>
-          <h1 className="roboto-medium text-sm hover:underline truncate">
+          <h1 className="roboto-medium truncate text-sm hover:underline">
             {name} {variantName} {color}
           </h1>
         </Link>
         <p className="text-xs text-zinc-700">{brand}</p>
-        <p className="roboto-bold text-sm leading-3">
-          € <span>{price}</span>
-        </p>
+        <div className="roboto-bold text-sm leading-3">
+          {salePrice ? (
+            <div className="relative flex gap-1">
+              <span>€{salePrice}</span>
+              <span className="text-[10px] text-zinc-500 line-through">
+                €{price}
+              </span>
+              <span className="bg-red-700 px-0.5 text-[8px] text-white">
+                SALE
+              </span>
+            </div>
+          ) : (
+            <>
+              € <span>{price}</span>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

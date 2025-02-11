@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 
+
 const variantSchema = new mongoose.Schema(
   {
     variantName: { type: String }, // Variant name, e.g., "Black", "Body Only"
@@ -8,8 +9,11 @@ const variantSchema = new mongoose.Schema(
     variantStocks: { type: Number, required: true },
     variantImgs: [String], // Array of image paths or URLs
     variantContent: [String],
-    isOnSale: { type: Boolean, default: false },
-    salePrice: { type: Number, default: null },
+    saleId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Sale",
+      default: null,
+    },
   },
   { timestamps: true }
 );

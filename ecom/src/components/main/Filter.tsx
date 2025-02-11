@@ -37,6 +37,7 @@ const ProductFilter: React.FC<{
     colors: [],
     specs: [],
   });
+  
   const [filter, setFilter] = useState(toggle);
 
   useEffect(() => {

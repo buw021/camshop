@@ -1,5 +1,4 @@
 const express = require("express");
-const cors = require("cors");
 
 const router = express.Router();
 const {
@@ -37,25 +36,20 @@ const {
 const {
   getUserData,
   updateAddress,
+  getUserAddress,
   saveNewAddress,
+  deleteAddress,
   setDefaultAddress,
   updateProfile,
   changePassword,
 } = require("../controllers/userData");
-const { addPromo } = require("../controllers/Promo");
+
 const {
   search,
   suggest,
   adminProductSearch,
 } = require("../controllers/search");
 const { getFilters } = require("../controllers/Filter");
-
-router.use(
-  cors({
-    credentials: true,
-    origin: "http://localhost:5173",
-  })
-);
 
 router.post("/register", registerUser);
 router.get("/check-email", checkEmail);
@@ -78,17 +72,20 @@ router.post("/save-wishlist", saveUserFavs);
 router.post("/add-to-wishlist", addToFavs);
 router.post("/add-all-to-cart", addAllToCart);
 router.post("/save-new-address", saveNewAddress);
+router.post("/delete-address", deleteAddress);
 router.post("/set-address-default", setDefaultAddress);
 router.post("/update-address", updateAddress);
 router.post("/update-profile", updateProfile);
 router.post("/change-password", changePassword);
-router.post("/add-promo", addPromo);
+
 
 router.get("/get-useradmin", getUserAdmin);
 router.get("/get-user", getUser);
 router.get("/get-products", getProducts);
 router.get("/get-archived-products", getArchivedProducts);
 router.get("/getFullProduct", getFullProduct);
+
+
 
 router.get("/getFilters", getFilters);
 
@@ -97,6 +94,7 @@ router.get("/get-variants", getVariants);
 router.get("/user-cart", getUserCart);
 router.get("/user-wishlist", getUserFavs);
 router.get("/get-user-data", getUserData);
+router.get("/get-address", getUserAddress);
 router.get("/search", search);
 router.get("/suggest", suggest);
 router.get("/search-products", adminProductSearch);

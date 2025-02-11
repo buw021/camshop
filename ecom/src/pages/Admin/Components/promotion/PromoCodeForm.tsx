@@ -1,29 +1,57 @@
 import React, { useEffect, useState } from "react";
 import { PromoCode } from "../interface/interfaces";
-import axios from "axios";
+
+import { toast } from "react-toastify";
+import axiosInstance from "../../Services/axiosInstance";
 
 interface FormInterface {
   onClose: () => void;
+  type: "edit" | "add";
+  promo?: PromoCode;
+  fetch: () => void;
 }
 
 const inputDesign =
   "w-full select-none rounded-sm bg-zinc-50 px-2 py-1 text-zinc-700 outline-none ring-1 ring-zinc-200 focus:bg-white focus:ring-2 focus:ring-blue-400 disabled:cursor-not-allowed disabled:bg-zinc-200 disabled:ring-zinc-300";
 
-const PromoCodeForm: React.FC<FormInterface> = ({ onClose }) => {
-  const [promo, setPromo] = useState<PromoCode>({
-    code: "",
-    description: "",
-    type: null,
-    value: null,
-    startDate: null,
-    endDate: null,
-    usageLimit: null,
-    keywords: [],
-  });
-  const [usageType, setUsageType] = useState<"limited" | "unlimited" | null>();
+const PromoCodeForm: React.FC<FormInterface> = ({
+  onClose,
+  type,
+  promo: initialPromo,
+  fetch,
+}) => {
+  const [promo, setPromo] = useState<PromoCode>(
+    type === "edit" && initialPromo
+      ? initialPromo
+      : {
+          code: "",
+          description: "",
+          type: null,
+          value: null,
+          startDate: null,
+          endDate: null,
+          minimumOrderValue: 0,
+          usageLimit: null,
+          keywords: [],
+        },
+  );
+  const [usageType, setUsageType] = useState<"limited" | "unlimited" | null>(
+    type === "edit"
+      ? initialPromo?.usageLimit === null
+        ? "unlimited"
+        : "limited"
+      : null,
+  );
   const [promoCondition, setPromoCondition] = useState<
     "all" | "keywords" | null
-  >();
+  >(
+    type === "edit" && initialPromo
+      ? initialPromo.keywords.length === 0
+        ? "all"
+        : "keywords"
+      : null,
+  );
+
   const [newKeyword, setNewKeyword] = useState("");
   useEffect(() => {
     setPromo((prevPromo) => ({
@@ -86,7 +114,6 @@ const PromoCodeForm: React.FC<FormInterface> = ({ onClose }) => {
         keywords: [...prev.keywords, newKeyword],
       }));
       setNewKeyword("");
-      console.log(promo);
     }
   };
 
@@ -114,21 +141,38 @@ const PromoCodeForm: React.FC<FormInterface> = ({ onClose }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await axios.post("/add-promo", promo);
-      if (res.status === 201) {
-        setPromo({
-          code: "",
-          description: "",
-          type: null,
-          value: 0,
-          startDate: null,
-          endDate: null,
-          usageLimit: null,
-          keywords: [],
-        });
-        setNewKeyword("");
-        setUsageType(null);
-        setPromoCondition(null);
+      if (type === "add") {
+        const res = await axiosInstance.post("/add-promo", promo);
+        if (res.status === 201) {
+          setPromo({
+            code: "",
+            description: "",
+            type: null,
+            value: 0,
+            startDate: null,
+            endDate: null,
+            minimumOrderValue: 0,
+            usageLimit: null,
+            keywords: [],
+          });
+          toast.success("Promo Code Added Successfully");
+          fetch();
+          setNewKeyword("");
+          setUsageType(null);
+          setPromoCondition(null);
+        } else {
+          toast.error(res.data.err);
+        }
+      } else if (type === "edit") {
+        const res = await axiosInstance.post("/update-promo", promo);
+
+        if (res.status === 200) {
+          toast.success("Promo Code Updated Successfully");
+          fetch();
+          onClose();
+        } else {
+          toast.error(res.data.error);
+        }
       }
     } catch (error) {
       console.log(error);
@@ -164,6 +208,7 @@ const PromoCodeForm: React.FC<FormInterface> = ({ onClose }) => {
               onChange={handleCodeChange}
               required
               maxLength={100}
+              disabled={type === "edit"}
             ></input>
           </div>
           <div className="flex flex-col gap-1">
@@ -225,19 +270,55 @@ const PromoCodeForm: React.FC<FormInterface> = ({ onClose }) => {
               onChange={(e) =>
                 setPromo({ ...promo, value: Number(e.target.value) })
               }
+              onKeyDown={(e) => {
+                if (e.key === "e" || e.key === "-" || e.key === "+") {
+                  e.preventDefault();
+                }
+              }}
               required
+              min={0}
+              max={promo.type === "percentage" ? 100 : undefined}
               maxLength={100}
             ></input>
           </div>
+          <div className="flex flex-col gap-1">
+            <label htmlFor={"promoCode"} className="text-sm font-medium">
+              Minimum Order Value:
+            </label>
+            <input
+              type="number"
+              className={inputDesign}
+              placeholder="Ex. 100"
+              disabled={!promo.type}
+              value={
+                promo.minimumOrderValue !== 0 ? promo.minimumOrderValue : ""
+              }
+              onChange={(e) =>
+                setPromo({
+                  ...promo,
+                  minimumOrderValue: Number(e.target.value),
+                })
+              }
+              onKeyDown={(e) => {
+                if (e.key === "e" || e.key === "-" || e.key === "+") {
+                  e.preventDefault();
+                }
+              }}
+              required={false}
+              min={0}
+              maxLength={100}
+            ></input>
+          </div>
+          <p className="-mb-2 text-sm font-medium">Duration:</p>
           <div className="flex flex-col gap-4 sm:flex-row">
             <div className="flex flex-col gap-1">
-              <label htmlFor={"promoCode"} className="text-sm font-medium">
+              <label htmlFor={"promoCode"} className="text-xs font-medium">
                 Start Date:
               </label>
               <input
                 type="date"
                 value={
-                  promo.startDate
+                  promo.startDate instanceof Date
                     ? promo.startDate.toISOString().slice(0, 10)
                     : ""
                 }
@@ -247,17 +328,18 @@ const PromoCodeForm: React.FC<FormInterface> = ({ onClose }) => {
               ></input>
             </div>
             <div className="flex flex-col gap-1">
-              <label htmlFor={"promoCode"} className="text-sm font-medium">
+              <label htmlFor={"promoCode"} className="text-xs font-medium">
                 End Date:
               </label>
               <input
                 type="date"
                 value={
-                  promo.endDate ? promo.endDate.toISOString().slice(0, 10) : ""
+                  promo.endDate instanceof Date
+                    ? promo.endDate.toISOString().slice(0, 10)
+                    : ""
                 }
                 className="w-36 select-none rounded-sm bg-zinc-50 px-2 py-1 text-zinc-700 outline-none ring-1 ring-zinc-200 focus:bg-white focus:ring-2 focus:ring-blue-400"
                 onChange={(e) => handleDateChange(e, "endDate")}
-                required
               ></input>
             </div>
           </div>
@@ -306,6 +388,11 @@ const PromoCodeForm: React.FC<FormInterface> = ({ onClose }) => {
                 onChange={(e) =>
                   setPromo({ ...promo, usageLimit: Number(e.target.value) })
                 }
+                onKeyDown={(e) => {
+                  if (e.key === "e" || e.key === "-" || e.key === "+") {
+                    e.preventDefault();
+                  }
+                }}
                 min={0}
                 required
               ></input>
