@@ -9,6 +9,7 @@ import Admin_Products from "../Pages/Admin_Products";
 import Admin_Promotion from "../Pages/Admin_Promotion";
 import Admin_Customers from "../Components/Admin_Customers";
 import Admin_Reports from "../Components/Admin_Reports";
+import Admin_Dashboard from "../Components/Admin_Dashboard";
 
 const AdminRoutes = () => {
   const { token, loading } = useAuth();
@@ -55,6 +56,7 @@ const AdminRoutes = () => {
             <Route path="/reports" element={<Admin_Reports />} />
             <Route path="/admin" element={<Navigate to="/admin/dashboard" />} />
             <Route path="*" element={<Navigate to="/admin/dashboard" />} />
+            <Route path="/dashboard" element={<Admin_Dashboard />} />
           </Routes>
         </Admin_Layout>
       </Admin_Navbar>

@@ -10,7 +10,6 @@ import { CartID, CartInterface } from "../interfaces/cart";
 import { showToast } from "../components/func/showToast";
 import { useAuth } from "./useAuth";
 import axios from "axios";
-import { set } from "lodash";
 
 interface DiscountedPrice {
   productId: string;
@@ -41,6 +40,7 @@ interface CartContextProps {
   clearCart: () => void;
   saveLocalCart: (cart: CartID[]) => void;
   applyCode: (code: string) => void;
+  clearAppliedCode: () => void;
 }
 
 export const CartContext = createContext<CartContextProps | undefined>(
@@ -140,13 +140,33 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
       0,
     );
 
-    const finalTotal = discountedByCode.fixed
-      ? calculatedTotal - discountedByCode.fixed
-      : calculatedTotal;
+    let finalTotal = calculatedTotal;
+
+    if (discountedByCode.fixed) {
+      finalTotal = discountedByCode.fixed
+        ? calculatedTotal - discountedByCode.fixed
+        : calculatedTotal;
+    }
+
+    if (discountedByCode.percentage.length > 0) {
+      finalTotal = cartInfo.reduce(
+        (acc, item) =>
+          acc +
+          (item.discountedPrice ?? item.saleId?.salePrice ?? item.price) *
+            item.quantity,
+        0,
+      );
+    }
 
     setTotalPrice(finalTotal);
     setSubtotal(calculatedTotal);
-  }, [cartIDs, cartInfo, discountedByCode.fixed, token]);
+  }, [
+    cartIDs,
+    cartInfo,
+    discountedByCode.fixed,
+    token,
+    discountedByCode.percentage,
+  ]);
 
   const addToCart = async (cartItem: CartID): Promise<boolean> => {
     if (token) {
@@ -279,6 +299,14 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
+  const clearAppliedCode = useCallback(() => {
+    setDiscountedByCode({
+      percentage: [],
+      fixed: 0,
+      code: undefined,
+    });
+  }, []);
+
   return (
     <CartContext.Provider
       value={{
@@ -294,6 +322,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
         clearCart,
         saveLocalCart,
         applyCode,
+        clearAppliedCode,
       }}
     >
       {children}

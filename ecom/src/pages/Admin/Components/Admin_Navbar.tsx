@@ -132,6 +132,10 @@ const Admin_Navbar: React.FC<Navbar> = ({
     };
   }, [isDirty]);
 
+  useEffect(() => {
+    setActiveLink(lastSegment?.toString() || "");
+  }, [lastSegment]);
+
   const RenderMenuList = React.memo(({ content, icon }: MenuList) => {
     return (
       <button

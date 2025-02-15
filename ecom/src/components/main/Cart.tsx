@@ -103,46 +103,82 @@ const Cart: React.FC<CheckoutCart> = ({
                     </h1>
                   </Link>
 
-                  {item.saleId?.salePrice ? (
+                  {checkout ? (
                     <>
-                      <p className="text-xs">
-                        {item.quantity} x €{" "}
-                        <span>
-                          {item.discountedPrice && item.discountedPrice > 0
-                            ? item.discountedPrice.toFixed(2)
-                            : item.saleId.salePrice.toFixed(2)}
-                        </span>
-                      </p>
+                      {item.saleId?.salePrice ? (
+                        <>
+                          <span className="text-xs text-zinc-500 line-through">
+                            € {item.price.toFixed(2)}
+                          </span>
+                          <p className="text-xs">
+                            {item.quantity} x €{" "}
+                            <span>
+                              {item.discountedPrice && item.discountedPrice > 0
+                                ? item.discountedPrice.toFixed(2)
+                                : item.saleId.salePrice.toFixed(2)}
+                            </span>
+                          </p>
 
-                      <p className="text-xs text-zinc-800">
-                        Total: €{" "}
-                        {(
-                          item.quantity *
-                          (item.discountedPrice && item.discountedPrice > 0
-                            ? item.discountedPrice
-                            : item.saleId.salePrice)
-                        ).toFixed(2)}
-                      </p>
+                          <p className="text-xs text-zinc-800">
+                            Total: €{" "}
+                            {(
+                              item.quantity *
+                              (item.discountedPrice && item.discountedPrice > 0
+                                ? item.discountedPrice
+                                : item.saleId.salePrice)
+                            ).toFixed(2)}
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-xs text-zinc-500 line-through">
+                            € {item.price.toFixed(2)}
+                          </span>
+                          <p className="text-xs">
+                            {item.quantity} x €{" "}
+                            <span>
+                              {item.discountedPrice && item.discountedPrice > 0
+                                ? item.discountedPrice.toFixed(2)
+                                : item.price.toFixed(2)}
+                            </span>
+                          </p>
+                          <p className="text-xs text-zinc-800">
+                            Total: €{" "}
+                            {(
+                              item.quantity *
+                              (item.discountedPrice && item.discountedPrice > 0
+                                ? item.discountedPrice
+                                : item.price)
+                            ).toFixed(2)}
+                          </p>
+                        </>
+                      )}
                     </>
                   ) : (
                     <>
-                      <p className="text-xs">
-                        {item.quantity} x €{" "}
-                        <span>
-                          {item.discountedPrice && item.discountedPrice > 0
-                            ? item.discountedPrice.toFixed(2)
-                            : item.price.toFixed(2)}
-                        </span>
-                      </p>
-                      <p className="text-xs text-zinc-800">
-                        Total: €{" "}
-                        {(
-                          item.quantity *
-                          (item.discountedPrice && item.discountedPrice > 0
-                            ? item.discountedPrice
-                            : item.price)
-                        ).toFixed(2)}
-                      </p>
+                      {item.saleId?.salePrice ? (
+                        <>
+                          <span className="text-xs text-zinc-500 line-through">
+                            € {item.price.toFixed(2)}
+                          </span>
+                          <p className="text-xs">
+                            {item.quantity} x €{" "}
+                            <span>{item.saleId.salePrice.toFixed(2)}</span>
+                          </p>
+
+                          <p className="text-xs text-zinc-800">
+                            Total: €{" "}
+                            {(item.quantity * item.saleId.salePrice).toFixed(2)}
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-xs">{item.quantity} x € </p>
+                          <p className="text-xs text-zinc-800">
+                            Total: € {(item.quantity * item.price).toFixed(2)}
+                          </p>
+                        </>
+                      )}
                     </>
                   )}
 

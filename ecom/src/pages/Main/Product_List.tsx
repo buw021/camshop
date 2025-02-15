@@ -247,12 +247,21 @@ const Product_List: React.FC<Category> = ({ category }) => {
                   Home
                 </Link>
                 <span>{`/`}</span>
-                <button
+                {location.pathname === "/" ? (
+                  <button
+                  onClick={() => window.location.reload()}
+                  className="text-blue-500 underline"
+                  >
+                  Refresh
+                  </button>
+                ) : (
+                  <button
                   onClick={() => navigate(-1)}
                   className="text-blue-500 underline"
-                >
+                  >
                   Go back
-                </button>
+                  </button>
+                )}
               </div>
             )}
           </div>

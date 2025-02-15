@@ -19,15 +19,15 @@ const orderItemSchema = new Schema(
     },
     variantName: {
       type: String,
-      required: true,
+      default: null,
     },
     variantColor: {
       type: String,
-      required: true,
+      default: null,
     },
     variantImg: {
       type: String,
-      required: true,
+      default: null,
     },
     price: {
       type: Number,
@@ -38,6 +38,10 @@ const orderItemSchema = new Schema(
       default: false,
     },
     salePrice: {
+      type: Number,
+      default: null,
+    },
+    discountedPrice: {
       type: Number,
       default: null,
     },
@@ -52,6 +56,10 @@ const orderItemSchema = new Schema(
 
 const orderSchema = new Schema(
   {
+    _id: {
+      type: String, // Define _id as a string to use custom values
+      required: true,
+    },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -66,7 +74,7 @@ const orderSchema = new Schema(
     shippingOption: {
       type: String,
       required: true,
-      enum: ["standard", "express"],
+      enum: ["free", "standard", "express"],
     },
     shippingAddress: {
       street: String,
@@ -88,6 +96,10 @@ const orderSchema = new Schema(
       type: Number,
       default: 0,
     },
+    originalTotalAmount: {
+      type: Number,
+      required: true,
+    },
     status: {
       type: String,
       required: true,
@@ -100,6 +112,10 @@ const orderSchema = new Schema(
     updatedAt: {
       type: Date,
       default: Date.now,
+    },
+    trackingNo: {
+      type: String,
+      default: null,
     },
   },
   { timestamps: true }

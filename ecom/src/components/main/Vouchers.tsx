@@ -20,9 +20,10 @@ const Vouchers = () => {
           placeholder="VOUCHER"
         ></input>
         <button
-          className="rounded-md border-[1px] px-2 text-xs uppercase leading-3 tracking-wide hover:bg-zinc-100 active:border-zinc-300 active:bg-zinc-200"
+          className="rounded-md border-[1px] w-14 px-2 text-xs uppercase leading-3 tracking-wide hover:bg-zinc-100 active:border-zinc-300 active:bg-zinc-200"
           type="button"
-          onClick={() => {
+          onClick={(e) => {
+            e.preventDefault();
             const voucherCode = (
               document.getElementById("vouchers") as HTMLInputElement
             ).value;

@@ -6,8 +6,7 @@ const Product = require("../models/products");
 const applyPromoCode = async (req, res) => {
   const { promoCodeInput, cartIDs } = req.body;
   const { usertoken } = req.cookies;
-  console.log(promoCodeInput);
-  console.log(cartIDs);
+
   try {
     const userId = await getUser(usertoken);
     if (!userId) {
@@ -42,11 +41,15 @@ const applyPromoCode = async (req, res) => {
       })
       .lean();
 
+    // Create a map of productId to product details
+    const productMap = products.reduce((acc, product) => {
+      acc[product._id.toString()] = product;
+      return acc;
+    }, {});
+
     // Calculate the total price for each cartID
     let totalPrice = cartIDs.reduce((acc, cartItem) => {
-      const product = products.find(
-        (product) => product._id.toString() === cartItem.productId
-      );
+      const product = productMap[cartItem.productId];
 
       if (!product) {
         return acc;
@@ -83,16 +86,14 @@ const applyPromoCode = async (req, res) => {
     if (promoCode.type === "percentage") {
       if (promoCode.keywords && promoCode.keywords.length > 0) {
         // Apply percentage discount to products matching the promo keywords
-        products.forEach((product) => {
+        cartIDs.forEach((cartItem) => {
+          const product = productMap[cartItem.productId];
+
           if (
             promoCode.keywords.includes(product.category) ||
             promoCode.keywords.includes(product.brand) ||
             promoCode.keywords.includes(product.subcategory)
           ) {
-            const cartItem = cartIDs.find(
-              (item) => item.productId === product._id.toString()
-            );
-
             const variant = product.variants.find(
               (variant) => variant._id.toString() === cartItem.variantId
             );
@@ -111,10 +112,8 @@ const applyPromoCode = async (req, res) => {
         });
       } else {
         // Apply percentage discount to all products
-        products.forEach((product) => {
-          const cartItem = cartIDs.find(
-            (item) => item.productId === product._id.toString()
-          );
+        cartIDs.forEach((cartItem) => {
+          const product = productMap[cartItem.productId];
 
           const variant = product.variants.find(
             (variant) => variant._id.toString() === cartItem.variantId
@@ -165,5 +164,7 @@ const applyPromoCode = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+module.exports = { applyPromoCode };
 
 module.exports = { applyPromoCode };

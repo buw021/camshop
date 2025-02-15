@@ -9,6 +9,7 @@ import { useAuth } from "../../contexts/useAuth";
 import { showToast } from "../func/showToast";
 import { SearchBar } from "./SearchBar";
 import { useCart } from "../../contexts/useCart";
+import { useLocation } from "react-router-dom";
 
 interface IconButtonProps {
   icon: string;
@@ -27,6 +28,8 @@ const Navbar = () => {
   const [expandProfile, setExpandProfile] = useState(false);
   const [expantFav, setExpandFav] = useState(false);
   const navRef = useRef<HTMLDivElement>(null);
+  const location = useLocation();
+  const currentPath = location.pathname;
 
   const handleLogout = async () => {
     localStorage.removeItem("cart");
@@ -161,32 +164,38 @@ const Navbar = () => {
             <IconButton icon="search" onClick={toggleSearch} />{" "}
           </div>
           <div className="order-2 flex items-center justify-end gap-2">
-            {" "}
             <IconButton
               icon="search"
               onClick={toggleSearch}
               additionalClasses="hidden md:block"
             />
-            <IconButton
-              icon="favorite"
-              onClick={toggleFav}
-              additionalClasses="filled"
-            />
-            <div className="group relative flex items-center">
-              {cartIDs.reduce((total, item) => total + item.quantity, 0) >
-                0 && (
-                <span
-                  className={`absolute -right-1 -top-1 rounded-full bg-red-500 px-1 text-[8px] text-white transition-all duration-100 ease-linear group-hover:bg-red-400 ${expand ? "invisible -z-50 opacity-0" : ""}`}
-                >
-                  {cartIDs.reduce((total, item) => total + item.quantity, 0)}
-                </span>
-              )}
-              <IconButton
-                icon="shopping_cart"
-                onClick={toggleCart}
-                additionalClasses="filled"
-              />
-            </div>
+            {currentPath !== "/checkout" && (
+              <>
+                <IconButton
+                  icon="favorite"
+                  onClick={toggleFav}
+                  additionalClasses="filled"
+                />
+                <div className="group relative flex items-center">
+                  {cartIDs.reduce((total, item) => total + item.quantity, 0) >
+                    0 && (
+                    <span
+                      className={`absolute -right-1 -top-1 rounded-full bg-red-500 px-1 text-[8px] text-white transition-all duration-100 ease-linear group-hover:bg-red-400 ${expand ? "invisible -z-50 opacity-0" : ""}`}
+                    >
+                      {cartIDs.reduce(
+                        (total, item) => total + item.quantity,
+                        0,
+                      )}
+                    </span>
+                  )}
+                  <IconButton
+                    icon="shopping_cart"
+                    onClick={toggleCart}
+                    additionalClasses="filled"
+                  />
+                </div>
+              </>
+            )}
             <IconButton
               icon="person"
               onClick={toggleProfile}

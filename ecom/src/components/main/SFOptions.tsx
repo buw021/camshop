@@ -1,18 +1,47 @@
-import React from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import axiosInstance from "../../services/axiosInstance";
 
-interface ShippingOptionsProps {
-  selectedSFOption: string;
-  handleOptionChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+interface SFOptionProps {
+  selectedSFOption: ShippingOptionProps;
+  handleOptionChange: (sfOption: ShippingOptionProps) => void;
+  totalOrderCost: number;
 }
-const shippingOptions = [
-  { id: "standard", label: "Standard Shipping (5-7 business days)", cost: 5.0 },
-  { id: "express", label: "Express Shipping (1-2 business days)", cost: 15.0 },
-];
 
-const SFOptions: React.FC<ShippingOptionsProps> = ({
+interface ShippingOptionProps {
+  shippingType: string;
+  shippingCost: number;
+  shippingLabel: string;
+  shippingTime: string;
+  _id?: string;
+}
+
+const SFOptions: React.FC<SFOptionProps> = ({
   selectedSFOption,
   handleOptionChange,
+  totalOrderCost,
 }) => {
+  const [shippingOptions, setShippingOptions] = useState<ShippingOptionProps[]>(
+    [],
+  );
+
+  const getShippingOptions = useCallback(async () => {
+    try {
+      const response = await axiosInstance.get("/get-sf-options", {
+        params: { totalOrderCost },
+      });
+      if (response.data) setShippingOptions(response.data);
+      else {
+        console.log("No data found");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }, [totalOrderCost]);
+
+  useEffect(() => {
+    getShippingOptions();
+  }, [getShippingOptions]);
+
   return (
     <>
       <div className="text-sm">
@@ -21,22 +50,19 @@ const SFOptions: React.FC<ShippingOptionsProps> = ({
           {shippingOptions.map((option) => (
             <button
               type="button"
-              key={option.id}
-              onClick={() =>
-                handleOptionChange({
-                  target: { value: option.id },
-                } as React.ChangeEvent<HTMLInputElement>)
-              }
-              className={`flex w-36 flex-col rounded-md border-[1px] p-2.5 ${selectedSFOption === option.id ? "border-zinc-200 bg-zinc-100" : ""}`}
+              key={option.shippingType}
+              onClick={() => handleOptionChange(option)}
+              className={`flex w-36 flex-col rounded-md border-[1px] p-2.5 ${selectedSFOption.shippingType === option.shippingType ? "border-zinc-200 bg-zinc-100" : ""}`}
             >
-              <span className="w-full text-right font-medium tracking-wide">
-                {option.label.split(" ").slice(0, 2).join(" ")}
+              <span className="w-full text-right font-medium capitalize tracking-wide">
+                {option.shippingLabel}
               </span>
-              <span className="w-full text-right text-xs text-zinc-700">
-                {option.label.split(" ").slice(2).join(" ")}
+              <span className="w-full text-right text-xs capitalize text-zinc-700">
+                {"("}
+                {option.shippingTime} business days{")"}
               </span>
               <span className="mt-1 w-full text-right font-medium">
-                €{option.cost.toFixed(2)}
+                €{option.shippingCost.toFixed(2)}
               </span>
             </button>
           ))}

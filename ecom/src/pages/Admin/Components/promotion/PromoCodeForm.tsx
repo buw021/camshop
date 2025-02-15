@@ -223,6 +223,7 @@ const PromoCodeForm: React.FC<FormInterface> = ({
               onChange={(e) =>
                 setPromo({ ...promo, description: e.target.value })
               }
+              required
             ></textarea>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">

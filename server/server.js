@@ -24,15 +24,18 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.json());
+
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: false }));
 
 //router connection
+app.use("/", require("./routes/stripeRoutes"));
+app.use(express.json());
 app.use("/", require("./routes/authRoutes"));
 app.use("/", require("./routes/orderRoutes"));
 app.use("/", require("./routes/promoRoutes"));
 app.use("/", require("./routes/saleRoutes"));
+app.use("/", require("./routes/shippingRoutes"));
 
 app.use("/uploads", express.static("uploads"));
 
