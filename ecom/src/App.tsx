@@ -6,6 +6,7 @@ import { Loading } from "./components/main/Loading";
 import { AuthProvider } from "./contexts/AuthContext"; // Import the AuthProvider
 import { CartProvider } from "./contexts/CartContext";
 import { WishlistProvider } from "./contexts/WishlistContext";
+const OrderStatus = React.lazy(() => import("./pages/Main/OrderStatus"));
 const NotFound = React.lazy(() => import("./pages/Main/NotFound"));
 const Checkout = React.lazy(() => import("./pages/Main/Checkout"));
 const Security = React.lazy(() => import("./pages/Profile/Security"));
@@ -79,6 +80,16 @@ const App: React.FC = () => {
                           <ProtectedRoute>
                             <Layout>
                               <Security />
+                            </Layout>
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/order-status"
+                        element={
+                          <ProtectedRoute>
+                            <Layout>
+                              <OrderStatus />
                             </Layout>
                           </ProtectedRoute>
                         }

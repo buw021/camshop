@@ -47,17 +47,67 @@ const stripeWebhookHandler = async (req, res) => {
     return res.status(400).send(`Webhook error: ${error.message}`);
   }
 
-  if (event.type === "checkout.session.completed") {
-    const order = await Order.findById(event.data.object.metadata?.orderId);
+  switch (event.type) {
+    case "checkout.session.completed":
+      const session = event.data.object;
+      const customOrderId = session.metadata?.customOrderId;
 
-    if (!order) {
-      return res.status(404).json({ message: "Order not found" });
-    }
+      if (!customOrderId) {
+        return res.status(400).send("Order ID not found in metadata.");
+      }
 
-    order.totalAmount = event.data.object.amount_total;
-    order.status = "paid";
+      const order = await Order.findOne({ customOrderId });
 
-    await order.save();
+      if (!order) {
+        return res.status(404).json({ message: "Order not found" });
+      }
+
+      order.totalAmount = session.amount_total;
+      order.status = "paid";
+      order.paymentUrl = "";
+      await order.save();
+      break;
+
+    case "payment_intent.payment_failed":
+      const paymentIntent = event.data.object;
+      const failedOrderId = paymentIntent.metadata?.customOrderId;
+
+      if (!failedOrderId) {
+        return res.status(400).send("Order ID not found in metadata.");
+      }
+
+      const failedOrder = await Order.findOne({ customOrderId });
+
+      if (!failedOrder) {
+        return res.status(404).json({ message: "Order not found" });
+      }
+
+      failedOrder.status = "payment failed";
+
+      await failedOrder.save();
+      break;
+
+    case "charge.failed":
+      const charge = event.data.object;
+      const chargeOrderId = charge.metadata?.customOrderId;
+
+      if (!chargeOrderId) {
+        return res.status(400).send("Order ID not found in metadata.");
+      }
+
+      const chargeOrder = await Order.findOne({ customOrderId });
+
+      if (!chargeOrder) {
+        return res.status(404).json({ message: "Order not found" });
+      }
+
+      chargeOrder.status = "payment failed";
+
+      await chargeOrder.save();
+      break;
+
+    default:
+      console.log(`Unhandled event type ${event.type}`);
   }
 
   res.status(200).send();
@@ -70,17 +120,17 @@ const createCheckoutSession = async (req, res) => {
   try {
     const user = await getUser(usertoken);
     const shippingCost = await getShippingCost(shippingOption._id);
-    const lastOrder = await Order.find()
-      .sort({ orderNumber: -1 })
-      .limit(1)
-      .exec();
+    const lastOrder = await Order.countDocuments();
 
-    let nextOrderNumber = 1;
-    if (lastOrder.length > 0 && lastOrder[0].orderNumber) {
-      nextOrderNumber = lastOrder[0].orderNumber + 1;
+    let customOrderId;
+    let isUnique = false;
+    while (!isUnique) {
+      customOrderId = generateOrderId();
+      const existingOrder = await Order.findOne({ customOrderId });
+      if (!existingOrder) {
+        isUnique = true;
+      }
     }
-
-    const orderId = generateOrderId(nextOrderNumber);
 
     if (!user) {
       console.error("User not found for token:", usertoken);
@@ -178,7 +228,7 @@ const createCheckoutSession = async (req, res) => {
     );
 
     const newOrder = new Order({
-      _id: orderId,
+      customOrderId: customOrderId,
       userId: user._id,
       items: orderItems,
       totalAmount: totalAmount,
@@ -197,16 +247,17 @@ const createCheckoutSession = async (req, res) => {
 
     const session = await createSession(
       lineItems,
-      orderId, // This is where the orderId is used
+      customOrderId, // This is where the orderId is used
       shippingCost,
       userEmail
     );
     if (!session.url) {
       return res.status(500).json({ message: "Error creating stripe session" });
     }
-    // Empty the user's cart
-    user.cart = [];
 
+    user.cart = [];
+    user.orders.push({ orderId: newOrder._id, customOrderId: customOrderId }); // Correctly push the order reference
+    newOrder.paymentUrl = session.url;
     await newOrder.save();
     await user.save();
     res.json({ id: session.id });
@@ -231,7 +282,7 @@ const createLineItems = (orderItems) => {
       price_data: {
         currency: "eur",
         product_data: {
-          name: `${name})`,
+          name: `${name}`,
           //image here will be converted into a url? when I transfer my images into the cloud and not in my backend
           images: [item.variantImg],
         },
@@ -246,7 +297,12 @@ const createLineItems = (orderItems) => {
   return line_items;
 };
 
-const createSession = async (lineItems, orderId, shippingCost, userEmail) => {
+const createSession = async (
+  lineItems,
+  customOrderId,
+  shippingCost,
+  userEmail
+) => {
   const sessionData = await STRIPE.checkout.sessions.create({
     payment_method_types: ["card"],
     customer_email: userEmail, // This should be the user's email
@@ -264,10 +320,10 @@ const createSession = async (lineItems, orderId, shippingCost, userEmail) => {
         },
       },
     ],
-    success_url: `${FRONTEND_URL}/success`,
-    cancel_url: `${FRONTEND_URL}/cancel`,
+    success_url: `${FRONTEND_URL}/order-status?orderId=${customOrderId}`,
+    cancel_url: `${FRONTEND_URL}/order-status?orderId=${customOrderId}`,
     metadata: {
-      orderId: orderId,
+      customOrderId: customOrderId,
     },
   });
 
@@ -425,10 +481,11 @@ const applyPromoCode = async (promoCodeInput, cartIDs, userId) => {
   }
 };
 
-const generateOrderId = (orderNumber) => {
+const generateOrderId = () => {
   const prefix = "CMSHP";
   const date = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-  return `${prefix}-${date}-${String(orderNumber).padStart(3, "0")}`;
+  const randomString = Math.random().toString(36).substring(2, 8).toUpperCase(); // Generates a random alphanumeric string
+  return `${prefix}${date}${randomString}`;
 };
 
 module.exports = { stripeWebhookHandler, createCheckoutSession };

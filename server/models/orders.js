@@ -56,9 +56,10 @@ const orderItemSchema = new Schema(
 
 const orderSchema = new Schema(
   {
-    _id: {
-      type: String, // Define _id as a string to use custom values
+    customOrderId: {
+      type: String,
       required: true,
+      unique: true,
     },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -103,7 +104,18 @@ const orderSchema = new Schema(
     status: {
       type: String,
       required: true,
-      enum: ["ordered", "paid", "pending", "shipped", "delivered", "cancelled"],
+      enum: [
+        "ordered",
+        "paid",
+        "pending",
+        "shipped",
+        "delivered",
+        "cancelled",
+        "refunded",
+        "processed",
+        "refund on process",
+        "payment failed",
+      ],
     },
     placedAt: {
       type: Date,
@@ -114,6 +126,10 @@ const orderSchema = new Schema(
       default: Date.now,
     },
     trackingNo: {
+      type: String,
+      default: null,
+    },
+    paymentUrl: {
       type: String,
       default: null,
     },

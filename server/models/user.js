@@ -14,6 +14,22 @@ const wishlistSchema = new Schema({
   },
 });
 
+const orderItemSchema = new Schema({
+  orderId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Order",
+    required: true,
+  },
+  customOrderId: {
+    type: String,
+    required: true,
+  },
+  archive: {
+    type: Boolean,
+    default: false,
+  },
+});
+
 const cartItemSchema = new Schema({
   productId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -69,6 +85,10 @@ const userSchema = new Schema(
     },
     wishlist: {
       type: [wishlistSchema],
+      default: [],
+    },
+    orders: {
+      type: [orderItemSchema],
       default: [],
     },
   },

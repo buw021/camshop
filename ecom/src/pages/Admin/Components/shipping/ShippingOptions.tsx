@@ -101,7 +101,10 @@ const SFOptions = () => {
   }, [getShippingOptions]);
 
   return (
-    <div className="h-56 max-w-96 rounded-md border-[1px] border-zinc-200 p-4">
+    <div className="flex max-w-96 flex-col items-start gap-2 rounded-md border-[1px] border-zinc-200 px-4 py-4">
+      <p className="text-lg font-medium leading-3 tracking-wide">
+        Shipping Options
+      </p>
       {toggleEditShippingOption && (
         <ShipppingOptionForm
           shippingOption={editShippingOption}
@@ -131,7 +134,7 @@ const SFOptions = () => {
             </button>
           )}
         </div>
-        <div className="mt-2 flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2">
           {shippingOptions.map((option) => (
             <button
               key={option.shippingType}
@@ -149,7 +152,7 @@ const SFOptions = () => {
                 {"("}
                 {option.shippingTime} business days{")"}
               </span>
-              <span className="mt-1 w-full text-right font-medium">
+              <span className="w-full text-right font-medium">
                 €{option.shippingCost.toFixed(2)}
               </span>
             </button>
