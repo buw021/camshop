@@ -1,0 +1,364 @@
+import React, { useCallback, useEffect, useState } from "react";
+import axiosInstance from "../../services/axiosInstance";
+import ProgressBar from "./ProgressBar";
+import { stripePromise } from "../../utils/stripe";
+import { showToast } from "../func/showToast";
+import axios from "axios";
+import OrderInfo from "./OrderInfo";
+
+interface ItemsProps {
+  createdAt: string;
+  discountedPrice: number | null;
+  isOnSale: boolean;
+  name: string;
+  price: number;
+  productId: string;
+  quantity: number;
+  salePrice: number;
+  updatedAt: string;
+  variantColor: string;
+  variantId: string;
+  variantImg: string;
+  variantName: string;
+}
+
+interface OrderProps {
+  createdAt: string;
+  customOrderId: string;
+  discountAmount: number;
+  items: [ItemsProps];
+  originalTotalAmount: number;
+  paymentMethod: string;
+  paymentUrl: string;
+  placedAt: string;
+  promoCode: string | null;
+  shippingAddress: {
+    city: string;
+    state: string;
+    zip: string;
+    country: string;
+  };
+  shippingCost: number;
+  shippingOption: string;
+  status: string;
+  totalAmount: number;
+  trackingNo: string | null;
+  _id: string;
+}
+
+const OrderStatusInfo = () => {
+  const [order, setOrder] = useState<OrderProps | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [noData, setNoData] = useState(false);
+
+  const payNowButton = document.getElementById("pay-now");
+  const refundButton = document.getElementById("return-refund");
+  const cancelButton = document.getElementById("cancel-order");
+
+  const PayNow = () => {
+    payNowButton?.removeAttribute("disabled");
+    payNowButton?.classList.remove("pulse");
+    payNowButton!.textContent = "Pay Now";
+  };
+
+  const Refund = () => {
+    refundButton?.removeAttribute("disabled");
+    refundButton?.classList.remove("pulse");
+    refundButton!.textContent = "Return/Refund";
+  };
+
+  const CancelOrder = () => {
+    cancelButton?.removeAttribute("disabled");
+    cancelButton?.classList.remove("pulse");
+    cancelButton!.textContent = "Cancel Order";
+  };
+
+  const Processing = (button: HTMLElement) => {
+    button?.setAttribute("disabled", "true");
+    button?.classList.add("pulse");
+    button!.textContent = "Processing...";
+  };
+
+  const getOrderStatus = useCallback(async () => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const orderId = urlParams.get("orderId");
+      const response = await axiosInstance.get("/get-order-status", {
+        params: {
+          orderId,
+        },
+      });
+      if (response.data) {
+        setOrder(response.data);
+      } else {
+        setNoData(true);
+      }
+    } catch (error) {
+      console.error(error);
+      setNoData(true);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    getOrderStatus();
+  }, [getOrderStatus]);
+
+  const handlePayNow = async (orderId: string) => {
+    if (!orderId) return;
+    try {
+      const response = await axiosInstance.post(
+        "/create-new-checkout-session",
+        {
+          orderId,
+        },
+      );
+
+      if (response.status !== 200) {
+        PayNow();
+        throw new Error(response.data.error);
+      }
+
+      const stripe = await stripePromise;
+      const sessionId = response.data.id;
+
+      if (!sessionId) {
+        PayNow();
+        throw new Error("Session ID not found in response");
+      }
+
+      // Redirect to Stripe Checkout
+      const result = await stripe?.redirectToCheckout({
+        sessionId: sessionId,
+      });
+
+      if (result?.error) {
+        PayNow();
+        console.error(result.error.message); // Handle error as needed
+      }
+    } catch (error) {
+      if (
+        axios.isAxiosError(error) &&
+        error.response &&
+        typeof error.response.data === "object"
+      ) {
+        const errorMessage = error.response.data.error;
+        console.log(errorMessage);
+        PayNow();
+        showToast(errorMessage, "error");
+      }
+    }
+  };
+
+  const handleCancelOrder = async (orderId: string, action: string) => {
+    if (!orderId) return;
+    try {
+      const response = await axiosInstance.post("/cancel-refund-order", {
+        orderId,
+        action,
+      });
+      if (response.status === 200) {
+        showToast(response.data.message, "success");
+        CancelOrder();
+        Refund();
+        getOrderStatus();
+      } else {
+        showToast(response.data.error, "error");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    if (noData) {
+      const timer = setTimeout(() => {
+        window.location.href = "/";
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [noData]);
+
+  if (loading) {
+    return <></>;
+  }
+
+  if (noData) {
+    return (
+      <div className="flex items-center justify-center gap-2">
+        <p className="text-lg font-medium tracking-wide">
+          Cannot find order number. Redirecting to home page
+        </p>
+        <div
+          className="text-surface inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-e-transparent align-[-0.125em] text-zinc-900 motion-reduce:animate-[spin_1.5s_linear_infinite]"
+          role="status"
+        >
+          <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">
+            Loading...
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex w-full flex-col items-center gap-2">
+      <button
+        id="return-refund"
+        name="return-refund"
+        className="roboto-medium max-w-40 self-start rounded-md bg-zinc-900 px-3 py-2 leading-3 text-white transition-all duration-200 hover:bg-zinc-700"
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          if (order?.customOrderId) {
+            // Add return/refund logic here
+          }
+        }}
+      >
+        My Order/s
+      </button>
+      <p className="text-normal font-medium capitalize tracking-wide">
+        Order Status:{" "}
+        <span className="underline">
+          {order?.status
+            ? order.status === "pending"
+              ? "waiting for payment"
+              : order.status
+            : ""}
+        </span>{" "}
+      </p>
+      <div className="flex w-full items-center rounded-md border-[1px] px-2 py-1 sm:max-w-[800px] sm:flex-col sm:px-4 sm:py-2.5">
+        <ProgressBar label={order?.status || ""} />
+      </div>
+      <div className="flex w-full flex-col justify-between gap-2 self-start">
+        <h3 className="self-start text-xl font-medium tracking-normal">
+          ORDER #:{" "}
+          <span className="font-bold uppercase tracking-normal">
+            {order?.customOrderId}
+          </span>
+        </h3>
+
+        {/* Render order details here */}
+        <div className="mb-2 self-start">
+          <p className="text-sm font-medium tracking-wide">
+            Tracking No:{" "}
+            {order?.trackingNo ? (
+              <span className="uppercase text-zinc-600 hover:underline">
+                {order.trackingNo}
+              </span>
+            ) : (
+              <span className="ml-1 font-normal uppercase">not available</span>
+            )}
+          </p>
+        </div>
+        {order && (
+          <>
+            <OrderInfo
+              orderItems={order.items}
+              totalPrice={order.totalAmount}
+              shippingCost={order.shippingCost}
+              originalAmount={order.originalTotalAmount}
+              couponUsed={order.promoCode || ""}
+              paymentMethod={order.paymentMethod}
+            />
+          </>
+        )}
+        <div
+          className={`flex w-full ${order?.status === "pending" ? "justify-between" : "justify-end"} gap-2`}
+        >
+          {["paid", "pending"].includes(order?.status || "") && (
+            <button
+              id="cancel-order"
+              name="cancel-order"
+              className="roboto-medium max-w-40 rounded-md bg-zinc-900 px-3 py-2 leading-3 text-white transition-all duration-200 hover:bg-zinc-700"
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                if (!order) return;
+                if (order.status === "pending") {
+                  if (
+                    window.confirm(
+                      "Are you sure you want to cancel this order?",
+                    )
+                  ) {
+                    if (cancelButton) {
+                      Processing(cancelButton);
+                    }
+                    handleCancelOrder(order.customOrderId, "cancel");
+                    showToast("Order has been cancelled", "success");
+                  }
+                }
+                if (order.status === "paid") {
+                  if (
+                    window.confirm(
+                      "Are you sure you want to refund this order?",
+                    )
+                  ) {
+                    if (cancelButton) {
+                      Processing(cancelButton);
+                    }
+                    handleCancelOrder(order.customOrderId, "refund");
+                    showToast("Order has been refunded", "success");
+                  }
+                }
+              }}
+            >
+              Cancel Order
+            </button>
+          )}
+
+          {["payment failed", "pending"].includes(order?.status || "") && (
+            <button
+              id="pay-now"
+              name="pay-now"
+              className="roboto-medium max-w-40 rounded-md bg-zinc-900 px-3 py-2 leading-3 text-white transition-all duration-200 hover:bg-zinc-700"
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                if (order?.customOrderId) {
+                  if (payNowButton) {
+                    Processing(payNowButton);
+                  }
+                  handlePayNow(order.customOrderId);
+                }
+              }}
+            >
+              Pay Now
+            </button>
+          )}
+
+          {order?.status === "delivered" && (
+            <button
+              id="return-refund"
+              name="return-refund"
+              className="roboto-medium max-w-40 self-end rounded-md bg-zinc-900 px-3 py-2 leading-3 text-white transition-all duration-200 hover:bg-zinc-700"
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                if (!order) return;
+                if (order.status === "delivered") {
+                  if (
+                    window.confirm(
+                      "Are you sure you want to return/refund this order?",
+                    )
+                  ) {
+                    if (refundButton) {
+                      Processing(refundButton);
+                    }
+                    handleCancelOrder(order.customOrderId, "return");
+                    showToast("Order has been returned", "success");
+                  }
+                }
+              }}
+            >
+              Return/Refund
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default OrderStatusInfo;

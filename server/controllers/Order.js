@@ -47,7 +47,9 @@ const getOrderStatus = async (req, res) => {
       return res.status(404).json({ error: "Order not found." });
     }
 
-    const populatedOrder = await Order.findById(order.orderId).select('-__v -updatedAt -userId');
+    const populatedOrder = await Order.findById(order.orderId).select(
+      "-__v -updatedAt -userId"
+    );
 
     if (!populatedOrder) {
       return res.status(404).json({ error: "Order not found." });
@@ -99,6 +101,83 @@ const updateOrderStatus = async (req, res) => {
   } catch (error) {
     console.error("Error updating order status:", error);
     res.status(500).json({ error: "Failed to update order status." });
+  }
+};
+
+const orderCancelRefund = async (req, res) => {
+  const { usertoken } = req.cookies;
+  const { orderId, action } = req.body;
+  if (action !== "cancel" && action !== "refund") {
+    return res.status(400).json({ error: "Invalid action." });
+  }
+
+  if (!usertoken) {
+    return res.status(401).json({ error: "Unauthorized: Missing token." });
+  }
+  if (!orderId) {
+    return res.status(400).json({ error: "Missing order ID." });
+  }
+  try {
+    const userId = await getUser(usertoken);
+
+    if (!userId) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    const user = await User.findById(userId).populate({
+      path: "orders._id",
+      model: "Order",
+      match: { archive: false },
+      select: "status customOrderId",
+    });
+
+    const order = user.orders.find(
+      (order) => order.customOrderId.toString() === orderId
+    );
+
+    if (!order) {
+      return res.status(404).json({ error: "Order not found." });
+    }
+
+    const populatedOrder = await Order.findById(order.orderId).select(
+      "-__v -updatedAt -userId"
+    );
+
+    if (!populatedOrder) {
+      return res.status(404).json({ error: "Order not found." });
+    }
+
+    if (action === "cancel") {
+      if (["paid", "pending"].includes(populatedOrder.status)) {
+        populatedOrder.status =
+          populatedOrder.status === "paid" ? "refund on process" : "cancelled";
+        await populatedOrder.save();
+        return res.json({
+          message: `Order cancelled successfully. ${
+            populatedOrder.status === "refund on process"
+              ? "Refund on process"
+              : ""
+          }`,
+        });
+      }
+
+      if (populatedOrder.status === "shipped") {
+        return res.status(400).json({
+          error: "Cannot cancel order after it has been shipped.",
+        });
+      }
+    } else {
+      if (populatedOrder.status === "delivered") {
+        populatedOrder.status = "refund on process";
+        await populatedOrder.save();
+        return res.json({
+          message: "Request for refund is started.",
+        });
+      }
+    }
+  } catch (error) {
+    console.error("Error cancelling order:", error);
+    res.status(500).json({ error: "Failed to cancel order." });
   }
 };
 

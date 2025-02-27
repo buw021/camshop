@@ -91,6 +91,14 @@ const userSchema = new Schema(
       type: [orderItemSchema],
       default: [],
     },
+    sessionCount: {
+      type: Number,
+      default: 0,
+    },
+    lastSessionCreatedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );

@@ -8,6 +8,7 @@ const Product = require("../models/products");
 const Order = require("../models/orders");
 const { PromoCode, PromoCodeUsed } = require("../models/promo");
 const Shipping = require("../models/shipping");
+const User = require("../models/user");
 
 const getProduct = async (productId, variantId) => {
   const product = await Product.findById(productId)
@@ -32,6 +33,8 @@ const getProduct = async (productId, variantId) => {
   };
 };
 
+/* Webhook Stripe */
+
 const stripeWebhookHandler = async (req, res) => {
   let event;
 
@@ -47,70 +50,125 @@ const stripeWebhookHandler = async (req, res) => {
     return res.status(400).send(`Webhook error: ${error.message}`);
   }
 
-  switch (event.type) {
-    case "checkout.session.completed":
-      const session = event.data.object;
-      const customOrderId = session.metadata?.customOrderId;
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object;
+    const customOrderId = session.metadata?.customOrderId;
 
-      if (!customOrderId) {
-        return res.status(400).send("Order ID not found in metadata.");
-      }
+    if (!customOrderId) {
+      return res.status(400).send("Order ID not found in metadata.");
+    }
 
-      const order = await Order.findOne({ customOrderId });
+    const order = await Order.findOne({ customOrderId });
 
-      if (!order) {
-        return res.status(404).json({ message: "Order not found" });
-      }
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
 
-      order.totalAmount = session.amount_total;
-      order.status = "paid";
-      order.paymentUrl = "";
-      await order.save();
-      break;
-
-    case "payment_intent.payment_failed":
-      const paymentIntent = event.data.object;
-      const failedOrderId = paymentIntent.metadata?.customOrderId;
-
-      if (!failedOrderId) {
-        return res.status(400).send("Order ID not found in metadata.");
-      }
-
-      const failedOrder = await Order.findOne({ customOrderId });
-
-      if (!failedOrder) {
-        return res.status(404).json({ message: "Order not found" });
-      }
-
-      failedOrder.status = "payment failed";
-
-      await failedOrder.save();
-      break;
-
-    case "charge.failed":
-      const charge = event.data.object;
-      const chargeOrderId = charge.metadata?.customOrderId;
-
-      if (!chargeOrderId) {
-        return res.status(400).send("Order ID not found in metadata.");
-      }
-
-      const chargeOrder = await Order.findOne({ customOrderId });
-
-      if (!chargeOrder) {
-        return res.status(404).json({ message: "Order not found" });
-      }
-
-      chargeOrder.status = "payment failed";
-
-      await chargeOrder.save();
-      break;
-
-    default:
-      console.log(`Unhandled event type ${event.type}`);
+    order.totalAmount = session.amount_total / 100;
+    order.status = "paid";
+    order.paymentUrl = "";
+    await order.save();
   }
 
+  //check if checkout session expired then use createnewcheckoutsession
+
   res.status(200).send();
+};
+
+/* Create Sessions */
+
+const createNewCheckOutSession = async (req, res) => {
+  const { usertoken } = req.cookies;
+  const customOrderId = req.body.orderId;
+  console.log("customOrderId", customOrderId);
+  console.log("usertoken", usertoken);
+
+  if (!usertoken) {
+    return res.status(401).json({ error: "Unauthorized: Missing token." });
+  }
+  if (!customOrderId) {
+    return res.status(400).json({ error: "Missing order ID." });
+  }
+  try {
+    const userId = await getUser(usertoken);
+
+    // Check session creation limit
+    const now = new Date();
+    const sessionLimit = 5;
+    const sessionWindowMs = 15 * 60 * 1000; // 15 minutes
+
+    if (
+      user.sessionCount >= sessionLimit &&
+      now - user.lastSessionCreatedAt < sessionWindowMs
+    ) {
+      return res
+        .status(429)
+        .json({ error: "Too many sessions created. Please try again later." });
+    }
+
+    // Reset session count if window has passed
+    if (now - user.lastSessionCreatedAt >= sessionWindowMs) {
+      user.sessionCount = 0;
+    }
+
+    user.sessionCount += 1;
+    user.lastSessionCreatedAt = now;
+    await user.save();
+
+    if (!userId) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    const user = await User.findById(userId).populate({
+      path: "orders._id",
+      model: "Order",
+      match: { archive: false },
+      select: "status customOrderId",
+    });
+
+    const order = user.orders.find(
+      (order) => order.customOrderId.toString() === customOrderId
+    );
+
+    if (!order) {
+      return res.status(404).json({ error: "Order not found." });
+    }
+
+    const populatedOrder = await Order.findById(order.orderId).select(
+      "-__v -updatedAt -userId"
+    );
+
+    if (!populatedOrder) {
+      return res.status(404).json({ error: "Order not found." });
+    }
+
+    if (
+      ["paid", "processed", "shipped", "delivered"].includes(
+        populatedOrder.status
+      )
+    ) {
+      return res
+        .status(400)
+        .json({ error: "This transaction is already processed." });
+    }
+
+    const lineItems = createLineItems(populatedOrder.items);
+    const session = await createSession(
+      lineItems,
+      customOrderId,
+      populatedOrder.shippingCost,
+      populatedOrder.userEmail
+    );
+
+    if (!session.url) {
+      return res.status(500).json({ message: "Error creating stripe session" });
+    }
+
+    res.json({ id: session.id });
+  } catch (error) {
+    console.error("Error creating checkout session:", error);
+    res.status(500).json({ error: error.message });
+  }
 };
 
 const createCheckoutSession = async (req, res) => {
@@ -203,7 +261,7 @@ const createCheckoutSession = async (req, res) => {
           variantName: variant.variantName || null,
           variantColor: variant.variantColor || null,
           variantImg: variant.variantImgs[0] || null,
-          price: price,
+          price: variant.variantPrice,
           isOnSale: isOnSale,
           salePrice: isOnSale ? variant.saleId.salePrice : null,
           discountedPrice: discountedPrice,
@@ -230,6 +288,9 @@ const createCheckoutSession = async (req, res) => {
     const newOrder = new Order({
       customOrderId: customOrderId,
       userId: user._id,
+      sessionUrl: "",
+      sessionId: "",
+      userEmail: userEmail,
       items: orderItems,
       totalAmount: totalAmount,
       shippingCost: shippingCost,
@@ -244,7 +305,6 @@ const createCheckoutSession = async (req, res) => {
     });
 
     const lineItems = createLineItems(orderItems);
-
     const session = await createSession(
       lineItems,
       customOrderId, // This is where the orderId is used
@@ -257,7 +317,8 @@ const createCheckoutSession = async (req, res) => {
 
     user.cart = [];
     user.orders.push({ orderId: newOrder._id, customOrderId: customOrderId }); // Correctly push the order reference
-    newOrder.paymentUrl = session.url;
+    newOrder.sessionId = session.id;
+    newOrder.sessionUrl = session.url;
     await newOrder.save();
     await user.save();
     res.json({ id: session.id });
@@ -270,6 +331,8 @@ const createCheckoutSession = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+/* reusable fnc */
 
 const createLineItems = (orderItems) => {
   const line_items = orderItems.map((item) => {
@@ -488,4 +551,8 @@ const generateOrderId = () => {
   return `${prefix}${date}${randomString}`;
 };
 
-module.exports = { stripeWebhookHandler, createCheckoutSession };
+module.exports = {
+  stripeWebhookHandler,
+  createCheckoutSession,
+  createNewCheckOutSession,
+};

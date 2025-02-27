@@ -66,6 +66,18 @@ const orderSchema = new Schema(
       ref: "User",
       required: true,
     },
+    sessionId: {
+      type: String,
+      required: true,
+    },
+    sessionUrl: {
+      type: String,
+      required: true,
+    },
+    userEmail: {
+      type: String,
+      required: true,
+    },
     items: [orderItemSchema],
     totalAmount: {
       type: Number,
@@ -78,7 +90,10 @@ const orderSchema = new Schema(
       enum: ["free", "standard", "express"],
     },
     shippingAddress: {
-      street: String,
+      firstName: String,
+      lastName: String,
+      phoneNo: String,
+      address: String,
       city: String,
       state: String,
       zip: String,
@@ -126,10 +141,6 @@ const orderSchema = new Schema(
       default: Date.now,
     },
     trackingNo: {
-      type: String,
-      default: null,
-    },
-    paymentUrl: {
       type: String,
       default: null,
     },

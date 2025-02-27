@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useDragToScroll } from "../func/DragtoScroll";
 import { slugify } from "../func/slugify";
 import { Link, useNavigate } from "react-router-dom";
