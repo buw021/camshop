@@ -263,7 +263,7 @@ const Navbar = () => {
                   </p>
                   <ul className="flex flex-col gap-1 text-xl">
                     <li className="group relative cursor-pointer items-center justify-between">
-                      <Link to={`/my-profile`} onClick={toggleClose}>
+                      <Link to={`/my-orders`} onClick={toggleClose}>
                         <span className="flex-transition-all roboto-medium relative text-zinc-700 duration-200 group-hover:text-zinc-900">
                           Orders
                           <div className="absolute -bottom-1 left-0 w-full">

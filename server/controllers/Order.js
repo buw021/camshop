@@ -1,21 +1,25 @@
 const Order = require("../models/orders");
 const User = require("../models/user");
+const Stripe = require("stripe");
+const STRIPE = new Stripe(process.env.STRIPE_SK);
 const { getUser } = require("../helpers/getUser");
+
 const getUserOrders = async (req, res) => {
   const { usertoken } = req.cookies;
   try {
-    const user = await User.findById(usertoken).populate({
-      path: "orders.orderId",
-      model: "Order",
-      options: { sort: { createdAt: -1 } },
-    });
-
-    if (!user) {
-      return res.status(404).json({ error: "User not found." });
-    }
+    const id = await getUser(usertoken);
+    const orders = await Order.find({
+      userId: id,
+      status: { $ne: "cancelled" },
+    })
+      .sort({ createdAt: -1 })
+      .select(
+        "-shippingAddress -sessionId -sessionUrl -userEmail -updatedAt -__v -userId"
+      );
 
     // Return the populated orders directly
-    return res.json(user.orders);
+
+    return res.json(orders);
   } catch (error) {
     console.error("Error fetching user orders:", error);
     res.status(500).json({ error: "Failed to fetch user orders." });
@@ -107,6 +111,7 @@ const updateOrderStatus = async (req, res) => {
 const orderCancelRefund = async (req, res) => {
   const { usertoken } = req.cookies;
   const { orderId, action } = req.body;
+
   if (action !== "cancel" && action !== "refund") {
     return res.status(400).json({ error: "Invalid action." });
   }
@@ -117,6 +122,7 @@ const orderCancelRefund = async (req, res) => {
   if (!orderId) {
     return res.status(400).json({ error: "Missing order ID." });
   }
+
   try {
     const userId = await getUser(usertoken);
 
@@ -149,6 +155,9 @@ const orderCancelRefund = async (req, res) => {
 
     if (action === "cancel") {
       if (["paid", "pending"].includes(populatedOrder.status)) {
+        if (populatedOrder.status === "pending") {
+          await STRIPE.checkout.sessions.expire(populatedOrder.sessionId);
+        }
         populatedOrder.status =
           populatedOrder.status === "paid" ? "refund on process" : "cancelled";
         await populatedOrder.save();
@@ -186,4 +195,5 @@ module.exports = {
   getUserOrders,
   getOrders,
   updateOrderStatus,
+  orderCancelRefund,
 };

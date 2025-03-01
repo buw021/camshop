@@ -80,8 +80,6 @@ const stripeWebhookHandler = async (req, res) => {
 const createNewCheckOutSession = async (req, res) => {
   const { usertoken } = req.cookies;
   const customOrderId = req.body.orderId;
-  console.log("customOrderId", customOrderId);
-  console.log("usertoken", usertoken);
 
   if (!usertoken) {
     return res.status(401).json({ error: "Unauthorized: Missing token." });
@@ -93,7 +91,7 @@ const createNewCheckOutSession = async (req, res) => {
     const userId = await getUser(usertoken);
 
     // Check session creation limit
-    const now = new Date();
+   /*  const now = new Date();
     const sessionLimit = 5;
     const sessionWindowMs = 15 * 60 * 1000; // 15 minutes
 
@@ -117,7 +115,7 @@ const createNewCheckOutSession = async (req, res) => {
 
     if (!userId) {
       return res.status(404).json({ error: "User not found." });
-    }
+    } */
 
     const user = await User.findById(userId).populate({
       path: "orders._id",
@@ -152,6 +150,8 @@ const createNewCheckOutSession = async (req, res) => {
         .json({ error: "This transaction is already processed." });
     }
 
+    await STRIPE.checkout.sessions.expire(populatedOrder.sessionId);
+
     const lineItems = createLineItems(populatedOrder.items);
     const session = await createSession(
       lineItems,
@@ -160,10 +160,13 @@ const createNewCheckOutSession = async (req, res) => {
       populatedOrder.userEmail
     );
 
+   
     if (!session.url) {
       return res.status(500).json({ message: "Error creating stripe session" });
     }
-
+    populatedOrder.sessionId = session.id;
+    populatedOrder.sessionUrl = session.url;
+    await populatedOrder.save();
     res.json({ id: session.id });
   } catch (error) {
     console.error("Error creating checkout session:", error);
@@ -178,7 +181,6 @@ const createCheckoutSession = async (req, res) => {
   try {
     const user = await getUser(usertoken);
     const shippingCost = await getShippingCost(shippingOption._id);
-    const lastOrder = await Order.countDocuments();
 
     let customOrderId;
     let isUnique = false;
@@ -238,9 +240,6 @@ const createCheckoutSession = async (req, res) => {
         }
 
         const isOnSale = !!variant.saleId;
-        const price = isOnSale
-          ? variant.saleId.salePrice
-          : variant.variantPrice;
 
         let discountedPrice = null;
         if (promoCodeInput) {

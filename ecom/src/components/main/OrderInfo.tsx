@@ -114,7 +114,7 @@ const OrderInfo: React.FC<OrderInfoProps> = ({
         )}
         <div className="flex justify-between">
           <span className="text-xs">Payment Method:</span>
-          <span className="text-right">{paymentMethod}</span>
+          <span className="text-right capitalize">{paymentMethod}</span>
         </div>
         <div className="border-t-[1px] border-dashed border-zinc-400 pb-1">
           

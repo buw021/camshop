@@ -154,7 +154,7 @@ const OrderStatusInfo = () => {
   const handleCancelOrder = async (orderId: string, action: string) => {
     if (!orderId) return;
     try {
-      const response = await axiosInstance.post("/cancel-refund-order", {
+      const response = await axiosInstance.post("/order-cancel-refund", {
         orderId,
         action,
       });
@@ -205,15 +205,13 @@ const OrderStatusInfo = () => {
   return (
     <div className="flex w-full flex-col items-center gap-2">
       <button
-        id="return-refund"
-        name="return-refund"
+        id="my-orders"
+        name="my-orders"
         className="roboto-medium max-w-40 self-start rounded-md bg-zinc-900 px-3 py-2 leading-3 text-white transition-all duration-200 hover:bg-zinc-700"
         type="button"
         onClick={(e) => {
           e.preventDefault();
-          if (order?.customOrderId) {
-            // Add return/refund logic here
-          }
+          window.location.href = "/my-orders";
         }}
       >
         My Order/s
@@ -271,12 +269,12 @@ const OrderStatusInfo = () => {
             <button
               id="cancel-order"
               name="cancel-order"
-              className="roboto-medium max-w-40 rounded-md bg-zinc-900 px-3 py-2 leading-3 text-white transition-all duration-200 hover:bg-zinc-700"
+              className="roboto-medium rounded-md bg-zinc-900 px-3 py-2 leading-3 text-white transition-all duration-200 hover:bg-zinc-700"
               type="button"
               onClick={(e) => {
                 e.preventDefault();
                 if (!order) return;
-                if (order.status === "pending") {
+                if (order.status === "pending" || order.status === "paid") {
                   if (
                     window.confirm(
                       "Are you sure you want to cancel this order?",
@@ -286,22 +284,26 @@ const OrderStatusInfo = () => {
                       Processing(cancelButton);
                     }
                     handleCancelOrder(order.customOrderId, "cancel");
-                    showToast("Order has been cancelled", "success");
                   }
                 }
-                if (order.status === "paid") {
-                  if (
-                    window.confirm(
-                      "Are you sure you want to refund this order?",
-                    )
-                  ) {
-                    if (cancelButton) {
-                      Processing(cancelButton);
-                    }
-                    handleCancelOrder(order.customOrderId, "refund");
-                    showToast("Order has been refunded", "success");
-                  }
-                }
+              }}
+            >
+              Cancel Order {order?.status === "paid" ? "/ Refund" : ""}
+            </button>
+          )}
+          {order?.status === "shipped" && (
+            <button
+              id="cancel-order"
+              name="cancel-order"
+              className="roboto-medium rounded-md bg-zinc-900 px-3 py-2 leading-3 text-white transition-all duration-200 hover:bg-zinc-700"
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                showToast(
+                  "Cannot cancel when Order has been shipped. Contact Customer Support for more information",
+                  "warning",
+                );
+                if (!order) return;
               }}
             >
               Cancel Order
@@ -347,7 +349,6 @@ const OrderStatusInfo = () => {
                       Processing(refundButton);
                     }
                     handleCancelOrder(order.customOrderId, "return");
-                    showToast("Order has been returned", "success");
                   }
                 }
               }}

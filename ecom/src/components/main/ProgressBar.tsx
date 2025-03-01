@@ -19,6 +19,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ label }) => {
       ], */
   const statusSteps = [
     { label: "pending", value: 0 },
+    { label: "cancelled", value: 0 },
     { label: "paid", value: 1 },
     { label: "processed", value: 2 },
     { label: "shipped", value: 3 },
@@ -28,7 +29,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ label }) => {
   const step = statusSteps.find((step) => step.label === label);
 
   return (
-    <div className="flex w-full flex-col items-center justify-center  px-4 py-2.5">
+    <div className="flex w-full flex-col items-center justify-center px-4 py-2.5">
       {step ? (
         <>
           <div className="flex w-full flex-row items-center justify-between">
@@ -39,10 +40,23 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ label }) => {
                     style={{ animationDuration: `3s` }}
                     className="material-symbols-outlined text-yellow-500 sm:text-[50px]"
                   >
-                    credit_card_clock
+                    pending
                   </span>
                   <span className="text-xs leading-3 tracking-normal text-yellow-600">
                     Pending
+                  </span>
+                </>
+              ) : label === "cancelled" ? (
+                <>
+                  <span
+                    className={`material-symbols-outlined text-red-700 sm:text-[50px]`}
+                  >
+                    block
+                  </span>
+                  <span
+                    className={`text-xs leading-3 tracking-normal text-red-800`}
+                  >
+                    Cancelled
                   </span>
                 </>
               ) : (
@@ -143,7 +157,49 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ label }) => {
           </div>
         </>
       ) : (
-        <></>
+        <div className="flex w-full flex-row items-center justify-center">
+          <div className="flex flex-col items-center gap-1">
+            {(label === "refund on process" || label === "refunded") && (
+              <>
+                <span
+                  style={{ animationDuration: `3s` }}
+                  className={`material-symbols-outlined sm:text-[50px] ${label === "refunded" ? "text-green-500" : "text-yellow-500"}`}
+                >
+                  credit_card_clock
+                </span>
+                <span
+                  className={`text-xs leading-3 tracking-normal ${label === "refunded" ? "text-green-600" : "text-yellow-600"}`}
+                >
+                  {label === "refund on process" ? "Processing" : "Processed"}
+                </span>
+              </>
+            )}
+          </div>
+          <div className="flex w-20 flex-col items-center justify-center sm:w-32">
+            <div className="w-[90%]">
+              <div className="relative pt-4 sm:pt-1">
+                <div className="mb-4 flex h-1 w-auto overflow-hidden rounded bg-zinc-200 text-xs sm:h-2">
+                  <div
+                    className={`flex flex-col justify-center whitespace-nowrap text-center text-white shadow-none ${label !== "refunded" ? "w-[15%] bg-yellow-500" : "w-full bg-green-500"}`}
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <span
+              className={`material-symbols-outlined relative sm:text-[50px] ${label === "refunded" ? "text-green-500" : "text-zinc-200"}`}
+            >
+              check_circle
+            </span>
+
+            <span
+              className={`text-xs leading-3 tracking-normal ${label === "refunded" ? "text-green-600" : "text-zinc-200"}`}
+            >
+              {label === "refunded" ? "Refunded" : "Refund on process"}
+            </span>
+          </div>
+        </div>
       )}
     </div>
   );
