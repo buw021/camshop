@@ -6,17 +6,39 @@ const { getUser } = require("../helpers/getUser");
 
 const getUserOrders = async (req, res) => {
   const { usertoken } = req.cookies;
+  const { orderStatus } = req.query;
   try {
     const id = await getUser(usertoken);
+    let statusFilter = { $ne: "cancelled" };
+
+    if (orderStatus === "past") {
+      statusFilter = { $in: ["delivered", "refunded"] };
+    } else if (orderStatus === "current") {
+      statusFilter = {
+        $in: ["ordered", "shipped", "refund on process", "processed"],
+      };
+    } else if (orderStatus === "pending") {
+      statusFilter = { $in: ["pending"] };
+    }
+
     const orders = await Order.find({
       userId: id,
-      status: { $ne: "cancelled" },
+      status: statusFilter,
     })
       .sort({ createdAt: -1 })
       .select(
         "-shippingAddress -sessionId -sessionUrl -userEmail -updatedAt -__v -userId"
       );
-
+    /* "ordered",
+        "paid",
+        "pending",
+        "shipped",
+        "delivered",
+        "cancelled",
+        "refunded",
+        "processed",
+        "refund on process",
+        "payment failed", */
     // Return the populated orders directly
 
     return res.json(orders);
@@ -154,12 +176,14 @@ const orderCancelRefund = async (req, res) => {
     }
 
     if (action === "cancel") {
-      if (["paid", "pending"].includes(populatedOrder.status)) {
+      if (["ordered", "pending"].includes(populatedOrder.status)) {
         if (populatedOrder.status === "pending") {
           await STRIPE.checkout.sessions.expire(populatedOrder.sessionId);
         }
         populatedOrder.status =
-          populatedOrder.status === "paid" ? "refund on process" : "cancelled";
+          populatedOrder.status === "ordered"
+            ? "refund on process"
+            : "cancelled";
         await populatedOrder.save();
         return res.json({
           message: `Order cancelled successfully. ${
@@ -190,10 +214,51 @@ const orderCancelRefund = async (req, res) => {
   }
 };
 
+//Admin
+
+const getOrdersAdmin = async (req, res) => {
+  const {
+    sort,
+    status,
+    paymentStatus,
+    fulfillment,
+    dateStart,
+    dateEnd,
+    cancelled,
+  } = req.query;
+  try {
+    let orderQuery = {};
+    if (status) {
+      orderQuery.status = status;
+    }
+    if (paymentStatus) {
+      orderQuery.paymentStatus = paymentStatus === "paid" ? true : false;
+    }
+    if (fulfillment) {
+      orderQuery.fulfillment = fulfillment === "fulfilled" ? true : false;
+    }
+    if (dateStart && dateEnd) {
+      orderQuery.createdAt = {
+        $gte: new Date(dateStart),
+        $lt: new Date(dateEnd),
+      };
+    }
+    if (!cancelled) {
+      orderQuery.status = { $ne: "cancelled" };
+    }
+    const orders = await Order.find(orderQuery).sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    res.status(500).json({ error: "Failed to fetch orders." });
+  }
+};
+
 module.exports = {
   getOrderStatus,
   getUserOrders,
   getOrders,
   updateOrderStatus,
   orderCancelRefund,
+  getOrdersAdmin,
 };

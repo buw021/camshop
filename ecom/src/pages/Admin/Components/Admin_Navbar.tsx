@@ -150,6 +150,7 @@ const Admin_Navbar: React.FC<Navbar> = ({
           className={`material-symbols-outlined z-10 text-center ${
             expandSideBar ? "" : ""
           }`}
+          title={transformTitle(content)}
         >
           {icon}
         </span>

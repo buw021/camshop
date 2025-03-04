@@ -1,22 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { slugify } from "../func/slugify";
-
-interface ItemsProps {
-  createdAt: string;
-  discountedPrice: number | null;
-  isOnSale: boolean;
-  name: string;
-  price: number;
-  productId: string;
-  quantity: number;
-  salePrice: number;
-  updatedAt: string;
-  variantColor: string;
-  variantId: string;
-  variantImg: string;
-  variantName: string;
-}
+import { ItemsProps } from "../../interfaces/order";
 
 interface OrderInfoProps {
   orderItems: ItemsProps[];
@@ -25,6 +10,7 @@ interface OrderInfoProps {
   originalAmount: number;
   couponUsed?: string;
   paymentMethod: string;
+
 }
 const OrderInfo: React.FC<OrderInfoProps> = ({
   orderItems,
@@ -33,6 +19,7 @@ const OrderInfo: React.FC<OrderInfoProps> = ({
   originalAmount,
   couponUsed,
   paymentMethod,
+
 }) => {
   return (
     <div className="relative flex h-full w-full flex-col">
@@ -116,9 +103,8 @@ const OrderInfo: React.FC<OrderInfoProps> = ({
           <span className="text-xs">Payment Method:</span>
           <span className="text-right capitalize">{paymentMethod}</span>
         </div>
-        <div className="border-t-[1px] border-dashed border-zinc-400 pb-1">
-          
-        </div>
+
+        <div className="border-t-[1px] border-dashed border-zinc-400 pb-1"></div>
         <div className="flex justify-between">
           <span className="text-xs">Subtotal:</span>
           <span className="text-right"> € {originalAmount.toFixed(2)}</span>

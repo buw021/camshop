@@ -20,7 +20,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ label }) => {
   const statusSteps = [
     { label: "pending", value: 0 },
     { label: "cancelled", value: 0 },
-    { label: "paid", value: 1 },
+    { label: "ordered", value: 1 },
     { label: "processed", value: 2 },
     { label: "shipped", value: 3 },
     { label: "delivered", value: 4 },
@@ -62,14 +62,14 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ label }) => {
               ) : (
                 <>
                   <span
-                    className={`material-symbols-outlined sm:text-[50px] ${label === "paid" || (step && step.value >= 1) ? "text-zinc-700" : "text-zinc-200"}`}
+                    className={`material-symbols-outlined sm:text-[50px] ${label === "ordered" || (step && step.value >= 1) ? "text-zinc-700" : "text-zinc-200"}`}
                   >
                     credit_score
                   </span>
                   <span
-                    className={`text-xs leading-3 tracking-normal ${label === "paid" || (step && step.value >= 1) ? "text-zinc-700" : "text-zinc-200"}`}
+                    className={`text-xs leading-3 tracking-normal ${label === "ordered" || (step && step.value >= 1) ? "text-zinc-700" : "text-zinc-200"}`}
                   >
-                    Paid
+                    Ordered
                   </span>
                 </>
               )}

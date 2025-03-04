@@ -65,7 +65,8 @@ const stripeWebhookHandler = async (req, res) => {
     }
 
     order.totalAmount = session.amount_total / 100;
-    order.status = "paid";
+    order.status = "ordered";
+    order.paymentStatus = true;
     order.paymentUrl = "";
     await order.save();
   }
@@ -141,13 +142,13 @@ const createNewCheckOutSession = async (req, res) => {
     }
 
     if (
-      ["paid", "processed", "shipped", "delivered"].includes(
-        populatedOrder.status
-      )
+      ["processed", "shipped", "delivered"].includes(
+      populatedOrder.status
+      ) || populatedOrder.paymentStatus === true
     ) {
       return res
-        .status(400)
-        .json({ error: "This transaction is already processed." });
+      .status(400)
+      .json({ error: "This transaction is already processed." });
     }
 
     await STRIPE.checkout.sessions.expire(populatedOrder.sessionId);

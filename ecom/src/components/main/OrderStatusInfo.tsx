@@ -5,22 +5,7 @@ import { stripePromise } from "../../utils/stripe";
 import { showToast } from "../func/showToast";
 import axios from "axios";
 import OrderInfo from "./OrderInfo";
-
-interface ItemsProps {
-  createdAt: string;
-  discountedPrice: number | null;
-  isOnSale: boolean;
-  name: string;
-  price: number;
-  productId: string;
-  quantity: number;
-  salePrice: number;
-  updatedAt: string;
-  variantColor: string;
-  variantId: string;
-  variantImg: string;
-  variantName: string;
-}
+import { ItemsProps } from "../../interfaces/order";
 
 interface OrderProps {
   createdAt: string;
@@ -41,6 +26,7 @@ interface OrderProps {
   shippingCost: number;
   shippingOption: string;
   status: string;
+  paymentStatus: boolean;
   totalAmount: number;
   trackingNo: string | null;
   _id: string;
@@ -160,9 +146,9 @@ const OrderStatusInfo = () => {
       });
       if (response.status === 200) {
         showToast(response.data.message, "success");
+        getOrderStatus();
         CancelOrder();
         Refund();
-        getOrderStatus();
       } else {
         showToast(response.data.error, "error");
       }
@@ -216,6 +202,7 @@ const OrderStatusInfo = () => {
       >
         My Order/s
       </button>
+
       <p className="text-normal font-medium capitalize tracking-wide">
         Order Status:{" "}
         <span className="underline">
@@ -226,17 +213,27 @@ const OrderStatusInfo = () => {
             : ""}
         </span>{" "}
       </p>
+
       <div className="flex w-full items-center rounded-md border-[1px] px-2 py-1 sm:max-w-[800px] sm:flex-col sm:px-4 sm:py-2.5">
         <ProgressBar label={order?.status || ""} />
       </div>
-      <div className="flex w-full flex-col justify-between gap-2 self-start">
+      <div className="flex w-full flex-col justify-between gap-1 self-start">
         <h3 className="self-start text-xl font-medium tracking-normal">
           ORDER #:{" "}
           <span className="font-bold uppercase tracking-normal">
             {order?.customOrderId}
           </span>
         </h3>
-
+        <div className="self-start">
+          <p className="text-sm font-medium tracking-wide">
+            Payment Status:{" "}
+            {order?.paymentStatus ? (
+              <span className="text-green-600">Paid</span>
+            ) : (
+              <span className="text-yellow-600">Unpaid</span>
+            )}
+          </p>
+        </div>
         {/* Render order details here */}
         <div className="mb-2 self-start">
           <p className="text-sm font-medium tracking-wide">
@@ -250,6 +247,7 @@ const OrderStatusInfo = () => {
             )}
           </p>
         </div>
+
         {order && (
           <>
             <OrderInfo
@@ -265,7 +263,7 @@ const OrderStatusInfo = () => {
         <div
           className={`flex w-full ${order?.status === "pending" ? "justify-between" : "justify-end"} gap-2`}
         >
-          {["paid", "pending"].includes(order?.status || "") && (
+          {["ordered", "pending"].includes(order?.status || "") && (
             <button
               id="cancel-order"
               name="cancel-order"
@@ -274,7 +272,7 @@ const OrderStatusInfo = () => {
               onClick={(e) => {
                 e.preventDefault();
                 if (!order) return;
-                if (order.status === "pending" || order.status === "paid") {
+                if (order.status === "pending" || order.status === "ordered") {
                   if (
                     window.confirm(
                       "Are you sure you want to cancel this order?",
@@ -288,7 +286,7 @@ const OrderStatusInfo = () => {
                 }
               }}
             >
-              Cancel Order {order?.status === "paid" ? "/ Refund" : ""}
+              Cancel Order {order?.status === "ordered" ? "/ Refund" : ""}
             </button>
           )}
           {order?.status === "shipped" && (

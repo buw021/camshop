@@ -39,3 +39,47 @@ export interface PromoCode {
   usageCount?: number;
   keywords: string[] ;
 }
+
+export interface ItemsProps {
+  createdAt: string;
+  discountedPrice: number | null;
+  isOnSale: boolean;
+  name: string;
+  price: number;
+  productId: string;
+  quantity: number;
+  salePrice: number;
+  updatedAt: string;
+  variantColor: string;
+  variantId: string;
+  variantImg: string;
+  variantName: string;
+}
+
+export interface OrderProps {
+  createdAt: string;
+  customOrderId: string;
+  discountAmount: number;
+  userId: string;
+  userEmail: string;
+  items: [ItemsProps];
+  originalTotalAmount: number;
+  paymentMethod: string;
+  paymentUrl: string;
+  placedAt: string;
+  promoCode: string | null;
+  shippingAddress: {
+    city: string;
+    state: string;
+    zip: string;
+    country: string;
+  };
+  shippingCost: number;
+  shippingOption: string;
+  status: string;
+  totalAmount: number;
+  trackingNo: string | null;
+  paymentStatus: boolean;
+  fulfillment: boolean
+  _id: string;
+}

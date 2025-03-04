@@ -108,6 +108,14 @@ const orderSchema = new Schema(
       type: String,
       default: null,
     },
+    fulfilled:{
+      type: Boolean,
+      default: false,
+    },
+    paymentStatus: {
+      type: Boolean,
+      default: false,
+    },
     discountAmount: {
       type: Number,
       default: 0,
@@ -121,7 +129,6 @@ const orderSchema = new Schema(
       required: true,
       enum: [
         "ordered",
-        "paid",
         "pending",
         "shipped",
         "delivered",
