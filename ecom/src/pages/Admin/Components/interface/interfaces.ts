@@ -1,3 +1,5 @@
+import { AddressInterface } from "../../../../interfaces/user";
+
 interface Attributes {
   [key: string]: string;
 }
@@ -68,12 +70,7 @@ export interface OrderProps {
   paymentUrl: string;
   placedAt: string;
   promoCode: string | null;
-  shippingAddress: {
-    city: string;
-    state: string;
-    zip: string;
-    country: string;
-  };
+  shippingAddress: AddressInterface;
   shippingCost: number;
   shippingOption: string;
   status: string;

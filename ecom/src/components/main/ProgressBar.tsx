@@ -170,7 +170,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ label }) => {
                 <span
                   className={`text-xs leading-3 tracking-normal ${label === "refunded" ? "text-green-600" : "text-yellow-600"}`}
                 >
-                  {label === "refund on process" ? "Processing" : "Processed"}
+                  Refund on Process
                 </span>
               </>
             )}
@@ -196,7 +196,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ label }) => {
             <span
               className={`text-xs leading-3 tracking-normal ${label === "refunded" ? "text-green-600" : "text-zinc-200"}`}
             >
-              {label === "refunded" ? "Refunded" : "Refund on process"}
+              Refunded
             </span>
           </div>
         </div>

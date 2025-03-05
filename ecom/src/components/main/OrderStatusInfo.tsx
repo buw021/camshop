@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import axiosInstance from "../../services/axiosInstance";
 import ProgressBar from "./ProgressBar";
 import { stripePromise } from "../../utils/stripe";
@@ -6,9 +6,12 @@ import { showToast } from "../func/showToast";
 import axios from "axios";
 import OrderInfo from "./OrderInfo";
 import { ItemsProps } from "../../interfaces/order";
+import ShippingInfo from "./ShippingInfo";
+import { AddressInterface } from "../../interfaces/user";
 
 interface OrderProps {
   createdAt: string;
+  shippingAddress: AddressInterface;
   customOrderId: string;
   discountAmount: number;
   items: [ItemsProps];
@@ -17,12 +20,6 @@ interface OrderProps {
   paymentUrl: string;
   placedAt: string;
   promoCode: string | null;
-  shippingAddress: {
-    city: string;
-    state: string;
-    zip: string;
-    country: string;
-  };
   shippingCost: number;
   shippingOption: string;
   status: string;
@@ -250,6 +247,7 @@ const OrderStatusInfo = () => {
 
         {order && (
           <>
+            <ShippingInfo address={order?.shippingAddress}></ShippingInfo>
             <OrderInfo
               orderItems={order.items}
               totalPrice={order.totalAmount}
@@ -257,6 +255,7 @@ const OrderStatusInfo = () => {
               originalAmount={order.originalTotalAmount}
               couponUsed={order.promoCode || ""}
               paymentMethod={order.paymentMethod}
+              shippingOption={order.shippingOption}
             />
           </>
         )}

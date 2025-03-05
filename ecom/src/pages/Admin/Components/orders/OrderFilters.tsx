@@ -47,7 +47,7 @@ const OrderFilters = () => {
           </button>
         </div>
       </div>
-      <div className="flex items-center gap-3 flex-wrap">
+      <div className="flex flex-wrap items-center gap-3">
         <div className="flex gap-2">
           <button
             className="relative self-center rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700"
@@ -57,7 +57,7 @@ const OrderFilters = () => {
           </button>
           <div className="relative flex items-center">
             <input
-              className="roboto-medium w-[15vw] min-w-[175px] rounded-md border-2 border-zinc-200 bg-zinc-50 py-[4.25px] pl-2 pr-8 text-zinc-900 outline-none outline-1 focus:border-zinc-300 text-xs leading-3"
+              className="roboto-medium w-[15vw] min-w-[175px] rounded-md border-2 border-zinc-200 bg-zinc-50 py-[4.25px] pl-2 pr-8 text-xs leading-3 text-zinc-900 outline-none outline-1 focus:border-zinc-300"
               placeholder="Search"
               onChange={(e) => setSearch(e.target.value)}
               /* onKeyDown={(e) => {
@@ -73,7 +73,7 @@ const OrderFilters = () => {
             </span>
           </div>
         </div>
-        <div className="bg-zinc-200 h-4 w-[1px]"></div>
+        <div className="h-4 w-[1px] bg-zinc-200"></div>
         <div className="flex items-center">
           <div
             className="relative z-10"
@@ -85,7 +85,7 @@ const OrderFilters = () => {
             tabIndex={0}
           >
             <button
-              className="relative self-center rounded-md bg-zinc-800  py-[7px] pl-3 pr-7 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700"
+              className="relative self-center rounded-md bg-zinc-800 py-[7px] pl-3 pr-7 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700"
               onClick={() => setShowDropdown(!showDropdown)}
             >
               Filter by status{" "}
@@ -151,7 +151,7 @@ const OrderFilters = () => {
             onChange={(e) => setFilters([...filters, e.target.value])}
           >
             <option className="text-xs font-medium tracking-wide" value="">
-              Fullfillment
+              Fullfillment Status
             </option>
             <option
               className="text-xs font-medium tracking-wide"

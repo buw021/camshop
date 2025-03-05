@@ -92,7 +92,7 @@ const createNewCheckOutSession = async (req, res) => {
     const userId = await getUser(usertoken);
 
     // Check session creation limit
-   /*  const now = new Date();
+    /*  const now = new Date();
     const sessionLimit = 5;
     const sessionWindowMs = 15 * 60 * 1000; // 15 minutes
 
@@ -142,16 +142,31 @@ const createNewCheckOutSession = async (req, res) => {
     }
 
     if (
-      ["processed", "shipped", "delivered"].includes(
-      populatedOrder.status
-      ) || populatedOrder.paymentStatus === true
+      ["processed", "shipped", "delivered"].includes(populatedOrder.status) ||
+      populatedOrder.paymentStatus === true
     ) {
       return res
-      .status(400)
-      .json({ error: "This transaction is already processed." });
+        .status(400)
+        .json({ error: "This transaction is already processed." });
     }
 
-    await STRIPE.checkout.sessions.expire(populatedOrder.sessionId);
+    if (populatedOrder.sessionId) {
+      try {
+        const session = await STRIPE.checkout.sessions.retrieve(
+          populatedOrder.sessionId
+        );
+        if (session.status !== "expired") {
+          await STRIPE.checkout.sessions.expire(populatedOrder.sessionId);
+        } else {
+          console.log("Session already expired.");
+        }
+      } catch (error) {
+        if (error.code !== "resource_missing") {
+          throw error;
+        }
+        console.log("Session already expired or not found.");
+      }
+    }
 
     const lineItems = createLineItems(populatedOrder.items);
     const session = await createSession(
@@ -161,7 +176,6 @@ const createNewCheckOutSession = async (req, res) => {
       populatedOrder.userEmail
     );
 
-   
     if (!session.url) {
       return res.status(500).json({ message: "Error creating stripe session" });
     }

@@ -177,8 +177,20 @@ const orderCancelRefund = async (req, res) => {
 
     if (action === "cancel") {
       if (["ordered", "pending"].includes(populatedOrder.status)) {
-        if (populatedOrder.status === "pending") {
-          await STRIPE.checkout.sessions.expire(populatedOrder.sessionId);
+        if (populatedOrder.status === "pending" && populatedOrder.sessionId) {
+          try {
+            const session = await STRIPE.checkout.sessions.retrieve(
+              populatedOrder.sessionId
+            );
+            if (session.status !== "expired") {
+              await STRIPE.checkout.sessions.expire(populatedOrder.sessionId);
+            }
+          } catch (error) {
+            if (error.code !== "resource_missing") {
+              throw error;
+            }
+            console.log("Session already expired or not found.");
+          }
         }
         populatedOrder.status =
           populatedOrder.status === "ordered"
