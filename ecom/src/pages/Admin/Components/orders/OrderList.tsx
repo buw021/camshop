@@ -1,6 +1,6 @@
-import React, { useState, useCallback, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { OrderProps } from "../interface/interfaces";
-import axiosInstance from "../../Services/axiosInstance";
+
 import { statusColor } from "../assets/statusColor";
 const Row_Cells: React.FC<{
   order: OrderProps;
@@ -63,28 +63,14 @@ const Row_Cells: React.FC<{
 
 const OrderList: React.FC<{
   orders: OrderProps[];
-  setOrders: React.Dispatch<React.SetStateAction<OrderProps[]>>;
   manageOrder: (order: OrderProps) => void;
-}> = ({ orders, setOrders, manageOrder }) => {
+  getOrders: () => void;
+}> = ({ orders, manageOrder, getOrders }) => {
   const [sortConfig, setSortConfig] = useState<{
     key: keyof OrderProps;
     direction: string;
   } | null>(null);
 
-  const getOrders = useCallback(async () => {
-    try {
-      const response = await axiosInstance.get("/admin-get-orders");
-      if (response.data) {
-        setOrders(response.data);
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  }, [setOrders]);
-
-  useEffect(() => {
-    getOrders();
-  }, [getOrders]);
 
   const sortedOrders = useMemo(() => {
     const sortableOrders = [...orders];

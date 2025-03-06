@@ -108,7 +108,7 @@ const orderSchema = new Schema(
       type: String,
       default: null,
     },
-    fulfilled:{
+    fulfilled: {
       type: Boolean,
       default: false,
     },
@@ -148,6 +148,10 @@ const orderSchema = new Schema(
       default: Date.now,
     },
     trackingNo: {
+      type: String,
+      default: null,
+    },
+    trackingLink: {
       type: String,
       default: null,
     },

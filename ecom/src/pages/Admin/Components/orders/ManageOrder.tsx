@@ -1,14 +1,16 @@
-import React from "react";
+import React, { useState } from "react";
 import { OrderProps } from "../interface/interfaces";
 import OrderInfo from "../../../../components/main/OrderInfo";
 import ProgressBar from "../../../../components/main/ProgressBar";
 import { statusColor } from "../assets/statusColor";
+import { showToast } from "../showToast";
 
 interface ManageOrderProps {
   orders: OrderProps[];
   currentOrder: OrderProps;
   setManageOrder: (order: OrderProps) => void;
   closeManageOrder: () => void;
+  fulfillOrder: (trackingNo: string, trackingLink: string) => void;
 }
 
 const ManageOrder: React.FC<ManageOrderProps> = ({
@@ -16,7 +18,10 @@ const ManageOrder: React.FC<ManageOrderProps> = ({
   currentOrder,
   setManageOrder,
   closeManageOrder,
+  fulfillOrder,
 }) => {
+  const [trackingNo, setTrackingNo] = useState("");
+  const [trackingLink, setTrackingLink] = useState("");
   const currentIndex = orders.findIndex(
     (order) => order._id === currentOrder._id,
   );
@@ -35,7 +40,7 @@ const ManageOrder: React.FC<ManageOrderProps> = ({
 
   return (
     <div className="absolute left-0 top-0 z-20 flex h-full w-full justify-center rounded-xl bg-zinc-900/20 py-4 backdrop-blur-sm">
-      <div className="flex w-full flex-col gap-2 rounded-xl bg-white p-4 ring-2 ring-zinc-300/70 sm:max-w-[800px] sm:p-12">
+      <div className="scrollbar-hide flex w-full flex-col gap-2 overflow-y-auto rounded-xl bg-white p-4 ring-2 ring-zinc-300/70 sm:max-w-[800px] sm:p-8">
         <div className="flex w-full items-center justify-between">
           <div className="flex flex-wrap items-center sm:gap-2">
             <span
@@ -105,11 +110,45 @@ const ManageOrder: React.FC<ManageOrderProps> = ({
             {currentOrder.fulfillment ? "Fulfilled" : "Unfulfilled"}
           </span>
         </div>
+        <div className="flex w-full flex-col gap-2 rounded-lg border-[1px] border-zinc-100 p-4 sm:max-w-[800px]">
+          <div className="flex flex-col gap-1">
+            <label
+              htmlFor="insert-tracking-no "
+              className="text-xs font-medium leading-3 tracking-wide"
+            >
+              Tracking Number
+            </label>
+            <input
+              className="roboto-medium w-full rounded-md border-2 border-zinc-200 bg-zinc-50 py-[4.25px] pl-2 pr-8 text-xs leading-3 text-zinc-900 outline-none outline-1 focus:border-zinc-300"
+              onChange={(e) => setTrackingNo(e.target.value)}
+              value={trackingNo}
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label
+              htmlFor="insert-tracking-link"
+              className="text-xs font-medium leading-3 tracking-wide"
+            >
+              Tracking Link
+            </label>
+            <input
+              className="roboto-medium w-full rounded-md border-2 border-zinc-200 bg-zinc-50 py-[4.25px] pl-2 pr-8 text-xs leading-3 text-zinc-900 outline-none outline-1 focus:border-zinc-300"
+              onChange={(e) => setTrackingLink(e.target.value)}
+              value={trackingLink}
+            />
+          </div>
+          {currentOrder.status === "shipped" ||
+            (currentOrder.status === "processed" && (
+              <button className="relative mt-2 self-end rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:border-[1px] disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-300">
+                Update Tracking
+              </button>
+            ))}
+        </div>
         <div className="w-full rounded-lg border-[1px] border-zinc-100 p-4 sm:max-w-[800px]">
           <ProgressBar label={currentOrder?.status || ""} />
         </div>
 
-        <div className="flex max-h-[700px] flex-col gap-2 overflow-auto">
+        <div className="scrollbar-hide flex flex-col gap-2">
           <div className="w-full rounded-lg border-[1px] border-zinc-100 p-4 sm:max-w-[800px]">
             <OrderInfo
               orderItems={currentOrder.items}
@@ -163,14 +202,49 @@ const ManageOrder: React.FC<ManageOrderProps> = ({
             </p>
           </div>
         </div>
-
-        <button
-          className="relative self-end rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:border-[1px] disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-300"
-          disabled={currentOrder.fulfillment}
-          /* onClick={() => handleSearch(search)} */
-        >
-          Fulfill Order
-        </button>
+        <div className="flex w-full justify-between">
+          {currentOrder.status !== "shipped" &&
+            currentOrder.status !== "delivered" && (
+              <button
+                className="relative self-end rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:border-[1px] disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-300"
+                disabled={currentOrder.fulfillment}
+             
+              >
+                Cancel Order
+              </button>
+            )}
+          {!currentOrder.fulfillment && (
+            <button
+              className="relative self-end rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:border-[1px] disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-300"
+              onClick={() => {
+                if (
+                  window.confirm("Are you sure you want to fulfill this order?")
+                ) {
+                  fulfillOrder(trackingLink, trackingNo);
+                }
+              }}
+            >
+              Fulfill Order
+            </button>
+          )}
+          {currentOrder.fulfillment && currentOrder.status !== "shipped" && (
+            <button
+              className="btn"
+              onClick={() => {
+                if (!trackingNo || !trackingLink) {
+                  showToast(
+                    "Please fill in the tracking number and link",
+                    "error",
+                  );
+                  return;
+                }
+                // Add your logic to handle shipping the order here
+              }}
+            >
+              Ship Order
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
