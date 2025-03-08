@@ -4,6 +4,7 @@ import OrderFilters from "../Components/orders/OrderFilters";
 import ManageOrder from "../Components/orders/ManageOrder";
 import { OrderProps } from "../Components/interface/interfaces";
 import axiosInstance from "../Services/axiosInstance";
+import { showToast } from "../Components/showToast";
 
 const Admin_Orders = () => {
   const [orders, setOrders] = useState<OrderProps[]>([]);
@@ -34,19 +35,25 @@ const Admin_Orders = () => {
     setManageOrder(null);
   };
 
-  const fulfillOrder = (trackingNo: string, trackingLink: string) => {
+  const updateOrderStatus = (
+    action: string,
+    trackingNo: string,
+    trackingLink: string,
+  ) => {
     if (manageOrder) {
       axiosInstance
-        .post("/fulfill-order", {
+        .post("/update-order-status", {
           orderId: manageOrder._id,
           customOrderId: manageOrder.customOrderId,
           trackingNo,
           trackingLink,
+          action,
         })
         .then((response) => {
           if (response.data) {
             getOrders();
-            //update setManageOrder
+            showToast(response.data.message, "success");
+            setManageOrder(response.data.order);
           }
         })
         .catch((error) => {
@@ -70,7 +77,10 @@ const Admin_Orders = () => {
           currentOrder={manageOrder}
           setManageOrder={setManageOrder}
           closeManageOrder={closeManageOrder}
-          fulfillOrder={fulfillOrder}
+          fulfillOrder={updateOrderStatus}
+          shipOrder={updateOrderStatus}
+          deliveredOrder={updateOrderStatus}
+          updateTracking={updateOrderStatus}
         />
       )}
     </div>

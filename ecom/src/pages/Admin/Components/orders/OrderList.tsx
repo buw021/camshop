@@ -10,7 +10,7 @@ const Row_Cells: React.FC<{
     <td className="px-6 py-1 text-left font-medium tracking-tight">
       {order.customOrderId}
     </td>
-    <td className="pl-8 pr-6 text-left tracking-tight whitespace-nowrap">
+    <td className="whitespace-nowrap pl-8 pr-6 text-left tracking-tight">
       € {order.totalAmount.toFixed(2)}
     </td>
     <td className="pl-8 pr-6 text-left text-xs font-medium capitalize">
@@ -25,9 +25,9 @@ const Row_Cells: React.FC<{
     <td className="pl-8 pr-6 text-left text-xs font-medium capitalize">
       <div className="flex gap-2">
         <span
-          className={`rounded-xl border-[1px] ${order.fulfillment ? "border-blue-300 bg-blue-200 text-blue-800" : "border-gray-300 bg-gray-200 text-gray-800"} px-2 py-0.5 drop-shadow-sm`}
+          className={`rounded-xl border-[1px] ${order.fulfilled ? "border-blue-300 bg-blue-200 text-blue-800" : "border-gray-300 bg-gray-200 text-gray-800"} px-2 py-0.5 drop-shadow-sm`}
         >
-          {order.fulfillment ? "Fulfilled" : "Unfulfilled"}
+          {order.fulfilled ? "Fulfilled" : "Unfulfilled"}
         </span>
       </div>
     </td>
@@ -70,7 +70,6 @@ const OrderList: React.FC<{
     key: keyof OrderProps;
     direction: string;
   } | null>(null);
-
 
   const sortedOrders = useMemo(() => {
     const sortableOrders = [...orders];
@@ -142,7 +141,7 @@ const OrderList: React.FC<{
               </th>
               <th
                 className="cursor-pointer px-6 text-left font-medium capitalize tracking-wide text-zinc-500 hover:text-zinc-600"
-                onClick={() => requestSort("fulfillment")}
+                onClick={() => requestSort("fulfilled")}
               >
                 <span className="mr-2 rounded border-[1px]" />
                 Fulfillment
@@ -194,10 +193,11 @@ const OrderList: React.FC<{
               </th>
             </tr>
           </thead>
-          <tr>
-            <td colSpan={8} className="h-2"></td>
-          </tr>
+
           <tbody>
+            <tr>
+              <td colSpan={8} className="h-2"></td>
+            </tr>
             {sortedOrders.map((order) => (
               <Row_Cells
                 key={order._id}

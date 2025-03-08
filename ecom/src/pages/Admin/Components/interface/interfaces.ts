@@ -76,7 +76,8 @@ export interface OrderProps {
   status: string;
   totalAmount: number;
   trackingNo: string | null;
+  trackingLink: string | null;
   paymentStatus: boolean;
-  fulfillment: boolean
+  fulfilled: boolean
   _id: string;
 }

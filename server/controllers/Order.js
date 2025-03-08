@@ -247,7 +247,7 @@ const getOrdersAdmin = async (req, res) => {
       orderQuery.paymentStatus = paymentStatus === "paid" ? true : false;
     }
     if (fulfillment) {
-      orderQuery.fulfillment = fulfillment === "fulfilled" ? true : false;
+      orderQuery.fulfilled = fulfillment === "fulfilled" ? true : false;
     }
     if (dateStart && dateEnd) {
       orderQuery.createdAt = {

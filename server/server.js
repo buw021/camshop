@@ -36,6 +36,7 @@ app.use("/", require("./routes/orderRoutes"));
 app.use("/", require("./routes/promoRoutes"));
 app.use("/", require("./routes/saleRoutes"));
 app.use("/", require("./routes/shippingRoutes"));
+app.use("/", require("./routes/adminOrderRoutes"));
 
 app.use("/uploads", express.static("uploads"));
 
