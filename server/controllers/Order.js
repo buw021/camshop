@@ -15,7 +15,13 @@ const getUserOrders = async (req, res) => {
       statusFilter = { $in: ["delivered", "refunded"] };
     } else if (orderStatus === "current") {
       statusFilter = {
-        $in: ["ordered", "shipped", "refund on process", "processed"],
+        $in: [
+          "ordered",
+          "shipped",
+          "refund on process",
+          "refund requested",
+          "processed",
+        ],
       };
     } else if (orderStatus === "pending") {
       statusFilter = { $in: ["pending"] };
@@ -194,13 +200,13 @@ const orderCancelRefund = async (req, res) => {
         }
         populatedOrder.status =
           populatedOrder.status === "ordered"
-            ? "refund on process"
+            ? "refund requested"
             : "cancelled";
         await populatedOrder.save();
         return res.json({
           message: `Order cancelled successfully. ${
-            populatedOrder.status === "refund on process"
-              ? "Refund on process"
+            populatedOrder.status === "refund requested"
+              ? "Refund request is started."
               : ""
           }`,
         });
@@ -213,7 +219,7 @@ const orderCancelRefund = async (req, res) => {
       }
     } else {
       if (populatedOrder.status === "delivered") {
-        populatedOrder.status = "refund on process";
+        populatedOrder.status = "refund requested";
         await populatedOrder.save();
         return res.json({
           message: "Request for refund is started.",

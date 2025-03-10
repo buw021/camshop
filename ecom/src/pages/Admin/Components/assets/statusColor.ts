@@ -9,6 +9,7 @@ export const statusColor = (status: string) => {
     case "shipped":
       return "bg-teal-200 text-teal-800 border-teal-300";
     case "delivered":
+    case "refunded":
       return "bg-green-200 text-green-800 border-green-300";
     case "cancelled":
       return "bg-red-200 text-red-800  border-red-300";

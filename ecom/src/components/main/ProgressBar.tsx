@@ -25,8 +25,15 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ label }) => {
     { label: "shipped", value: 3 },
     { label: "delivered", value: 4 },
   ];
-
   const step = statusSteps.find((step) => step.label === label);
+
+  const refundSteps = [
+    { label: "refund requested", value: 0 },
+    { label: "refund on process", value: 1 },
+    { label: "refunded", value: 2 },
+  ];
+
+  const refundStep = refundSteps.find((step) => step.label === label);
 
   return (
     <div className="flex w-full flex-col items-center justify-center px-4 py-2.5">
@@ -159,6 +166,30 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ label }) => {
       ) : (
         <div className="flex w-full flex-row items-center justify-center">
           <div className="flex flex-col items-center gap-1">
+            <span
+              style={{ animationDuration: `3s` }}
+              className={`material-symbols-outlined sm:text-[50px] ${label === "refunded" ? "text-green-500" : "text-yellow-500"}`}
+            >
+              pending
+            </span>
+            <span
+              className={`text-xs leading-3 tracking-normal ${label === "refunded" ? "text-green-600" : "text-yellow-600"}`}
+            >
+              Refund Requested
+            </span>
+          </div>
+          <div className="flex w-20 flex-col items-center justify-center sm:w-32">
+            <div className="w-[90%]">
+              <div className="relative pt-4 sm:pt-1">
+                <div className="mb-4 flex h-1 w-auto overflow-hidden rounded bg-zinc-200 text-xs sm:h-2">
+                  <div
+                    className={`flex flex-col justify-center whitespace-nowrap text-center text-white shadow-none ${refundStep && refundStep.value >= 1 ? "w-full" : "w-[15%]"} ${label === "refunded" ? "bg-green-500" : "bg-yellow-500"}`}
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col items-center gap-1">
             {(label === "refund on process" || label === "refunded") && (
               <>
                 <span
@@ -180,7 +211,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ label }) => {
               <div className="relative pt-4 sm:pt-1">
                 <div className="mb-4 flex h-1 w-auto overflow-hidden rounded bg-zinc-200 text-xs sm:h-2">
                   <div
-                    className={`flex flex-col justify-center whitespace-nowrap text-center text-white shadow-none ${label !== "refunded" ? "w-[15%] bg-yellow-500" : "w-full bg-green-500"}`}
+                    className={`flex flex-col justify-center whitespace-nowrap text-center text-white shadow-none ${refundStep && refundStep.value >= 2 ? "w-full" : "w-[20%]"} ${label === "refunded" ? "bg-green-500" : "bg-yellow-500"}`}
                   ></div>
                 </div>
               </div>

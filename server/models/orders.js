@@ -135,6 +135,7 @@ const orderSchema = new Schema(
         "cancelled",
         "refunded",
         "processed",
+        "refund requested",
         "refund on process",
         "payment failed",
       ],
@@ -152,6 +153,10 @@ const orderSchema = new Schema(
       default: null,
     },
     trackingLink: {
+      type: String,
+      default: null,
+    },
+    receiptLink: {
       type: String,
       default: null,
     },

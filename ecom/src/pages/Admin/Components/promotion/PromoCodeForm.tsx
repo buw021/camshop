@@ -257,7 +257,7 @@ const PromoCodeForm: React.FC<FormInterface> = ({
             </div>
           </div>
           <div className="flex flex-col gap-1">
-            <label htmlFor={"promoCode"} className="text-sm font-medium">
+            <label htmlFor={"value"} className="text-sm font-medium">
               Value:
             </label>
             <input
@@ -283,7 +283,7 @@ const PromoCodeForm: React.FC<FormInterface> = ({
             ></input>
           </div>
           <div className="flex flex-col gap-1">
-            <label htmlFor={"promoCode"} className="text-sm font-medium">
+            <label htmlFor={"minValue"} className="text-sm font-medium">
               Minimum Order Value:
             </label>
             <input
@@ -313,7 +313,7 @@ const PromoCodeForm: React.FC<FormInterface> = ({
           <p className="-mb-2 text-sm font-medium">Duration:</p>
           <div className="flex flex-col gap-4 sm:flex-row">
             <div className="flex flex-col gap-1">
-              <label htmlFor={"promoCode"} className="text-xs font-medium">
+              <label htmlFor={"start-date"} className="text-xs font-medium">
                 Start Date:
               </label>
               <input
@@ -329,7 +329,7 @@ const PromoCodeForm: React.FC<FormInterface> = ({
               ></input>
             </div>
             <div className="flex flex-col gap-1">
-              <label htmlFor={"promoCode"} className="text-xs font-medium">
+              <label htmlFor={"end-date"} className="text-xs font-medium">
                 End Date:
               </label>
               <input
@@ -346,7 +346,7 @@ const PromoCodeForm: React.FC<FormInterface> = ({
           </div>
           <div className="flex flex-col gap-1 sm:self-auto">
             <div className="flex flex-wrap gap-2">
-              <label htmlFor={"promoCode"} className="pr-2 text-sm font-medium">
+              <label htmlFor={"usage-limit"} className="pr-2 text-sm font-medium">
                 Usage Limit:
               </label>
               <div className="flex flex-wrap gap-2">
@@ -400,7 +400,7 @@ const PromoCodeForm: React.FC<FormInterface> = ({
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            <label htmlFor={"promoCode"} className="text-sm font-medium">
+            <label htmlFor={"condition"} className="text-sm font-medium">
               Conditions:{" "}
               <span className="roboto-regular text-xs text-zinc-400">{`(Brands or Categories)`}</span>
             </label>

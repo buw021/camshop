@@ -81,3 +81,12 @@ export interface OrderProps {
   fulfilled: boolean
   _id: string;
 }
+
+export interface FiltersProps {
+  status: string[];
+  paymentStatus: string;
+  fulfillmentStatus: string;
+  searchQuery: string;
+  dateStart: string;
+  dateEnd: string;
+}

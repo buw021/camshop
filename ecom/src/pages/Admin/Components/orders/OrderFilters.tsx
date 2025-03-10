@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { FiltersProps } from "../interface/interfaces";
 
 const statusList = [
   "ordered",
@@ -12,15 +13,28 @@ const statusList = [
   "payment failed",
 ];
 
-const OrderFilters = () => {
-  const [filters, setFilters] = useState<string[]>([]);
+const OrderFilters: React.FC<{ getFilter: (filter: FiltersProps) => void }> = ({
+  getFilter,
+}) => {
   const [search, setSearch] = useState<string>("");
+  const [filters, setFilters] = useState<FiltersProps>({
+    status: [],
+    paymentStatus: "",
+    fulfillmentStatus: "",
+    searchQuery: "",
+    dateStart: "",
+    dateEnd: "",
+  });
+
+  useEffect(() => {
+    getFilter(filters);
+  }, [filters, getFilter]);
 
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
   return (
     <div className="flex w-full flex-col gap-2">
       <div className="relative flex items-center justify-between">
-        <div className="flex gap-2">
+        {/* <div className="flex gap-2">
           <button
             className={`roboto-medium rounded-t border-x-[1px] border-t-[1px] border-zinc-100 bg-zinc-100 px-2 text-sm hover:cursor-pointer hover:bg-zinc-200 ${"border-zinc-300 bg-zinc-200"}`}
             onClick={(e) => {
@@ -45,13 +59,18 @@ const OrderFilters = () => {
           >
             Paid
           </button>
-        </div>
+        </div> */}
       </div>
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex gap-2">
           <button
             className="relative self-center rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700"
-            /* onClick={() => handleSearch(search)} */
+            onClick={() =>
+              setFilters((prev) => ({
+                ...prev,
+                searchQuery: search,
+              }))
+            }
           >
             Search
           </button>
@@ -67,7 +86,13 @@ const OrderFilters = () => {
             />
             <span
               className={`material-symbols-outlined filled absolute right-2 mr-1 flex items-center text-base leading-3 text-zinc-500 transition-all duration-100 ease-linear hover:cursor-pointer hover:text-zinc-600`}
-              onClick={() => setSearch("")}
+              onClick={() => {
+                setSearch("");
+                setFilters((prev) => ({
+                  ...prev,
+                  searchQuery: search,
+                }));
+              }}
             >
               cancel
             </span>
@@ -104,12 +129,18 @@ const OrderFilters = () => {
                       <input
                         type="checkbox"
                         className="h-4 w-4 rounded border-gray-300 bg-gray-100 text-blue-600 focus:ring-2 focus:ring-blue-500"
-                        checked={filters.includes(status)}
+                        checked={filters.status.includes(status)}
                         onChange={(e) => {
                           if (e.target.checked) {
-                            setFilters([...filters, status]);
+                            setFilters((prev) => ({
+                              ...prev,
+                              status: [...prev.status, status],
+                            }));
                           } else {
-                            setFilters(filters.filter((f) => f !== status));
+                            setFilters((prev) => ({
+                              ...prev,
+                              status: prev.status.filter((f) => f !== status),
+                            }));
                           }
                         }}
                       />
@@ -121,12 +152,42 @@ const OrderFilters = () => {
             )}
           </div>
         </div>
-
+        <div className="flex flex-col gap-4 sm:flex-row">
+          <div className="flex flex-col gap-1">
+            <label
+              htmlFor={"start-date"}
+              className="sr-only text-xs font-medium"
+            >
+              Start Date:
+            </label>
+            <input
+              type="date"
+              className="border-zinc-150 w-26 rounded-md border-[1px] bg-zinc-50 px-1 py-1 text-xs font-medium tracking-wide text-zinc-900 outline-none outline-1 drop-shadow-sm hover:border-zinc-300 focus:border-zinc-300"
+              required
+              title="Start Date"
+            ></input>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label htmlFor={"end-date"} className="sr-only text-xs font-medium">
+              End Date:
+            </label>
+            <input
+              type="date"
+              title="End Date"
+              className="border-zinc-150 w-26 rounded-md border-[1px] bg-zinc-50 px-1 py-1 text-xs font-medium tracking-wide text-zinc-900 outline-none outline-1 drop-shadow-sm hover:border-zinc-300 focus:border-zinc-300"
+            ></input>
+          </div>
+        </div>
         <div className="flex flex-col">
           <label className="sr-only text-xs font-medium tracking-wide"></label>
           <select
             className="border-zinc-150 w-26 rounded-md border-[1px] bg-zinc-50 px-1 py-1 text-xs font-medium tracking-wide text-zinc-900 outline-none outline-1 drop-shadow-sm hover:border-zinc-300 focus:border-zinc-300"
-            onChange={(e) => setFilters([...filters, e.target.value])}
+            onChange={(e) =>
+              setFilters((prev) => ({
+                ...prev,
+                paymentStatus: e.target.value,
+              }))
+            }
           >
             <option className="text-xs font-medium tracking-wide" value="">
               Payment Status
@@ -148,7 +209,12 @@ const OrderFilters = () => {
           </label>
           <select
             className="border-zinc-150 w-26 rounded-md border-[1px] bg-zinc-50 px-1 py-1 text-xs font-medium tracking-wide text-zinc-900 outline-none outline-1 drop-shadow-sm hover:border-zinc-300 focus:border-zinc-300"
-            onChange={(e) => setFilters([...filters, e.target.value])}
+            onChange={(e) =>
+              setFilters((prev) => ({
+                ...prev,
+                fulfillmentStatus: e.target.value,
+              }))
+            }
           >
             <option className="text-xs font-medium tracking-wide" value="">
               Fullfillment Status

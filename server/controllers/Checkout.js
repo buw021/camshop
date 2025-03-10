@@ -68,11 +68,28 @@ const stripeWebhookHandler = async (req, res) => {
     order.status = "ordered";
     order.paymentStatus = true;
     order.paymentUrl = "";
+
     await order.save();
   }
 
-  //check if checkout session expired then use createnewcheckoutsession
+  if (event.type === "charge.succeeded") {
+    const charge = event.data.object;
+    const customOrderId = charge.metadata?.customOrderId;
 
+    if (!customOrderId) {
+      return res.status(400).send("Order ID not found in metadata.");
+    }
+
+    const order = await Order.findOne({ customOrderId });
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    order.receiptLink = charge.receipt_url;
+
+    await order.save();
+  }
   res.status(200).send();
 };
 
@@ -402,8 +419,13 @@ const createSession = async (
     metadata: {
       customOrderId: customOrderId,
     },
+    metadata: { customOrderId: customOrderId },
+    payment_intent_data: {
+      metadata: { customOrderId: customOrderId }, // Explicitly set metadata here
+      description: `Order ${customOrderId}'`, // Add a description
+    },
   });
-
+  console.log(sessionData.metadata);
   return sessionData;
 };
 

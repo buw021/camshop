@@ -64,8 +64,7 @@ const Row_Cells: React.FC<{
 const OrderList: React.FC<{
   orders: OrderProps[];
   manageOrder: (order: OrderProps) => void;
-  getOrders: () => void;
-}> = ({ orders, manageOrder, getOrders }) => {
+}> = ({ orders, manageOrder }) => {
   const [sortConfig, setSortConfig] = useState<{
     key: keyof OrderProps;
     direction: string;

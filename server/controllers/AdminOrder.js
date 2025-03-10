@@ -1,19 +1,6 @@
 const Order = require("../models/orders");
-const User = require("../models/user");
 const Stripe = require("stripe");
 const STRIPE = new Stripe(process.env.STRIPE_SK);
-const { getUser } = require("../helpers/getUser");
-
-const getOrders = async (req, res) => {
-  const { sort } = req.query;
-  try {
-    const orders = await Order.find().sort({ createdAt: -1 });
-    res.json(orders);
-  } catch (error) {
-    console.error("Error fetching orders:", error);
-    res.status(500).json({ error: "Failed to fetch orders." });
-  }
-};
 
 const updateOrderStatus = async (req, res) => {
   const { orderId, action, trackingNo, trackingLink } = req.body;
@@ -76,24 +63,27 @@ const updateOrderStatus = async (req, res) => {
 
 const getOrdersAdmin = async (req, res) => {
   const {
-    sort,
     status,
     paymentStatus,
-    fulfillment,
+    fulfillmentStatus,
     dateStart,
     dateEnd,
-    cancelled,
+    searchQuery,
   } = req.query;
+
   try {
     let orderQuery = {};
     if (status) {
-      orderQuery.status = status;
+      const statusArray = Array.isArray(status) ? status : status.split(",");
+      orderQuery.status = { $in: statusArray };
+    } else {
+      orderQuery.status = { $ne: "cancelled" };
     }
     if (paymentStatus) {
       orderQuery.paymentStatus = paymentStatus === "paid" ? true : false;
     }
-    if (fulfillment) {
-      orderQuery.fulfilled = fulfillment === "fulfilled" ? true : false;
+    if (fulfillmentStatus) {
+      orderQuery.fulfilled = fulfillmentStatus === "fulfilled" ? true : false;
     }
     if (dateStart && dateEnd) {
       orderQuery.createdAt = {
@@ -101,9 +91,16 @@ const getOrdersAdmin = async (req, res) => {
         $lt: new Date(dateEnd),
       };
     }
-    if (!cancelled) {
-      orderQuery.status = { $ne: "cancelled" };
+    if (searchQuery) {
+      orderQuery = {
+        $or: [
+          { customOrderId: { $regex: searchQuery, $options: "i" } },
+          { email: { $regex: searchQuery, $options: "i" } },
+          { name: { $regex: searchQuery, $options: "i" } },
+        ],
+      };
     }
+
     const orders = await Order.find(orderQuery).sort({ createdAt: -1 });
     res.json(orders);
   } catch (error) {
@@ -113,7 +110,6 @@ const getOrdersAdmin = async (req, res) => {
 };
 
 module.exports = {
-  getOrders,
   updateOrderStatus,
   getOrdersAdmin,
 };

@@ -2,24 +2,34 @@ import React, { useCallback, useEffect, useState } from "react";
 import OrderList from "../Components/orders/OrderList";
 import OrderFilters from "../Components/orders/OrderFilters";
 import ManageOrder from "../Components/orders/ManageOrder";
-import { OrderProps } from "../Components/interface/interfaces";
+import { FiltersProps, OrderProps } from "../Components/interface/interfaces";
 import axiosInstance from "../Services/axiosInstance";
 import { showToast } from "../Components/showToast";
 
 const Admin_Orders = () => {
   const [orders, setOrders] = useState<OrderProps[]>([]);
   const [manageOrder, setManageOrder] = useState<OrderProps | null>(null);
+  const [filters, setFilters] = useState<FiltersProps>({
+    status: [],
+    paymentStatus: "",
+    fulfillmentStatus: "",
+    searchQuery: "",
+    dateStart: "",
+    dateEnd: "",
+  });
 
   const getOrders = useCallback(async () => {
     try {
-      const response = await axiosInstance.get("/admin-get-orders");
+      const response = await axiosInstance.get("/admin-get-orders", {
+        params: filters,
+      });
       if (response.data) {
         setOrders(response.data);
       }
     } catch (error) {
       console.log(error);
     }
-  }, [setOrders]);
+  }, [filters]);
 
   useEffect(() => {
     getOrders();
@@ -62,15 +72,16 @@ const Admin_Orders = () => {
     }
   };
 
+  const getFilter = (filter: FiltersProps) => {
+    setFilters(filter);
+    console.log(filter);
+  };
+
   return (
-    <div className="relative flex h-full w-full flex-col gap-1 rounded-xl bg-white p-10 ring-2 ring-zinc-300/70">
+    <div className="relative flex h-full w-full flex-col gap-1 rounded-xl bg-white p-4 ring-2 ring-zinc-300/70 sm:p-10">
       <h1 className="mb-2 text-xl font-bold tracking-wide">Order List</h1>
-      <OrderFilters />
-      <OrderList
-        orders={orders}
-        getOrders={getOrders}
-        manageOrder={toggleManageOrder}
-      />
+      <OrderFilters getFilter={getFilter} />
+      <OrderList orders={orders} manageOrder={toggleManageOrder} />
       {manageOrder && (
         <ManageOrder
           orders={orders}
