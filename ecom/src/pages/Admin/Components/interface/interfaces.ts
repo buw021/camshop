@@ -87,6 +87,6 @@ export interface FiltersProps {
   paymentStatus: string;
   fulfillmentStatus: string;
   searchQuery: string;
-  dateStart: string;
-  dateEnd: string;
+  dateStart: Date | null;
+  dateEnd: Date | null;
 }

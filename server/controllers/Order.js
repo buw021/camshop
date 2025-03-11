@@ -232,6 +232,50 @@ const orderCancelRefund = async (req, res) => {
   }
 };
 
+const orderReceived = async (req, res) => {
+  const { usertoken } = req.cookies;
+  const { orderId } = req.body;
+
+  try {
+    const userId = await getUser(usertoken);
+
+    if (!userId) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    const user = await User.findById(userId).populate({
+      path: "orders._id",
+      model: "Order",
+      match: { archive: false },
+      select: "status customOrderId",
+    });
+
+    const order = user.orders.find(
+      (order) => order.customOrderId.toString() === orderId
+    );
+    if (!order) {
+      return res.status(404).json({ error: "Order not found." });
+    }
+
+    const populatedOrder = await Order.findById(order.orderId).select(
+      "-__v -updatedAt -userId"
+    );
+
+    if (!populatedOrder) {
+      return res.status(404).json({ error: "Order not found." });
+    }
+
+    if (populatedOrder.status !== "shipped") {
+      return res.status(400).json({ error: "order is not shipped yet." });
+    }
+
+    populatedOrder.status = "delivered";
+    await populatedOrder.save();
+
+    res.json({ message: "Order received successfully" });
+  } catch (error) {}
+};
+
 //Admin
 
 const getOrdersAdmin = async (req, res) => {
@@ -279,4 +323,5 @@ module.exports = {
   updateOrderStatus,
   orderCancelRefund,
   getOrdersAdmin,
+  orderReceived,
 };

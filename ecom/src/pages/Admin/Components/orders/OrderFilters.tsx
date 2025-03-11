@@ -22,13 +22,52 @@ const OrderFilters: React.FC<{ getFilter: (filter: FiltersProps) => void }> = ({
     paymentStatus: "",
     fulfillmentStatus: "",
     searchQuery: "",
-    dateStart: "",
-    dateEnd: "",
+    dateStart: new Date(),
+    dateEnd: null,
   });
 
   useEffect(() => {
     getFilter(filters);
   }, [filters, getFilter]);
+
+  const handleDateChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    dateType: "dateStart" | "dateEnd",
+  ) => {
+    if (dateType === "dateStart") {
+      const end = filters.dateEnd;
+      const value = new Date(e.target.value);
+      if (end && value >= end) {
+        setFilters((prev) => ({
+          ...prev,
+          [dateType]: value,
+          dateEnd: value,
+        }));
+      } else {
+        setFilters((prev) => ({
+          ...prev,
+          [dateType]: value,
+        }));
+      }
+    }
+    if (dateType === "dateEnd") {
+      const start = filters.dateStart;
+      const value = new Date(e.target.value);
+      if (start)
+        if (value <= start) {
+          setFilters((prev) => ({
+            ...prev,
+            dateEnd: value,
+            dateStart: value,
+          }));
+        } else {
+          setFilters((prev) => ({
+            ...prev,
+            dateEnd: value,
+          }));
+        }
+    }
+  };
 
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
   return (
@@ -163,8 +202,9 @@ const OrderFilters: React.FC<{ getFilter: (filter: FiltersProps) => void }> = ({
             <input
               type="date"
               className="border-zinc-150 w-26 rounded-md border-[1px] bg-zinc-50 px-1 py-1 text-xs font-medium tracking-wide text-zinc-900 outline-none outline-1 drop-shadow-sm hover:border-zinc-300 focus:border-zinc-300"
-              required
               title="Start Date"
+              onChange={(e) => handleDateChange(e, "dateStart")}
+              value={filters.dateStart?.toISOString().split("T")[0]}
             ></input>
           </div>
           <div className="flex flex-col gap-1">
@@ -175,6 +215,8 @@ const OrderFilters: React.FC<{ getFilter: (filter: FiltersProps) => void }> = ({
               type="date"
               title="End Date"
               className="border-zinc-150 w-26 rounded-md border-[1px] bg-zinc-50 px-1 py-1 text-xs font-medium tracking-wide text-zinc-900 outline-none outline-1 drop-shadow-sm hover:border-zinc-300 focus:border-zinc-300"
+              onChange={(e) => handleDateChange(e, "dateEnd")}
+              value={filters.dateEnd?.toISOString().split("T")[0]}
             ></input>
           </div>
         </div>

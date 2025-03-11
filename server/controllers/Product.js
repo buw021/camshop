@@ -95,9 +95,7 @@ const getFullProduct = async (req, res) => {
 
 const getProducts = async (req, res) => {
   try {
-    const products = await Product.find({ isArchived: false }).select(
-      "_id category name variants.variantPrice variants.variantStocks variants.variantImgs"
-    );
+    const products = await Product.find({ isArchived: false });
 
     /*const product = await Product.findById(productId).populate({
     path: 'variants.saleId',
@@ -105,18 +103,8 @@ const getProducts = async (req, res) => {
     match: { isOnSale: true }, // Only populate if isOnSale is true
     select: 'salePrice saleStartDate saleExpiryDate', // Select specific fields if needed
   }).lean();*/
-    const productSummaries = products.map((product) => ({
-      _id: product._id,
-      category: product.category,
-      name: product.name,
-      variants: product.variants.map((variant) => ({
-        variantPrice: variant.variantPrice,
-        variantStocks: variant.variantStocks,
-        variantImgs: variant.variantImgs[0], // Only the first image
-      })),
-    }));
 
-    res.json(productSummaries);
+    res.json(products);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -124,20 +112,7 @@ const getProducts = async (req, res) => {
 
 const getArchivedProducts = async (req, res) => {
   try {
-    const products = await Product.find({ isArchived: true }).select(
-      "_id category name variants.variantPrice variants.variantStocks variants.variantImgs"
-    );
-
-    const productSummaries = products.map((product) => ({
-      _id: product._id,
-      category: product.category,
-      name: product.name,
-      variants: product.variants.map((variant) => ({
-        variantPrice: variant.variantPrice,
-        variantStocks: variant.variantStocks,
-        variantImgs: variant.variantImgs[0], // Only the first image
-      })),
-    }));
+    const products = await Product.find({ isArchived: true });
 
     res.json(productSummaries);
   } catch (error) {

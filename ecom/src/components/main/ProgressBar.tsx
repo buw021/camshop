@@ -69,12 +69,12 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ label }) => {
               ) : (
                 <>
                   <span
-                    className={`material-symbols-outlined sm:text-[50px] ${label === "ordered" || (step && step.value >= 1) ? "text-zinc-700" : "text-zinc-200"}`}
+                    className={`material-symbols-outlined sm:text-[50px] ${label === "ordered" || (step && step.value >= 1) ? `${label === "delivered" ? "text-green-500" : "text-zinc-700"}` : "text-zinc-200"}`}
                   >
                     credit_score
                   </span>
                   <span
-                    className={`text-xs leading-3 tracking-normal ${label === "ordered" || (step && step.value >= 1) ? "text-zinc-700" : "text-zinc-200"}`}
+                    className={`text-xs leading-3 tracking-normal ${label === "ordered" || (step && step.value >= 1) ? `${label === "delivered" ? "text-green-600" : "text-zinc-700"}` : "text-zinc-200"}`}
                   >
                     Ordered
                   </span>
@@ -86,7 +86,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ label }) => {
                 <div className="relative pt-4 sm:pt-1">
                   <div className="mb-4 flex h-1 w-auto overflow-hidden rounded bg-zinc-200 text-xs sm:h-2">
                     <div
-                      className={`flex flex-col justify-center whitespace-nowrap bg-zinc-700 text-center text-white shadow-none ${step.value === 1 ? "w-[15%]" : step.value > 1 ? "w-full" : "w-0"}`}
+                      className={`flex flex-col justify-center whitespace-nowrap ${label === "delivered" ? "bg-green-500" : "bg-zinc-700"} text-center text-white shadow-none ${step.value === 1 ? "w-[15%]" : step.value > 1 ? "w-full" : "w-0"}`}
                     ></div>
                   </div>
                 </div>
@@ -94,12 +94,12 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ label }) => {
             </div>
             <div className="flex flex-col items-center gap-1">
               <span
-                className={`material-symbols-outlined sm:text-[50px] ${label === "processed" || (step && step.value >= 2) ? "text-zinc-700" : "text-zinc-200"}`}
+                className={`material-symbols-outlined sm:text-[50px] ${label === "processed" || (step && step.value >= 2) ? `${label === "delivered" ? "text-green-500" : "text-zinc-700"}` : "text-zinc-200"}`}
               >
                 list_alt_check
               </span>
               <span
-                className={`text-xs leading-3 tracking-normal ${label === "processed" || (step && step.value >= 2) ? "text-zinc-700" : "text-zinc-200"}`}
+                className={`text-xs leading-3 tracking-normal ${label === "processed" || (step && step.value >= 2) ? `${label === "delivered" ? "text-green-600" : "text-zinc-700"}` : "text-zinc-200"}`}
               >
                 Processed
               </span>
@@ -109,7 +109,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ label }) => {
                 <div className="relative pt-4 sm:pt-1">
                   <div className="mb-4 flex h-1 w-auto overflow-hidden rounded bg-zinc-200 text-xs sm:h-2">
                     <div
-                      className={`flex flex-col justify-center whitespace-nowrap bg-zinc-700 text-center text-white shadow-none ${step.value === 2 ? "w-1/2" : step.value > 2 ? "w-full" : "w-0"}`}
+                      className={`flex flex-col justify-center whitespace-nowrap ${label === "delivered" ? "bg-green-500" : "bg-zinc-700"} text-center text-white shadow-none ${step.value === 2 ? "w-1/2" : step.value > 2 ? "w-full" : "w-0"}`}
                     ></div>
                   </div>
                 </div>
@@ -117,7 +117,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ label }) => {
             </div>
             <div className="flex flex-col items-center gap-1">
               <span
-                className={`material-symbols-outlined relative sm:text-[50px] ${label === "shipped" || (step && step.value >= 3) ? "text-zinc-700" : "text-zinc-200"}`}
+                className={`material-symbols-outlined relative sm:text-[50px] ${label === "shipped" || (step && step.value >= 3) ? `${label === "delivered" ? "text-green-500" : "text-zinc-700"}` : "text-zinc-200"}`}
               >
                 local_shipping
                 {/*  <span
@@ -128,7 +128,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ label }) => {
               </span>
 
               <span
-                className={`text-xs leading-3 tracking-normal ${label === "shipped" || (step && step.value >= 3) ? "text-zinc-700" : "text-zinc-200"}`}
+                className={`text-xs leading-3 tracking-normal ${label === "shipped" || (step && step.value >= 3) ? `${label === "delivered" ? "text-green-600" : "text-zinc-700"}` : "text-zinc-200"}`}
               >
                 Shipped
               </span>
@@ -138,7 +138,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ label }) => {
                 <div className="relative pt-4 sm:pt-1">
                   <div className="mb-4 flex h-1 w-auto overflow-hidden rounded bg-zinc-200 text-xs sm:h-2">
                     <div
-                      className={`flex flex-col justify-center whitespace-nowrap bg-zinc-700 text-center text-white shadow-none ${step.value === 3 ? "w-1/5" : step.value === 4 ? "w-full" : "w-0"}`}
+                      className={`flex flex-col justify-center whitespace-nowrap ${label === "delivered" ? "bg-green-500" : "bg-zinc-700"} text-center text-white shadow-none ${step.value === 3 ? "w-1/5" : step.value === 4 ? "w-full" : "w-0"}`}
                     ></div>
                   </div>
                 </div>
@@ -146,7 +146,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ label }) => {
             </div>
             <div className="flex flex-col items-center gap-1">
               <span
-                className={`material-symbols-outlined relative sm:text-[50px] ${label === "delivered" ? "text-zinc-700" : "text-zinc-200"}`}
+                className={`material-symbols-outlined relative sm:text-[50px] ${label === "delivered" ? "text-green-500" : "text-zinc-200"}`}
               >
                 box
                 {/*  <span
@@ -156,7 +156,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ label }) => {
                 </span> */}
               </span>
               <span
-                className={`text-xs leading-3 tracking-normal ${label === "delivered" ? "text-zinc-700" : "text-zinc-200"}`}
+                className={`text-xs leading-3 tracking-normal ${label === "delivered" ? "text-green-600" : "text-zinc-200"}`}
               >
                 Delivered
               </span>
@@ -190,28 +190,26 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ label }) => {
             </div>
           </div>
           <div className="flex flex-col items-center gap-1">
-            {(label === "refund on process" || label === "refunded") && (
-              <>
-                <span
-                  style={{ animationDuration: `3s` }}
-                  className={`material-symbols-outlined sm:text-[50px] ${label === "refunded" ? "text-green-500" : "text-yellow-500"}`}
-                >
-                  credit_card_clock
-                </span>
-                <span
-                  className={`text-xs leading-3 tracking-normal ${label === "refunded" ? "text-green-600" : "text-yellow-600"}`}
-                >
-                  Refund on Process
-                </span>
-              </>
-            )}
+            <>
+              <span
+                style={{ animationDuration: `3s` }}
+                className={`material-symbols-outlined sm:text-[50px] ${label === "refund on process" ? "text-yellow-500" : "text-zinc-200"} ${label === "refunded" && "text-green-500"}`}
+              >
+                credit_card_clock
+              </span>
+              <span
+                className={`text-xs leading-3 tracking-normal ${label === "refund on process" ? "text-yellow-600" : "text-zinc-200"} ${label === "refunded" && "text-green-600"}`}
+              >
+                Refund on Process
+              </span>
+            </>
           </div>
           <div className="flex w-20 flex-col items-center justify-center sm:w-32">
             <div className="w-[90%]">
               <div className="relative pt-4 sm:pt-1">
                 <div className="mb-4 flex h-1 w-auto overflow-hidden rounded bg-zinc-200 text-xs sm:h-2">
                   <div
-                    className={`flex flex-col justify-center whitespace-nowrap text-center text-white shadow-none ${refundStep && refundStep.value >= 2 ? "w-full" : "w-[20%]"} ${label === "refunded" ? "bg-green-500" : "bg-yellow-500"}`}
+                    className={`flex flex-col justify-center whitespace-nowrap text-center text-white shadow-none ${refundStep && refundStep.value >= 2 ? "w-full" : "w-0"} ${label === "refunded" ? "bg-green-500" : "bg-yellow-500"}`}
                   ></div>
                 </div>
               </div>

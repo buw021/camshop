@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Product } from "../interface/interfaces";
+import PreviewForm from "./ProductView";
 
 interface Table_Content {
   handleEdit: (product: Product) => void;
@@ -14,6 +15,8 @@ const Admin_ProductTable: React.FC<Table_Content> = ({
 }) => {
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
+  const [toggleProductView, setToggleProductView] = useState<boolean>(false);
   const itemsPerPage = 10;
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const ref = useRef<HTMLTableCellElement>(null);
@@ -38,15 +41,76 @@ const Admin_ProductTable: React.FC<Table_Content> = ({
     };
   }, []);
 
+  const togglePreview = (product: Product) => {
+    setCurrentProduct(product);
+    setToggleProductView(!toggleProductView);
+  };
+
+  const togglePreviewClose = () => {
+    setCurrentProduct(null);
+    setToggleProductView(false);
+  };
+  const [sortConfig, setSortConfig] = useState<{
+    key: keyof Product;
+    direction: string;
+  } | null>(null);
+
+  const handleSort = (key: keyof Product) => {
+    let direction = "ascending";
+    if (
+      sortConfig &&
+      sortConfig.key === key &&
+      sortConfig.direction === "ascending"
+    ) {
+      direction = "descending";
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const sortedOrders = useMemo(() => {
+    if (!products || !sortConfig) return products;
+
+    const { key, direction } = sortConfig;
+
+    const sortableOrders = [...products];
+    sortableOrders.sort((a, b) => {
+      const aValue = a[key];
+      const bValue = b[key];
+
+      if (typeof aValue === "boolean" && typeof bValue === "boolean") {
+        return direction === "ascending"
+          ? Number(aValue) - Number(bValue)
+          : Number(bValue) - Number(aValue);
+      }
+
+      if (typeof aValue === "string" && typeof bValue === "string") {
+        return direction === "ascending"
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue);
+      }
+
+      if (typeof aValue === "number" && typeof bValue === "number") {
+        return direction === "ascending" ? aValue - bValue : bValue - aValue;
+      }
+
+      return 0; // Default case
+    });
+
+    return sortableOrders;
+  }, [products, sortConfig]);
+
+  // Calculate paginated products
+
   const Row_Cells: React.FC<{
     product: Product;
-  }> = ({ product }) => (
-    <tr className="hover:bg-zinc-200">
-      <td scope="col" className="px-4">
+    togglePreview: (product: Product) => void;
+  }> = ({ product, togglePreview }) => (
+    <tr className="bg- border-y-[1px] hover:bg-zinc-100">
+      <td scope="col" className="flex items-center px-4 py-1.5">
         <div className="flex items-center">
           <input
             type="checkbox"
-            className="h-4 w-4 rounded border-gray-300 bg-gray-100 text-blue-600"
+            className="h-4 w-4 rounded border-gray-300 bg-gray-100 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600"
             checked={
               product._id
                 ? selectedProducts.includes(product._id.toString())
@@ -59,21 +123,14 @@ const Admin_ProductTable: React.FC<Table_Content> = ({
           <label className="sr-only">checkbox</label>
         </div>
       </td>
-      {/* <td className="overflow-hidden overflow-ellipsis whitespace-nowrap px-6">
-        <span className=""> {variant._id}</span>
-      </td> */}
-      {/* <td className="flex justify-center whitespace-nowrap px-6">
-        <div className="h-8 w-8 items-center bg-black">
-          <img
-            src={`http://localhost:3000/uploads/${product.variants[0].variantImgs}`}
-            alt="thumbnail"
-          />
-        </div>
-      </td> */}
-      <td className="whitespace-nowrap px-6">{product.name}</td>
-      <td className="whitespace-nowrap px-6 capitalize">{product.category}</td>
-      <td className="whitespace-nowrap px-6 font-medium">
-        EUR{" "}
+      <td className="pl-8 pr-6 text-left font-medium capitalize">
+        {product.name}
+      </td>
+      <td className="pl-8 pr-6 text-left font-medium capitalize">
+        {product.category}
+      </td>
+      <td className="pl-8 pr-6 text-left capitalize">
+        €{" "}
         {Math.min(
           ...product.variants.map(
             (variant) => variant.variantPrice ?? Infinity,
@@ -81,10 +138,10 @@ const Admin_ProductTable: React.FC<Table_Content> = ({
         )}
       </td>
 
-      <td className="whitespace-nowrap px-6 text-center">
+      <td className="pl-8 pr-6 text-left capitalize">
         {product.variants.length - 1}
       </td>
-      <td className="whitespace-nowrap px-6 text-center">
+      <td className="pl-8 pr-6 text-left capitalize">
         {(() => {
           const stock = product.variants.reduce(
             (acc, variant) => acc + (variant.variantStocks ?? 0),
@@ -93,12 +150,40 @@ const Admin_ProductTable: React.FC<Table_Content> = ({
           return stock;
         })()}
       </td>
-      <td className="whitespace-nowrap px-6 text-center">
+
+      <td className="pl-8 pr-6 text-left capitalize"></td>
+
+      <td className="mr-2 whitespace-nowrap text-center">
         <button
-          className="font-medium text-blue-700 hover:underline"
+          className="rounded-lg border-[1px] border-zinc-300 bg-white py-0.5 pl-7 pr-2 text-xs font-medium tracking-wide drop-shadow-sm hover:text-zinc-700"
+          onClick={() => togglePreview(product)}
+        >
+          <span className="material-symbols-outlined absolute left-2 top-1 text-base leading-3">
+            edit_square
+          </span>
+          View
+        </button>
+        <button
+          className="ml-2 rounded-lg border-[1px] border-zinc-300 bg-white py-0.5 pl-7 pr-2 text-xs font-medium tracking-wide drop-shadow-sm hover:text-zinc-700"
           onClick={() => handleEdit(product)}
         >
+          <span className="material-symbols-outlined absolute left-2 top-1 text-base leading-3">
+            edit_square
+          </span>
           Edit
+        </button>
+        <button
+          className="ml-2 rounded-lg border-[1px] border-zinc-300 bg-white py-0.5 pl-7 pr-2 text-xs font-medium tracking-wide drop-shadow-sm hover:text-zinc-700 disabled:border-zinc-200 disabled:text-zinc-200 disabled:hover:cursor-not-allowed"
+          onClick={async () => {
+            handleArchive(selectedProducts, true);
+            setIsExpanded(false);
+          }}
+          disabled={selectedProducts.length === 0}
+        >
+          <span className="material-symbols-outlined absolute left-2 top-1 text-base leading-3">
+            archive
+          </span>
+          Archive
         </button>
       </td>
     </tr>
@@ -107,7 +192,7 @@ const Admin_ProductTable: React.FC<Table_Content> = ({
   // Calculate paginated products
   const indexOfLastProduct = currentPage * itemsPerPage;
   const indexOfFirstProduct = indexOfLastProduct - itemsPerPage;
-  const currentProducts = products.slice(
+  const currentProducts = sortedOrders.slice(
     indexOfFirstProduct,
     indexOfLastProduct,
   );
@@ -117,17 +202,23 @@ const Admin_ProductTable: React.FC<Table_Content> = ({
 
   return (
     <div className="flex h-full w-full flex-col justify-between">
-      <div className="mt-4 flex h-full w-full justify-center font-sans">
+      {toggleProductView && (
+        <PreviewForm
+          product={currentProduct}
+          toggleClose={togglePreviewClose}
+        ></PreviewForm>
+      )}
+      <div className="mt-4 flex h-full w-full justify-center">
         <div className="flex h-full w-full justify-center">
-          <div className="relative h-full w-full overflow-auto rounded">
-            <table className="w-full table-auto divide-y divide-gray-300 text-sm">
-              <thead className="h-8 bg-zinc-200">
-                <tr className="">
-                  <th scope="col" className="px-4">
+          <div className="relative h-full w-full overflow-auto">
+            <table className="w-full table-auto overflow-hidden text-sm">
+              <thead className="">
+                <tr className="h-8 text-nowrap bg-zinc-100">
+                  <th scope="col" className="rounded-l-lg px-4">
                     <div className="flex items-center rounded">
                       <input
                         type="checkbox"
-                        className="h-4 w-4 rounded border-gray-300 bg-gray-100 text-blue-600"
+                        className="h-4 w-4 rounded border-gray-300 bg-gray-100 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600"
                         onChange={(e) => {
                           const isChecked = e.target.checked;
                           if (isChecked) {
@@ -158,56 +249,60 @@ const Admin_ProductTable: React.FC<Table_Content> = ({
                   {/*  <th className="px-6 text-center font-medium uppercase tracking-wider text-zinc-500">
                     Thumbnail
                   </th> */}
-                  <th className="px-6 text-left font-medium uppercase tracking-wider text-zinc-500">
+                  <th
+                    className="cursor-pointer px-6 text-left font-medium capitalize tracking-wide text-zinc-500 hover:text-zinc-600"
+                    onClick={() => {
+                      handleSort("name");
+                    }}
+                  >
+                    <span className="mr-2 rounded border-[1px]" />
                     Name
-                  </th>
-                  <th className="px-6 text-left font-medium uppercase tracking-wider text-zinc-500">
-                    Category
-                  </th>
-                  <th className="px-6 text-left font-medium uppercase tracking-wider text-zinc-500">
-                    Minimum Price
-                  </th>
-                  <th className="px-6 text-center font-medium uppercase tracking-wider text-zinc-500">
-                    Variants
-                  </th>
-                  <th className="px-6 text-center font-medium uppercase tracking-wider text-zinc-500">
-                    Total Stocks
+                    <span className="material-symbols-outlined absolute top-2.5 px-1 text-sm leading-3">
+                      swap_vert
+                    </span>
                   </th>
                   <th
-                    scope="col"
-                    className="flex h-8 items-center justify-center"
-                    ref={ref}
+                    className="cursor-pointer px-6 text-left font-medium capitalize tracking-wide text-zinc-500 hover:text-zinc-600"
+                    onClick={() => {
+                      handleSort("category");
+                    }}
                   >
-                    <button
-                      type="button"
-                      className="flex rounded-md border-[1px] border-zinc-400 bg-zinc-100 transition-all hover:border-zinc-500"
-                      onClick={() => setIsExpanded(!isExpanded)}
-                      title="More Options"
-                    >
-                      <span className="material-symbols-outlined px-1 leading-3 text-zinc-500 transition-all hover:text-zinc-700">
-                        more_horiz
-                      </span>
-                    </button>
-                    {isExpanded && (
-                      <>
-                        <button
-                          className="w-18 absolute top-10 rounded-md bg-white p-2 uppercase text-red-700 shadow-md outline-2 transition-all hover:bg-red-50 hover:text-red-800 disabled:cursor-not-allowed disabled:bg-zinc-200 disabled:text-zinc-500"
-                          onClick={async () => {
-                            handleArchive(selectedProducts, true);
-                            setIsExpanded(false);
-                          }}
-                          disabled={selectedProducts.length === 0}
-                        >
-                          Archive
-                        </button>
-                      </>
-                    )}
+                    <span className="mr-2 rounded border-[1px]" />
+                    Category
+                    <span className="material-symbols-outlined absolute top-2.5 px-1 text-sm leading-3">
+                      swap_vert
+                    </span>
+                  </th>
+                  <th className="cursor-pointer px-6 text-left font-medium capitalize tracking-wide text-zinc-500 hover:text-zinc-600">
+                    <span className="mr-2 rounded border-[1px]" />
+                    Minimum Price
+                  </th>
+                  <th className="cursor-pointer px-6 text-left font-medium capitalize tracking-wide text-zinc-500 hover:text-zinc-600">
+                    <span className="mr-2 rounded border-[1px]" />
+                    Variants
+                  </th>
+                  <th className="cursor-pointer px-6 text-left font-medium capitalize tracking-wide text-zinc-500 hover:text-zinc-600">
+                    <span className="mr-2 rounded border-[1px]" />
+                    Total Stocks
+                  </th>
+                  <th className="cursor-pointer px-6 text-left font-medium">
+                    <span className="mr-2 rounded border-[1px]" />
+                  </th>
+                  <th className="rounded-r-lg text-center font-medium capitalize tracking-wider text-zinc-500">
+                    Manage
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-300">
+              <tbody className="">
+                <tr>
+                  <td colSpan={8} className="h-2"></td>
+                </tr>
                 {currentProducts.map((product, index) => (
-                  <Row_Cells key={index} product={product} />
+                  <Row_Cells
+                    key={index}
+                    product={product}
+                    togglePreview={togglePreview}
+                  />
                 ))}
               </tbody>
             </table>
@@ -218,11 +313,11 @@ const Admin_ProductTable: React.FC<Table_Content> = ({
         <button
           onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
           disabled={currentPage === 1}
-          className="rounded bg-gray-300 px-4 py-2"
+          className="rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700 disabled:bg-zinc-300"
         >
           Previous
         </button>
-        <span>
+        <span className="text-xs font-bold uppercase leading-3 tracking-wide text-zinc-500">
           Page {totalPages > 0 ? currentPage : 0} of {totalPages}
         </span>
         <button
@@ -230,7 +325,7 @@ const Admin_ProductTable: React.FC<Table_Content> = ({
             setCurrentPage((prev) => Math.min(prev + 1, totalPages))
           }
           disabled={currentPage === totalPages || totalPages === 0}
-          className="rounded bg-gray-300 px-4 py-2"
+          className="rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700 disabled:bg-zinc-300"
         >
           Next
         </button>

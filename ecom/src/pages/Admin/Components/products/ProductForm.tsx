@@ -1083,7 +1083,7 @@ const ProductForm: React.FC<{
       >
         <button
           type="button"
-          className="rounded bg-zinc-500 px-2.5 py-1 text-white hover:bg-zinc-700 focus:bg-zinc-500 focus:ring-2 focus:ring-zinc-400"
+          className="rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700"
           onClick={handleSubmitForm}
         >
           Submit

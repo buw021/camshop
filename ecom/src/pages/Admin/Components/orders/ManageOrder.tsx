@@ -29,7 +29,8 @@ interface ManageOrderProps {
   updateTracking: (
     action: "updateTracking",
     trackingNo: string,
-    trackingLink: string,) => void;
+    trackingLink: string,
+  ) => void;
 }
 
 const ManageOrder: React.FC<ManageOrderProps> = ({
@@ -63,7 +64,7 @@ const ManageOrder: React.FC<ManageOrderProps> = ({
   };
 
   return (
-    <div className="absolute left-0 top-0 z-20 flex h-full w-full justify-center rounded-xl bg-zinc-900/20 sm:py-4 backdrop-blur-sm">
+    <div className="absolute left-0 top-0 z-20 flex h-full w-full justify-center rounded-xl bg-zinc-900/20 backdrop-blur-sm sm:py-4">
       <div className="flex w-full flex-col gap-2 rounded-xl bg-white p-4 ring-2 ring-zinc-300/70 sm:max-w-[800px] sm:p-8">
         <div className="flex w-full items-center justify-between">
           <div className="flex flex-wrap items-center sm:gap-2">
@@ -195,11 +196,22 @@ const ManageOrder: React.FC<ManageOrderProps> = ({
                 <button
                   className="relative mt-2 self-end rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:border-[1px] disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-300"
                   onClick={() => {
-                  if (trackingNo === currentOrder.trackingNo && trackingLink === currentOrder.trackingLink) {
-                    return;
-                  }
-                    if (window.confirm("Are you sure you want to update the tracking information?")) {
-                    updateTracking("updateTracking", trackingNo, trackingLink);
+                    if (
+                      trackingNo === currentOrder.trackingNo &&
+                      trackingLink === currentOrder.trackingLink
+                    ) {
+                      return;
+                    }
+                    if (
+                      window.confirm(
+                        "Are you sure you want to update the tracking information?",
+                      )
+                    ) {
+                      updateTracking(
+                        "updateTracking",
+                        trackingNo,
+                        trackingLink,
+                      );
                     }
                   }}
                 >
@@ -326,7 +338,7 @@ const ManageOrder: React.FC<ManageOrderProps> = ({
             </button>
           )}
 
-          {currentOrder.fulfilled && currentOrder.status === "delivered" && (
+          {currentOrder.fulfilled && currentOrder.status === "shipped" && (
             <button
               className="relative self-end rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:border-[1px] disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-300"
               onClick={() => {
@@ -341,6 +353,23 @@ const ManageOrder: React.FC<ManageOrderProps> = ({
               }}
             >
               Order Delivered
+            </button>
+          )}
+
+          {currentOrder.fulfilled && currentOrder.status === "delivered" && (
+            <button
+              className="relative self-end rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:border-[1px] disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-300"
+              onClick={() => {
+                if (!trackingNo || !trackingLink) {
+                  showToast(
+                    "Please fill in the tracking number and link",
+                    "error",
+                  );
+                  return;
+                }
+              }}
+            >
+              Refund
             </button>
           )}
         </div>

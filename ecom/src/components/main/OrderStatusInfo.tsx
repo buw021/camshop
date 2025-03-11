@@ -154,6 +154,19 @@ const OrderStatusInfo = () => {
     }
   };
 
+  const handleOrderReceived = async (orderId: string) => {
+    if (!order) return;
+    try {
+      const response = await axiosInstance.post("/order-received", { orderId });
+      if (response.status === 200) {
+        showToast(response.data.message, "success");
+        getOrderStatus();
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   useEffect(() => {
     if (noData) {
       const timer = setTimeout(() => {
@@ -260,7 +273,7 @@ const OrderStatusInfo = () => {
           </>
         )}
         <div
-          className={`flex w-full ${order?.status === "pending" ? "justify-between" : "justify-end"} gap-2`}
+          className={`flex w-full ${order?.status === "pending" || order?.status === "shipped" ? "justify-between" : "justify-end"} gap-2`}
         >
           {["ordered", "pending"].includes(order?.status || "") && (
             <button
@@ -304,6 +317,26 @@ const OrderStatusInfo = () => {
               }}
             >
               Cancel Order
+            </button>
+          )}
+          {order?.status === "shipped" && (
+            <button
+              id="cancel-order"
+              name="cancel-order"
+              className="roboto-medium rounded-md bg-zinc-900 px-3 py-2 leading-3 text-white transition-all duration-200 hover:bg-zinc-700"
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                if (
+                  window.confirm(
+                    "Already received the order? Click OK to confirm",
+                  )
+                ) {
+                  handleOrderReceived(order.customOrderId);
+                }
+              }}
+            >
+              Order Received
             </button>
           )}
 

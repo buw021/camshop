@@ -71,21 +71,43 @@ const OrderList: React.FC<{
   } | null>(null);
 
   const sortedOrders = useMemo(() => {
-    const sortableOrders = [...orders];
-    if (sortConfig !== null) {
-      sortableOrders.sort((a, b) => {
-        const aValue = a[sortConfig.key];
-        const bValue = b[sortConfig.key];
+    if (!orders || !sortConfig) return orders;
 
-        if (aValue && bValue && aValue < bValue) {
-          return sortConfig.direction === "ascending" ? -1 : 1;
-        }
-        if (aValue && bValue && aValue > bValue) {
-          return sortConfig.direction === "ascending" ? 1 : -1;
-        }
-        return 0;
-      });
-    }
+    const { key, direction } = sortConfig;
+
+    const sortableOrders = [...orders];
+    sortableOrders.sort((a, b) => {
+      const aValue = a[key];
+      const bValue = b[key];
+
+      // Handle comparison for different data types
+      if (key === "placedAt") {
+        return direction === "ascending"
+          ? new Date(aValue as string | number | Date).getTime() -
+              new Date(bValue as string | number | Date).getTime()
+          : new Date(bValue as string | number | Date).getTime() -
+              new Date(aValue as string | number | Date).getTime();
+      }
+
+      if (typeof aValue === "boolean" && typeof bValue === "boolean") {
+        return direction === "ascending"
+          ? Number(aValue) - Number(bValue)
+          : Number(bValue) - Number(aValue);
+      }
+
+      if (typeof aValue === "string" && typeof bValue === "string") {
+        return direction === "ascending"
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue);
+      }
+
+      if (typeof aValue === "number" && typeof bValue === "number") {
+        return direction === "ascending" ? aValue - bValue : bValue - aValue;
+      }
+
+      return 0; // Default case
+    });
+
     return sortableOrders;
   }, [orders, sortConfig]);
 

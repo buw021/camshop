@@ -87,8 +87,8 @@ const getOrdersAdmin = async (req, res) => {
     }
     if (dateStart && dateEnd) {
       orderQuery.createdAt = {
-        $gte: new Date(dateStart),
-        $lt: new Date(dateEnd),
+        $gte: new Date(new Date(dateStart).setHours(0, 0, 0, 0)),
+        $lt: new Date(new Date(dateEnd).setHours(23, 59, 59, 999)),
       };
     }
     if (searchQuery) {

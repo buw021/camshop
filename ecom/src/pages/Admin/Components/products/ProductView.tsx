@@ -1,11 +1,12 @@
 import React, { ReactNode, useState } from "react";
+
 interface Attributes {
   [key: string]: string;
 }
 
 interface Variant {
   variantName: string;
-  variantColor: string;
+  variantColor?: string;
   variantStocks: number | null;
   variantContent: string[];
   variantImgs: string[];
@@ -26,6 +27,7 @@ interface Product {
   tags: string[];
   _id?: string;
 }
+
 const AccordionSection: React.FC<{
   title: string;
   children: ReactNode;
@@ -40,12 +42,16 @@ const AccordionSection: React.FC<{
         <span className="font-medium tracking-wide">{title}</span>
         <div className="relative flex items-center">
           <span
-            className={`material-symbols-outlined absolute right-0 ${!isOpen ? "animate-fade-in" : "animate-fade-out"}`}
+            className={`material-symbols-outlined absolute right-0 ${
+              !isOpen ? "animate-fade-in" : "animate-fade-out"
+            }`}
           >
             collapse_content
           </span>
           <span
-            className={`material-symbols-outlined absolute right-0 ${isOpen ? "animate-fade-in" : "animate-fade-out"}`}
+            className={`material-symbols-outlined absolute right-0 ${
+              isOpen ? "animate-fade-in" : "animate-fade-out"
+            }`}
           >
             expand_content
           </span>
@@ -61,17 +67,19 @@ const AccordionSection: React.FC<{
 };
 
 const PreviewForm: React.FC<{
-  product: Product;
-  togglePreview: () => void;
-  confirm: () => void;
-  processing: boolean;
-}> = ({ product, togglePreview, confirm, processing }) => {
+  product: Product | null;
+  toggleClose: () => void;
+}> = ({ product, toggleClose }) => {
+  if (!product) {
+    return <div>No product data available.</div>;
+  }
+
   return (
     <div className="absolute left-0 top-0 z-30 flex h-full w-full justify-center rounded bg-zinc-600/50 p-2.5 text-sm tracking-wide backdrop-blur-sm lg:p-10">
       <div className="container relative flex h-full w-full flex-col gap-4 overflow-scroll rounded-md bg-zinc-100 p-2.5 px-10">
         <span
           className={`material-symbols-outlined absolute right-2 top-2 z-20 h-8 w-8 select-none self-end rounded-full bg-zinc-900/10 text-center text-xl leading-8 text-zinc-800 backdrop-blur-sm transition-all duration-100 ease-linear hover:cursor-pointer hover:text-zinc-500`}
-          onClick={() => togglePreview()}
+          onClick={toggleClose}
         >
           close
         </span>
@@ -102,7 +110,7 @@ const PreviewForm: React.FC<{
                 <>
                   <p>
                     <span className="font-medium">Content:</span>
-                    {product.variants[0].variantContent}
+                    {product.variants[0].variantContent.join(", ")}
                   </p>
                   <div className="h-[2px] w-full bg-zinc-200"></div>
                   <p>
@@ -117,15 +125,20 @@ const PreviewForm: React.FC<{
               )}
             </AccordionSection>
             <AccordionSection title="Specifications">
-              {product.specifications.map((spec, idx) => (
-                <div key={idx}>
-                  {Object.entries(spec).map(([key, value]) => (
-                    <p key={key}>
-                      <strong>{key}:</strong> {value}
-                    </p>
-                  ))}
-                </div>
-              ))}
+              {Array.isArray(product.specifications) &&
+              product.specifications.length > 0 ? (
+                product.specifications.map((spec, idx) => (
+                  <div key={idx}>
+                    {Object.entries(spec).map(([key, value]) => (
+                      <p key={key}>
+                        <strong>{key}:</strong> {value}
+                      </p>
+                    ))}
+                  </div>
+                ))
+              ) : (
+                <p>No specifications available.</p>
+              )}
             </AccordionSection>
             {product.variants.length > 1 && (
               <AccordionSection title="Variants">
@@ -135,14 +148,16 @@ const PreviewForm: React.FC<{
                       <p>
                         <strong>Name:</strong> {variant.variantName}
                       </p>
-                      <p>
-                        <strong>Color:</strong> {variant.variantColor}
-                      </p>
+                      {variant.variantColor && (
+                        <p>
+                          <strong>Color:</strong> {variant.variantColor}
+                        </p>
+                      )}
                       <p>
                         <strong>Stocks:</strong> {variant.variantStocks}
                       </p>
                       <p>
-                        <strong>Price:</strong> {variant.variantPrice}
+                        <strong>Price:</strong> € {variant.variantPrice}
                       </p>
                       <p>
                         <strong>Content:</strong>
@@ -152,13 +167,13 @@ const PreviewForm: React.FC<{
                         <strong>Images:</strong>
                       </p>
                       <div className="flex gap-2">
-                        {variant.previewUrl.map((img) => (
+                        {variant.variantImgs.map((img) => (
                           <div
                             key={img}
                             className="relative max-h-14 max-w-14 rounded bg-white p-1"
                           >
                             <img
-                              src={img}
+                              src={`http://localhost:3000/uploads/${img}`}
                               alt={`Preview ${img}`}
                               className="h-auto w-full"
                             />
@@ -173,13 +188,13 @@ const PreviewForm: React.FC<{
             {product.variants.length === 1 && (
               <AccordionSection title="Images">
                 <div className="flex gap-2">
-                  {product.variants[0].previewUrl.map((img) => (
+                  {product.variants[0].variantImgs.map((img) => (
                     <div
                       key={img}
                       className="relative max-h-14 max-w-14 rounded bg-white p-1"
                     >
                       <img
-                        src={img}
+                        src={`http://localhost:3000/uploads/${img}`}
                         alt={`Preview ${img}`}
                         className="h-auto w-full"
                       />
@@ -195,14 +210,6 @@ const PreviewForm: React.FC<{
             )}
           </div>
         </div>
-        <button
-          type="button"
-          className="self-end rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700"
-          onClick={confirm}
-          disabled={processing}
-        >
-          Confirm
-        </button>
       </div>
     </div>
   );

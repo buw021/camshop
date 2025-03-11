@@ -135,6 +135,7 @@ const orderSchema = new Schema(
         "cancelled",
         "refunded",
         "processed",
+        "return",
         "refund requested",
         "refund on process",
         "payment failed",

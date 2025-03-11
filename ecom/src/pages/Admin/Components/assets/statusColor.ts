@@ -15,6 +15,8 @@ export const statusColor = (status: string) => {
       return "bg-red-200 text-red-800  border-red-300";
     case "refund on process":
       return "bg-violet-200 text-violet-800  border-violet-300";
+      case "refund requested":
+      return "bg-pink-200 text-pink-800  border-pink-300 animate-pulse";
     default:
       return "bg-gray-200 text-gray-800 border-gray-300";
   }

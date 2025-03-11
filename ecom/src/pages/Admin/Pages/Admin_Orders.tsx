@@ -14,8 +14,8 @@ const Admin_Orders = () => {
     paymentStatus: "",
     fulfillmentStatus: "",
     searchQuery: "",
-    dateStart: "",
-    dateEnd: "",
+    dateStart: null,
+    dateEnd: null,
   });
 
   const getOrders = useCallback(async () => {
@@ -74,7 +74,6 @@ const Admin_Orders = () => {
 
   const getFilter = (filter: FiltersProps) => {
     setFilters(filter);
-    console.log(filter);
   };
 
   return (

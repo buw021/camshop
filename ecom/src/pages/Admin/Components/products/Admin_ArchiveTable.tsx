@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Product } from "../interface/interfaces";
+import PreviewForm from "./ProductView";
 
 interface Table_Content {
   handleEdit: (product: Product) => void;
@@ -14,6 +15,8 @@ const Admin_ArchiveTable: React.FC<Table_Content> = ({
 }) => {
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
+  const [toggleProductView, setToggleProductView] = useState<boolean>(false);
   const itemsPerPage = 10;
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const ref = useRef<HTMLTableCellElement>(null);
@@ -38,11 +41,22 @@ const Admin_ArchiveTable: React.FC<Table_Content> = ({
     };
   }, []);
 
+  const togglePreview = (product: Product) => {
+    setCurrentProduct(product);
+    setToggleProductView(!toggleProductView);
+  };
+
+  const togglePreviewClose = () => {
+    setCurrentProduct(null);
+    setToggleProductView(false);
+  };
+
   const Row_Cells: React.FC<{
     product: Product;
-  }> = ({ product }) => (
-    <tr className="hover:bg-zinc-200">
-      <td scope="col" className="px-4">
+    togglePreview: (product: Product) => void;
+  }> = ({ product, togglePreview }) => (
+    <tr className="border-y-[1px] hover:cursor-pointer hover:bg-zinc-100 focus:bg-zinc-200">
+      <td scope="col" className="flex items-center px-4 py-1.5">
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -59,21 +73,15 @@ const Admin_ArchiveTable: React.FC<Table_Content> = ({
           <label className="sr-only">checkbox</label>
         </div>
       </td>
-      {/* <td className="overflow-hidden overflow-ellipsis whitespace-nowrap px-6">
-        <span className=""> {variant._id}</span>
-      </td> */}
-      <td className="flex justify-center whitespace-nowrap px-6">
-        <div className="h-8 w-8 items-center bg-black">
-          <img
-            src={`http://localhost:3000/uploads/${product.variants[0].variantImgs}`}
-            alt="thumbnail"
-          />
-        </div>
+
+      <td className="pl-8 pr-6 text-left font-medium capitalize">
+        {product.name}
       </td>
-      <td className="whitespace-nowrap px-6">{product.name}</td>
-      <td className="whitespace-nowrap px-6 capitalize">{product.category}</td>
-      <td className="whitespace-nowrap px-6 font-medium">
-        EUR{" "}
+      <td className="pl-8 pr-6 text-left font-medium capitalize">
+        {product.category}
+      </td>
+      <td className="pl-8 pr-6 text-left capitalize">
+        €{" "}
         {Math.min(
           ...product.variants.map(
             (variant) => variant.variantPrice ?? Infinity,
@@ -81,10 +89,10 @@ const Admin_ArchiveTable: React.FC<Table_Content> = ({
         )}
       </td>
 
-      <td className="whitespace-nowrap px-6 text-center">
+      <td className="pl-8 pr-6 text-left capitalize">
         {product.variants.length - 1}
       </td>
-      <td className="whitespace-nowrap px-6 text-center">
+      <td className="pl-8 pr-6 text-left capitalize">
         {(() => {
           const stock = product.variants.reduce(
             (acc, variant) => acc + (variant.variantStocks ?? 0),
@@ -93,12 +101,38 @@ const Admin_ArchiveTable: React.FC<Table_Content> = ({
           return stock;
         })()}
       </td>
-      <td className="whitespace-nowrap px-6 text-center">
+      <td className="pl-8 pr-6 text-left capitalize"></td>
+      <td className="mr-2 whitespace-nowrap text-center">
         <button
-          className="font-medium text-blue-700 hover:underline"
+          className="rounded-lg border-[1px] border-zinc-300 bg-white py-0.5 pl-7 pr-2 text-xs font-medium tracking-wide drop-shadow-sm hover:text-zinc-700"
+          onClick={() => togglePreview(product)}
+        >
+          <span className="material-symbols-outlined absolute left-2 top-1 text-base leading-3">
+            edit_square
+          </span>
+          View
+        </button>
+        <button
+          className="ml-2 rounded-lg border-[1px] border-zinc-300 bg-white py-0.5 pl-7 pr-2 text-xs font-medium tracking-wide drop-shadow-sm hover:text-zinc-700"
           onClick={() => handleEdit(product)}
         >
+          <span className="material-symbols-outlined absolute left-2 top-1 text-base leading-3">
+            edit_square
+          </span>
           Edit
+        </button>
+        <button
+          className="ml-2 rounded-lg border-[1px] border-zinc-300 bg-white py-0.5 pl-7 pr-2 text-xs font-medium tracking-wide drop-shadow-sm hover:text-zinc-700 disabled:border-zinc-200 disabled:text-zinc-200 disabled:hover:cursor-not-allowed"
+          onClick={async () => {
+            handleArchive(selectedProducts, false);
+            setIsExpanded(false);
+          }}
+          disabled={selectedProducts.length === 0}
+        >
+          <span className="material-symbols-outlined absolute left-2 top-1 rotate-180 text-base leading-3">
+            archive
+          </span>
+          Unarchive
         </button>
       </td>
     </tr>
@@ -117,14 +151,20 @@ const Admin_ArchiveTable: React.FC<Table_Content> = ({
 
   return (
     <div className="flex h-full w-full flex-col justify-between">
-      <div className="mt-4 flex h-full w-full justify-center font-sans">
+      {toggleProductView && (
+        <PreviewForm
+          product={currentProduct}
+          toggleClose={togglePreviewClose}
+        ></PreviewForm>
+      )}
+      <div className="mt-4 flex h-full w-full justify-center">
         <div className="flex h-full w-full justify-center">
           <div className="relative h-full w-full overflow-auto rounded">
-            <table className="w-full table-auto divide-y divide-gray-300 text-sm">
+            <table className="w-full table-auto overflow-hidden text-sm">
               <thead className="bg-zinc-200">
-                <tr className="">
-                  <th scope="col" className="px-4">
-                    <div className="flex items-center">
+                <tr className="h-8 text-nowrap bg-zinc-100">
+                  <th scope="col" className="rounded-l-lg px-4">
+                    <div className="flex items-center rounded">
                       <input
                         type="checkbox"
                         className="h-4 w-4 rounded border-gray-300 bg-gray-100 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600"
@@ -155,58 +195,47 @@ const Admin_ArchiveTable: React.FC<Table_Content> = ({
                   {/* <th className="px-6 text-left font-medium uppercase tracking-wider text-zinc-500">
                     ID No.
                   </th> */}
-                  <th className="px-6 text-center font-medium uppercase tracking-wider text-zinc-500">
-                    Thumbnail
-                  </th>
-                  <th className="px-6 text-left font-medium uppercase tracking-wider text-zinc-500">
+                  <th className="cursor-pointer px-6 text-left font-medium capitalize tracking-wide text-zinc-500 hover:text-zinc-600">
+                    <span className="mr-2 rounded border-[1px]" />
                     Name
                   </th>
-                  <th className="px-6 text-left font-medium uppercase tracking-wider text-zinc-500">
+                  <th className="cursor-pointer px-6 text-left font-medium capitalize tracking-wide text-zinc-500 hover:text-zinc-600">
+                    <span className="mr-2 rounded border-[1px]" />
                     Category
                   </th>
-                  <th className="px-6 text-left font-medium uppercase tracking-wider text-zinc-500">
+                  <th className="cursor-pointer px-6 text-left font-medium capitalize tracking-wide text-zinc-500 hover:text-zinc-600">
+                    <span className="mr-2 rounded border-[1px]" />
                     Minimum Price
                   </th>
-                  <th className="px-6 text-center font-medium uppercase tracking-wider text-zinc-500">
+                  <th className="cursor-pointer px-6 text-left font-medium capitalize tracking-wide text-zinc-500 hover:text-zinc-600">
+                    <span className="mr-2 rounded border-[1px]" />
                     Variants
                   </th>
-                  <th className="px-6 text-center font-medium uppercase tracking-wider text-zinc-500">
+                  <th className="cursor-pointer px-6 text-left font-medium capitalize tracking-wide text-zinc-500 hover:text-zinc-600">
+                    <span className="mr-2 rounded border-[1px]" />
                     Total Stocks
                   </th>
-                  <th
-                    scope="col"
-                    className="relative flex items-center justify-center p-4"
-                    ref={ref}
-                  >
-                    <button
-                      type="button"
-                      className="flex rounded-md border-[1px] border-zinc-400 bg-zinc-100 transition-all hover:border-zinc-500"
-                      onClick={() => setIsExpanded(!isExpanded)}
-                    >
-                      <span className="material-symbols-outlined px-1 leading-3 text-zinc-500 transition-all hover:text-zinc-700">
-                        more_horiz
-                      </span>
-                    </button>
+                  <th className="cursor-pointer px-6 text-left font-medium">
+                    <span className="mr-2 rounded border-[1px]" />
+                  </th>
+                  <th className="rounded-r-lg text-center font-medium capitalize tracking-wider text-zinc-500">
                     {isExpanded && (
-                      <>
-                        <button
-                          className="w-18 absolute top-10 rounded-md bg-white p-2 uppercase text-green-700 shadow-md outline-2 transition-all hover:bg-green-50 hover:text-green-800 disabled:cursor-not-allowed disabled:bg-zinc-200 disabled:text-zinc-500"
-                          onClick={async () => {
-                            handleArchive(selectedProducts, false);
-                            setIsExpanded(false);
-                          }}
-                          disabled={selectedProducts.length === 0}
-                        >
-                          Unarchive
-                        </button>
-                      </>
+                      <div className="w-18 absolute top-8 z-20 -ml-4 rounded-lg border-[1px] border-zinc-200 bg-white px-4 py-2 drop-shadow-sm"></div>
                     )}
+                    Manage
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-300">
+              <tbody className="">
+                <tr>
+                  <td colSpan={8} className="h-2"></td>
+                </tr>
                 {currentProducts.map((product, index) => (
-                  <Row_Cells key={index} product={product} />
+                  <Row_Cells
+                    key={index}
+                    product={product}
+                    togglePreview={togglePreview}
+                  />
                 ))}
               </tbody>
             </table>

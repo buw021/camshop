@@ -1,12 +1,14 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { variants } from "../Components/assets/transition_variants";
 import Admin_ProductTable from "../Components/products/Admin_ProductTable";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import ProductForm from "../Components/products/ProductForm";
 import axiosInstance from "../Services/axiosInstance";
 import { Product } from "../Components/interface/interfaces";
 import EditProduct from "../Components/products/EditProduct";
 import Admin_ArchiveTable from "../Components/products/Admin_ArchiveTable";
+
+const categoryList = ["camera", "lens", "accessories", "others"];
 
 const Admin_Products: React.FC<{ setIsDirty: (dirty: boolean) => void }> = ({
   setIsDirty,
@@ -17,27 +19,36 @@ const Admin_Products: React.FC<{ setIsDirty: (dirty: boolean) => void }> = ({
   const [archive, setArchive] = useState(false);
   const [archiveProducts, setArchiveProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState("");
+
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [filters, setFilters] = useState<{ category: string[] }>({
+    category: [],
+  });
   const toggleAddProduct = () => {
     setAddPopup(!addPopUp);
   };
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
-      const response = await axiosInstance.get("/get-products");
+      const response = await axiosInstance.get("/get-products", {
+        params: { filters: filters },
+      });
       setProducts(response.data);
     } catch (error) {
       console.error("Error fetching products:", error);
     }
-  };
+  }, [filters]);
 
-  const fetchArchiveProducts = async () => {
+  const fetchArchiveProducts = useCallback(async () => {
     try {
-      const response = await axiosInstance.get("/get-archived-products");
+      const response = await axiosInstance.get("/get-archived-products", {
+        params: { filters: filters },
+      });
       setArchiveProducts(response.data);
     } catch (error) {
       console.error("Error fetching products:", error);
     }
-  };
+  }, [filters]);
 
   const fetchProducToEdit = async (id: string) => {
     try {
@@ -51,7 +62,7 @@ const Admin_Products: React.FC<{ setIsDirty: (dirty: boolean) => void }> = ({
   useEffect(() => {
     fetchProducts();
     fetchArchiveProducts();
-  }, []);
+  }, [fetchArchiveProducts, fetchProducts]);
 
   const handleEdit = (product: Product) => {
     if (product._id) fetchProducToEdit(product._id);
@@ -144,17 +155,17 @@ const Admin_Products: React.FC<{ setIsDirty: (dirty: boolean) => void }> = ({
         <h1 className="roboto-bold mb-5 text-xl text-zinc-800">
           {archive ? "Archive" : "Product"} List{" "}
         </h1>
-        <div className="roboto-medium flex justify-between uppercase text-zinc-500">
-          <div className="flex gap-4">
+        <div className="roboto-medium flex items-center justify-between uppercase text-zinc-500">
+          <div className="flex items-center gap-4">
             <button
-              className="roboto-medium self-center rounded-md bg-zinc-400 px-4 py-2 text-sm uppercase tracking-wide text-white transition-all duration-100 hover:bg-zinc-500"
+              className="rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700"
               onClick={() => handleSearch(search)}
             >
               Search
             </button>
             <div className="relative flex items-center">
               <input
-                className="roboto-regular w-[15vw] min-w-[175px] rounded-sm border-2 border-zinc-200 bg-zinc-50 py-[6px] pl-2 pr-8 text-sm text-zinc-900 outline-none outline-1 focus:border-zinc-300"
+                className="roboto-medium w-[15vw] min-w-[175px] rounded-md border-2 border-zinc-200 bg-zinc-50 py-[4.25px] pl-2 pr-8 text-xs leading-3 text-zinc-900 outline-none outline-1 focus:border-zinc-300"
                 placeholder="Search"
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={(e) => {
@@ -169,17 +180,72 @@ const Admin_Products: React.FC<{ setIsDirty: (dirty: boolean) => void }> = ({
                 cancel
               </span>
             </div>
+            <div className="flex items-center">
+              <div
+                className="relative z-10"
+                onBlur={(e) => {
+                  if (!e.currentTarget.contains(e.relatedTarget)) {
+                    setShowDropdown(false);
+                  }
+                }}
+                tabIndex={0}
+              >
+                <button
+                  className="relative self-center rounded-md bg-zinc-800 py-[7px] pl-3 pr-7 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700"
+                  onClick={() => setShowDropdown(!showDropdown)}
+                >
+                  Filter by status{" "}
+                  <span className="material-symbols-outlined absolute right-2 top-1.5 text-lg leading-3">
+                    keyboard_arrow_down
+                  </span>
+                </button>
+                {showDropdown && (
+                  <div className="absolute mt-2 w-48 gap-1 rounded-md bg-white py-1 text-sm font-medium tracking-wide shadow-lg ring-1 ring-black ring-opacity-5">
+                    <div className="py-1">
+                      {categoryList.map((category, index) => (
+                        <label
+                          key={index}
+                          className="flex items-center px-2 hover:cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4 rounded border-gray-300 bg-gray-100 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                            checked={filters.category.includes(category)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setFilters((prev) => ({
+                                  ...prev,
+                                  category: [...prev.category, category],
+                                }));
+                              } else {
+                                setFilters((prev) => ({
+                                  ...prev,
+                                  category: prev.category.filter(
+                                    (f) => f !== category,
+                                  ),
+                                }));
+                              }
+                            }}
+                          />
+                          <span className="ml-2 capitalize">{category}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-          <div className="flex flex-row gap-2">
+          <div className="flex flex-row items-center gap-2">
             <button
-              className={`roboto-medium self-center rounded-md bg-zinc-400 px-4 py-2 text-sm uppercase tracking-wide text-white transition-all duration-100 hover:bg-zinc-500 disabled:translate-x-[5rem] disabled:scale-x-0 disabled:cursor-not-allowed disabled:bg-zinc-200 disabled:text-zinc-500`}
+              className="rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700"
               onClick={() => toggleAddProduct()}
               disabled={archive}
             >
               Add New Product
             </button>
             <button
-              className={`roboto-medium flex self-center rounded-md px-4 py-1.5 text-sm uppercase tracking-wide text-white transition-all duration-100 ${!archive ? "bg-red-400 hover:bg-red-500" : "bg-green-400 hover:bg-green-500"}`}
+              className={`roboto-medium flex rounded-md py-[7px] pl-2.5 pr-2.5 text-sm uppercase tracking-wide text-white transition-all duration-100 ${!archive ? "bg-red-400 hover:bg-red-500" : "bg-green-400 hover:bg-green-500"}`}
               onClick={() => {
                 setArchive(!archive);
                 setSearch("");
@@ -188,7 +254,7 @@ const Admin_Products: React.FC<{ setIsDirty: (dirty: boolean) => void }> = ({
               {!archive ? (
                 <>
                   <span
-                    className="material-symbols-outlined"
+                    className="material-symbols-outlined text-lg leading-3"
                     title="View Archive"
                   >
                     archive
@@ -197,7 +263,7 @@ const Admin_Products: React.FC<{ setIsDirty: (dirty: boolean) => void }> = ({
               ) : (
                 <>
                   <span
-                    className="material-symbols-outlined"
+                    className="material-symbols-outlined text-lg leading-3"
                     title="View Products"
                   >
                     unarchive

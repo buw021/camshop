@@ -10,7 +10,7 @@ const {
   getOrderStatus,
   orderCancelRefund,
   getUserOrders,
-
+  orderReceived,
 } = require("../controllers/Order");
 const { createCheckoutSessionLimiter } = require("../middleware/rateLimit");
 
@@ -27,5 +27,7 @@ router.post(
   createNewCheckOutSession
 );
 router.post("/order-cancel-refund", orderCancelRefund);
+
+router.post("/order-received", orderReceived);
 
 module.exports = router;
