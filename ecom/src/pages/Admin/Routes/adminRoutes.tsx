@@ -7,7 +7,7 @@ import Admin_Navbar from "../Components/Admin_Navbar";
 import Admin_Login from "../Pages/Admin_Login";
 import Admin_Products from "../Pages/Admin_Products";
 import Admin_Promotion from "../Pages/Admin_Promotion";
-import Admin_Customers from "../Components/Admin_Customers";
+import Admin_Customers from "../Pages/Admin_Customers";
 import Admin_Reports from "../Components/Admin_Reports";
 import Admin_Dashboard from "../Components/Admin_Dashboard";
 

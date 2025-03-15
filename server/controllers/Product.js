@@ -94,15 +94,16 @@ const getFullProduct = async (req, res) => {
 };
 
 const getProducts = async (req, res) => {
+  const { filters } = req.query;
+ 
   try {
-    const products = await Product.find({ isArchived: false });
+    let query = { isArchived: false };
 
-    /*const product = await Product.findById(productId).populate({
-    path: 'variants.saleId',
-    model: 'Sale',
-    match: { isOnSale: true }, // Only populate if isOnSale is true
-    select: 'salePrice saleStartDate saleExpiryDate', // Select specific fields if needed
-  }).lean();*/
+    if (filters && filters.category && filters.category.length > 0) {
+      query.category = { $in: filters.category };
+    }
+
+    const products = await Product.find(query);
 
     res.json(products);
   } catch (error) {
@@ -111,10 +112,18 @@ const getProducts = async (req, res) => {
 };
 
 const getArchivedProducts = async (req, res) => {
+  const { filters } = req.query;
+  
   try {
-    const products = await Product.find({ isArchived: true });
+    let query = { isArchived: false };
 
-    res.json(productSummaries);
+    if (filters && filters.category && filters.category.length > 0) {
+      query.category = { $in: filters.category };
+    }
+
+    const products = await Product.find(query);
+
+    res.json(products);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

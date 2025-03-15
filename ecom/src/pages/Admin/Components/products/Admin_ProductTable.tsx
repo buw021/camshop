@@ -159,7 +159,7 @@ const Admin_ProductTable: React.FC<Table_Content> = ({
           onClick={() => togglePreview(product)}
         >
           <span className="material-symbols-outlined absolute left-2 top-1 text-base leading-3">
-            edit_square
+            visibility
           </span>
           View
         </button>

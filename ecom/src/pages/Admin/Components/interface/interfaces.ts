@@ -90,3 +90,67 @@ export interface FiltersProps {
   dateStart: Date | null;
   dateEnd: Date | null;
 }
+
+export interface CartID { 
+  productId: string;
+  variantId: string;
+  quantity: number;
+}
+
+export interface CartInterface {
+  productId: string;
+  variantId: string;
+  name: string;
+  variantName: string;
+  variantColor: string;
+  variantImg: string;
+  price: number;
+  quantity: number;
+  saleId: {salePrice: number | null} | null;
+  discountedPrice?: number;
+}
+
+export interface WishlistID {
+  productId: string;
+  variantId: string;
+}
+
+export interface Wishlist {
+    quantity: number;
+    productId: string;
+    variantId: string;
+    name: string;
+    variantName: string;
+    variantColor: string;
+    variantImg: string;
+    saleId: { salePrice: number } | null;
+    price: number;
+  }
+
+
+export interface CustomerProps {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNo: string;
+  address: AddressInterface[];
+  orders: OrderProps[];
+  wishlist: Wishlist[];
+  cart: CartInterface[];
+  
+}
+
+
+export interface AddressInterface {
+  firstName: string;
+  lastName: string;
+  phoneNo: string;
+  address: string;
+  city: string;
+  state: string;
+  zip: number;
+  country: string;
+  default?: boolean;
+  _id?: string;
+}

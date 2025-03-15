@@ -99,9 +99,16 @@ const userSchema = new Schema(
       type: Date,
       default: null,
     },
+    reivews: {
+      type: [],
+      default: [],
+    },
+    otp: { type: String, default: null },
+    otpExpires: { type: Date, default: null },
   },
+
   { timestamps: true }
 );
 
-const UserModel = mongoose.model("User", userSchema);
-module.exports = UserModel;
+const User = mongoose.model("User", userSchema);
+module.exports = User;

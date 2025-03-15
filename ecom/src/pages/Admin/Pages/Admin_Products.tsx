@@ -194,7 +194,7 @@ const Admin_Products: React.FC<{ setIsDirty: (dirty: boolean) => void }> = ({
                   className="relative self-center rounded-md bg-zinc-800 py-[7px] pl-3 pr-7 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700"
                   onClick={() => setShowDropdown(!showDropdown)}
                 >
-                  Filter by status{" "}
+                  Filter by Category{" "}
                   <span className="material-symbols-outlined absolute right-2 top-1.5 text-lg leading-3">
                     keyboard_arrow_down
                   </span>
@@ -248,6 +248,7 @@ const Admin_Products: React.FC<{ setIsDirty: (dirty: boolean) => void }> = ({
               className={`roboto-medium flex rounded-md py-[7px] pl-2.5 pr-2.5 text-sm uppercase tracking-wide text-white transition-all duration-100 ${!archive ? "bg-red-400 hover:bg-red-500" : "bg-green-400 hover:bg-green-500"}`}
               onClick={() => {
                 setArchive(!archive);
+                setFilters({ category: [] });
                 setSearch("");
               }}
             >

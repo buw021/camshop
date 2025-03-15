@@ -73,32 +73,6 @@ const OrderFilters: React.FC<{ getFilter: (filter: FiltersProps) => void }> = ({
   return (
     <div className="flex w-full flex-col gap-2">
       <div className="relative flex items-center justify-between">
-        {/* <div className="flex gap-2">
-          <button
-            className={`roboto-medium rounded-t border-x-[1px] border-t-[1px] border-zinc-100 bg-zinc-100 px-2 text-sm hover:cursor-pointer hover:bg-zinc-200 ${"border-zinc-300 bg-zinc-200"}`}
-            onClick={(e) => {
-              e.preventDefault();
-            }}
-          >
-            All Products
-          </button>
-          <button
-            className={`roboto-medium rounded-t border-x-[1px] border-t-[1px] border-zinc-100 bg-zinc-100 px-2 text-sm hover:cursor-pointer hover:bg-zinc-200 ${"border-zinc-300 bg-zinc-200"}`}
-            onClick={(e) => {
-              e.preventDefault();
-            }}
-          >
-            Unfulfilled
-          </button>
-          <button
-            className={`roboto-medium rounded-t border-x-[1px] border-t-[1px] border-zinc-100 bg-zinc-100 px-2 text-sm hover:cursor-pointer hover:bg-zinc-200 ${"border-zinc-300 bg-zinc-200"}`}
-            onClick={(e) => {
-              e.preventDefault();
-            }}
-          >
-            Paid
-          </button>
-        </div> */}
       </div>
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex gap-2">
@@ -201,6 +175,7 @@ const OrderFilters: React.FC<{ getFilter: (filter: FiltersProps) => void }> = ({
             </label>
             <input
               type="date"
+              id="start-date"
               className="border-zinc-150 w-26 rounded-md border-[1px] bg-zinc-50 px-1 py-1 text-xs font-medium tracking-wide text-zinc-900 outline-none outline-1 drop-shadow-sm hover:border-zinc-300 focus:border-zinc-300"
               title="Start Date"
               onChange={(e) => handleDateChange(e, "dateStart")}
@@ -213,6 +188,7 @@ const OrderFilters: React.FC<{ getFilter: (filter: FiltersProps) => void }> = ({
             </label>
             <input
               type="date"
+              id="end-date"
               title="End Date"
               className="border-zinc-150 w-26 rounded-md border-[1px] bg-zinc-50 px-1 py-1 text-xs font-medium tracking-wide text-zinc-900 outline-none outline-1 drop-shadow-sm hover:border-zinc-300 focus:border-zinc-300"
               onChange={(e) => handleDateChange(e, "dateEnd")}
