@@ -26,8 +26,20 @@ const Admin_Customers = () => {
     getCustomers();
   }, [getCustomers]);
 
-  const manageCustomer = (customer: CustomerProps) => {
-    setSelectedCustomer(customer);
+  const getCustomerDetails = async (customerID: string) => {
+    try {
+      const response = await axiosInstance.get("/get-user-details", {
+        params: { customerID },
+      });
+      if (response.status === 200) return response.data;
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const manageCustomer = async (customerID: string) => {
+    const customerDetails = await getCustomerDetails(customerID);
+    if (customerDetails) setSelectedCustomer(customerDetails);
   };
 
   const closeManageCustomer = () => {

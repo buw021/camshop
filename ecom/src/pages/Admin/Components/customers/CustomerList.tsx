@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { CustomerProps } from "../interface/interfaces";
 const Row_Cells: React.FC<{
   customer: CustomerProps;
-  manageCustomer: (customer: CustomerProps) => void;
+  manageCustomer: (customer: string) => void;
 }> = ({ customer, manageCustomer }) => (
   <tr className="border-y-[1px] hover:bg-zinc-100">
     <td className="whitespace-nowrap py-1 pl-8 pr-6 text-left capitalize">
@@ -17,7 +17,7 @@ const Row_Cells: React.FC<{
     <td className="whitespace-nowrap pl-8 pr-6 text-left text-xs font-medium">
       {customer.phoneNo || "XXX-XXX-XXXX"}
     </td>
-    <td className="px-6 pl-8 text-left">
+    <td className="whitespace-nowrap px-6 pl-8 text-left">
       <button className="rounded-lg border-[1px] border-zinc-300 bg-white py-0.5 pl-7 pr-2 text-xs font-medium tracking-wide drop-shadow-sm hover:text-zinc-700">
         <span className="material-symbols-outlined absolute left-2 top-1 text-base leading-3">
           visibility
@@ -27,7 +27,7 @@ const Row_Cells: React.FC<{
 
       <button
         className="ml-2 rounded-lg border-[1px] border-zinc-300 bg-white py-0.5 pl-7 pr-2 text-xs font-medium tracking-wide drop-shadow-sm hover:text-zinc-700"
-        onClick={() => manageCustomer(customer)}
+        onClick={() => manageCustomer(customer._id)}
       >
         <span className="material-symbols-outlined absolute left-2 top-1 text-base leading-3">
           edit_square
@@ -40,7 +40,7 @@ const Row_Cells: React.FC<{
 
 const CustomerList: React.FC<{
   customers: CustomerProps[];
-  manageCustomer: (order: CustomerProps) => void;
+  manageCustomer: (customerID: string) => void;
 }> = ({ customers, manageCustomer }) => {
   const [sortConfig, setSortConfig] = useState<{
     key: keyof CustomerProps;

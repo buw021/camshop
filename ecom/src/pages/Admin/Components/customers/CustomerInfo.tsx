@@ -3,15 +3,16 @@ import { AddressInterface, CustomerProps } from "../interface/interfaces";
 import CustomerAddress from "./CustomerAddress";
 import CustomerOrderList from "./CustomerOrderList";
 import CustomerCartList from "./CustomerCart";
+import CustomerWishlist from "./CustomerWishlist";
 
 const ManageCustomerInfo: React.FC<{
   customer: CustomerProps;
   customertList: CustomerProps[];
-  setCustomer: (order: CustomerProps) => void;
+  setCustomer: (customer: string) => void;
   close: () => void;
 }> = ({ customer, customertList, close, setCustomer }) => {
-  const [toggleAddress, setToggleAddress] = useState<boolean>(true);
-  const [toggleOrders, setToggleOrders] = useState<boolean>(true);
+  const [toggleAddress, setToggleAddress] = useState<boolean>(false);
+  const [toggleOrders, setToggleOrders] = useState<boolean>(false);
   const [toggleCart, setToggleCart] = useState<boolean>(false);
   const [toggleWishlist, setToggleWishlist] = useState<boolean>(false);
   const currentIndex = customertList.findIndex(
@@ -19,12 +20,12 @@ const ManageCustomerInfo: React.FC<{
   );
   const handleNextOrder = () => {
     if (currentIndex < customertList.length - 1) {
-      setCustomer(customertList[currentIndex + 1]);
+      setCustomer(customertList[currentIndex + 1]._id);
     }
   };
   const handlePreviousOrder = () => {
     if (currentIndex > 0) {
-      setCustomer(customertList[currentIndex - 1]);
+      setCustomer(customertList[currentIndex - 1]._id);
     }
   };
   const handleToggleAddress = () => {
@@ -116,37 +117,44 @@ const ManageCustomerInfo: React.FC<{
             </div>
             {toggleOrders && <CustomerOrderList orders={customer.orders} />}
           </div>
-          <div className="s flex flex-col gap-2">
+          <div className="flex flex-col gap-2">
             <div className="w-full rounded-lg border-[1px] border-zinc-100 p-4 sm:max-w-[800px]">
-              <div className="mb-0.5 flex items-center justify-between">
-                <h1 className="font-bold">Cart</h1>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <h1 className="font-bold">Cart</h1>
+                </div>
+
+                <button
+                  className="flex items-center rounded-md border-[1px] border-zinc-200 px-0.5 py-1.5 leading-3 drop-shadow-sm"
+                  onClick={handleToggleCart}
+                >
+                  <span className="material-symbols-outlined ml-0.5 text-lg leading-3">
+                    {toggleCart ? "expand_less" : "expand_more"}
+                  </span>
+                </button>
               </div>
-              <button
-                className="flex items-center rounded-md border-[1px] border-zinc-200 px-0.5 py-1.5 leading-3 drop-shadow-sm"
-                onClick={handleToggleCart}
-              >
-                <span className="material-symbols-outlined ml-0.5 text-lg leading-3">
-                  {toggleCart ? "expand_less" : "expand_more"}
-                </span>
-              </button>
-              {toggleOrders && <CustomerCartList cart={customer.cart} />}
+              {toggleCart && <CustomerCartList cartIDs={customer.cart} />}
             </div>
           </div>
-          <div className="scrollbar-hide flex flex-col gap-2">
+          <div className="flex flex-col gap-2">
             <div className="w-full rounded-lg border-[1px] border-zinc-100 p-4 sm:max-w-[800px]">
-              <div className="mb-0.5 flex items-center justify-between">
-                <h1 className="font-bold">Wishlist</h1>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <h1 className="font-bold">Wishlist</h1>
+                </div>
+
+                <button
+                  className="flex items-center rounded-md border-[1px] border-zinc-200 px-0.5 py-1.5 leading-3 drop-shadow-sm"
+                  onClick={handleToggleWishlist}
+                >
+                  <span className="material-symbols-outlined ml-0.5 text-lg leading-3">
+                    {toggleCart ? "expand_less" : "expand_more"}
+                  </span>
+                </button>
               </div>
-              <div className="mb-1 h-[1px] w-full bg-zinc-100"></div>
-              {/* WISHLIST  <OrderInfo
-                orderItems={currentOrder.items}
-                totalPrice={currentOrder.totalAmount}
-                shippingCost={currentOrder.shippingCost}
-                originalAmount={currentOrder.originalTotalAmount}
-                couponUsed={currentOrder.promoCode || ""}
-                paymentMethod={currentOrder.paymentMethod}
-                shippingOption={currentOrder.shippingOption}
-              /> */}
+              {toggleWishlist && (
+                <CustomerWishlist wishlistIDs={customer.wishlist} />
+              )}
             </div>
           </div>
           <div className="w-full rounded-lg border-[1px] border-zinc-100 p-4 sm:max-w-[800px]">

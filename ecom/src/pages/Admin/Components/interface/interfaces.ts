@@ -1,4 +1,4 @@
-import { AddressInterface } from "../../../../interfaces/user";
+
 
 interface Attributes {
   [key: string]: string;
@@ -138,7 +138,6 @@ export interface CustomerProps {
   orders: OrderProps[];
   wishlist: Wishlist[];
   cart: CartInterface[];
-  
 }
 
 

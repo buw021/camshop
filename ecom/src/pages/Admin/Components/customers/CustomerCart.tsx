@@ -1,27 +1,56 @@
-import { FC, useState } from "react";
+import { FC, useCallback, useEffect, useState } from "react";
 import { CartInterface } from "../interface/interfaces";
+import axiosInstance from "../../Services/axiosInstance";
+
+interface CartProps {
+  productId: string;
+  variantId: string;
+  name: string;
+  variantName: string;
+  variantColor: string;
+  variantImg: string;
+  price: number;
+  quantity: number;
+  saleId: { salePrice: number | null } | null;
+  discountedPrice?: number;
+}
 
 const CustomerCartList: FC<{
-  cart: CartInterface[];
-}> = ({ cart }) => {
-
-/*   const [populatedCart, setPopulatedCart] = useState */
-  
+  cartIDs: CartInterface[];
+}> = ({ cartIDs }) => {
+  /*   const [populatedCart, setPopulatedCart] = useState */
+  const [cartwDetails, setCartwDetails] = useState<CartProps[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = Math.ceil(cart.length / 10);
-  const indexOfLastProduct = currentPage * 10;
-  const indexOfFirstProduct = indexOfLastProduct - 10;
-  const currentOrders = cart.slice(indexOfFirstProduct, indexOfLastProduct);
+  const limit = 5;
+  const totalPages = Math.ceil(cartIDs.length / limit);
 
-  if (cart.length === 0) {
+  const getCartDetails = useCallback(async () => {
+    try {
+      const response = await axiosInstance.post("/get-cart-details", {
+        cartIDs,
+        currentPage,
+        limit,
+      });
+      if (response.data) {
+        setCartwDetails(response.data.cart);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }, [cartIDs, currentPage]);
+
+  useEffect(() => {
+    getCartDetails();
+  }, [getCartDetails]);
+
+  if (cartIDs.length === 0)
     return (
-      <div
-        className={`flex w-full flex-col justify-between gap-2 overflow-hidden rounded-lg py-4 text-center text-xs`}
-      >
-        <p>No Orders found</p>
+      <div className="flex items-center justify-center gap-2">
+        <p className="text-sm font-medium leading-3 tracking-wide text-zinc-700">
+          No items in cart
+        </p>
       </div>
     );
-  }
 
   return (
     <div className="mt-2 border-y-[1px] border-zinc-100 py-2">
@@ -49,27 +78,26 @@ const CustomerCartList: FC<{
         </div>
       </div>
       <div
-        className={`flex h-[400px] w-full flex-col justify-between gap-2 overflow-hidden rounded-lg py-2`}
+        className={`flex h-[250px] w-full flex-col justify-between gap-2 overflow-hidden rounded-lg py-2`}
       >
         <div className="flex flex-col gap-2">
-          {currentOrders.map((order) => (
-            <div
-              key={order._id}
-              className="flex items-center justify-between gap-2 rounded-lg border-[1px] border-zinc-100 px-2 py-1 hover:border-zinc-200 hover:bg-zinc-100"
-            >
-              <p className="text-sm font-medium leading-3 tracking-wide text-zinc-700">
-                {order.customOrderId}
-              </p>
-              <div className="flex gap-2">
-                <button className="rounded-lg border-[1px] border-zinc-300 bg-white py-0.5 pl-7 pr-2 text-xs font-medium tracking-wide drop-shadow-sm hover:text-zinc-700">
-                  <span className="material-symbols-outlined absolute left-2 top-1 text-base leading-3">
-                    edit_square
-                  </span>
-                  Manage
-                </button>
+          {cartwDetails?.length > 0 &&
+            cartwDetails?.map((order, index) => (
+              <div
+                key={order.variantId}
+                className="flex items-center justify-between gap-2 rounded-lg border-[1px] border-zinc-100 px-2 py-1 hover:border-zinc-200 hover:bg-zinc-100"
+              >
+                <p className="py-1.5 text-sm font-medium leading-3 tracking-wide text-zinc-700">
+                  {index + 1}. {order.name} {order.variantName}{" "}
+                  {order.variantColor && `(${order.variantColor})`}
+                </p>
+                <p>
+                  <p className="py-1.5 text-sm font-medium leading-3 tracking-wide text-zinc-700">
+                    {`(Qty. ${order.quantity})`}
+                  </p>
+                </p>
               </div>
-            </div>
-          ))}
+            ))}
         </div>
       </div>
     </div>
