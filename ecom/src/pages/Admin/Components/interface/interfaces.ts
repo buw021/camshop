@@ -59,6 +59,7 @@ export interface ItemsProps {
 }
 
 export interface OrderProps {
+  orderId?: string;
   createdAt: string;
   customOrderId: string;
   discountAmount: number;

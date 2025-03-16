@@ -1,5 +1,6 @@
 const User = require("../models/user");
 const Product = require("../models/products");
+const Order = require("../models/orders");
 
 const getUsers = async (req, res) => {
   const { searchQuery } = req.query;
@@ -117,9 +118,20 @@ const getWishlistDetails = async (req, res) => {
   }
 };
 
+const getOrderDetails = async (req, res) => {
+  const { orderId } = req.query;
+  try {
+    const order = await Order.findById(orderId);
+    res.json(order);
+  } catch (error) {
+    res.status(404).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getUsers,
   getUserDetails,
   getCartDetails,
   getWishlistDetails,
+  getOrderDetails,
 };
