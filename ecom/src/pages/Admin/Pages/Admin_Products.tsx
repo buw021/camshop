@@ -6,7 +6,6 @@ import ProductForm from "../Components/products/ProductForm";
 import axiosInstance from "../Services/axiosInstance";
 import { Product } from "../Components/interface/interfaces";
 import EditProduct from "../Components/products/EditProduct";
-import Admin_ArchiveTable from "../Components/products/Admin_ArchiveTable";
 
 const categoryList = ["camera", "lens", "accessories", "others"];
 
@@ -17,8 +16,10 @@ const Admin_Products: React.FC<{ setIsDirty: (dirty: boolean) => void }> = ({
   const [products, setProducts] = useState<Product[]>([]);
   const [editProd, setEditProd] = useState<Product | null>(null);
   const [archive, setArchive] = useState(false);
-  const [archiveProducts, setArchiveProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const limit = 10;
+  const totalPages = Math.ceil(products.length / limit);
 
   const [showDropdown, setShowDropdown] = useState(false);
   const [filters, setFilters] = useState<{ category: string[] }>({
@@ -31,24 +32,13 @@ const Admin_Products: React.FC<{ setIsDirty: (dirty: boolean) => void }> = ({
   const fetchProducts = useCallback(async () => {
     try {
       const response = await axiosInstance.get("/get-products", {
-        params: { filters: filters },
+        params: { filters: filters, currentPage, limit, archive },
       });
       setProducts(response.data);
     } catch (error) {
       console.error("Error fetching products:", error);
     }
-  }, [filters]);
-
-  const fetchArchiveProducts = useCallback(async () => {
-    try {
-      const response = await axiosInstance.get("/get-archived-products", {
-        params: { filters: filters },
-      });
-      setArchiveProducts(response.data);
-    } catch (error) {
-      console.error("Error fetching products:", error);
-    }
-  }, [filters]);
+  }, [currentPage, filters, archive]);
 
   const fetchProducToEdit = async (id: string) => {
     try {
@@ -61,8 +51,7 @@ const Admin_Products: React.FC<{ setIsDirty: (dirty: boolean) => void }> = ({
 
   useEffect(() => {
     fetchProducts();
-    fetchArchiveProducts();
-  }, [fetchArchiveProducts, fetchProducts]);
+  }, [fetchProducts]);
 
   const handleEdit = (product: Product) => {
     if (product._id) fetchProducToEdit(product._id);
@@ -82,17 +71,18 @@ const Admin_Products: React.FC<{ setIsDirty: (dirty: boolean) => void }> = ({
     setEditProd(null);
   };
 
-  const handleArchive = async (productIds: string[], command: boolean) => {
+  const handleArchive = async (productIds: string[]) => {
     if (
       !window.confirm("Are you sure you want to archive the selected products?")
     ) {
       return;
     }
     try {
-      await axiosInstance.post("/archive-products", { productIds, command });
-
+      await axiosInstance.post("/archive-products", {
+        productIds,
+        command: !archive,
+      });
       fetchProducts();
-      fetchArchiveProducts();
     } catch (error) {
       console.error("Error archiving products:", error);
     }
@@ -274,24 +264,33 @@ const Admin_Products: React.FC<{ setIsDirty: (dirty: boolean) => void }> = ({
             </button>
           </div>
         </div>
-
-        {archive ? (
-          <>
-            <Admin_ArchiveTable
-              products={archiveProducts}
-              handleEdit={handleEdit}
-              handleArchive={handleArchive}
-            />
-          </>
-        ) : (
-          <>
-            <Admin_ProductTable
-              products={products}
-              handleEdit={handleEdit}
-              handleArchive={handleArchive}
-            />
-          </>
-        )}
+        <Admin_ProductTable
+          products={products}
+          handleEdit={handleEdit}
+          handleArchive={handleArchive}
+          archive={archive}
+        />
+        <div className="mt-4 flex items-center justify-center gap-2">
+          <button
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className="rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700 disabled:bg-zinc-300"
+          >
+            Previous
+          </button>
+          <span className="text-xs font-bold uppercase leading-3 tracking-wide text-zinc-500">
+            Page {totalPages > 0 ? currentPage : 0} of {totalPages}
+          </span>
+          <button
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
+            disabled={currentPage === totalPages || totalPages === 0}
+            className="rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700 disabled:bg-zinc-300"
+          >
+            Next
+          </button>
+        </div>
       </div>
     </>
   );

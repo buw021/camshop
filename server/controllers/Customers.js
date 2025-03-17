@@ -3,7 +3,7 @@ const Product = require("../models/products");
 const Order = require("../models/orders");
 
 const getUsers = async (req, res) => {
-  const { searchQuery } = req.query;
+  const { searchQuery, currentPage, limit } = req.query;
   try {
     let query = {};
     if (searchQuery) {
@@ -15,9 +15,10 @@ const getUsers = async (req, res) => {
         ],
       };
     }
-    const users = await User.find(query).select(
-      "_id firstName lastName email phoneNo address"
-    );
+    const users = await User.find(query)
+      .select("_id firstName lastName email phoneNo address")
+      .skip((currentPage - 1) * limit)
+      .limit(limit);
     res.status(200).json(users);
   } catch (error) {
     res.status(404).json({ message: error.message });

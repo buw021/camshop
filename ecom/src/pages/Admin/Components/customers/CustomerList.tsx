@@ -18,15 +18,8 @@ const Row_Cells: React.FC<{
       {customer.phoneNo || "XXX-XXX-XXXX"}
     </td>
     <td className="whitespace-nowrap px-6 pl-8 text-left">
-      <button className="rounded-lg border-[1px] border-zinc-300 bg-white py-0.5 pl-7 pr-2 text-xs font-medium tracking-wide drop-shadow-sm hover:text-zinc-700">
-        <span className="material-symbols-outlined absolute left-2 top-1 text-base leading-3">
-          visibility
-        </span>
-        View
-      </button>
-
       <button
-        className="ml-2 rounded-lg border-[1px] border-zinc-300 bg-white py-0.5 pl-7 pr-2 text-xs font-medium tracking-wide drop-shadow-sm hover:text-zinc-700"
+        className="rounded-lg border-[1px] border-zinc-300 bg-white py-0.5 pl-7 pr-2 text-xs font-medium tracking-wide drop-shadow-sm hover:text-zinc-700"
         onClick={() => manageCustomer(customer._id)}
       >
         <span className="material-symbols-outlined absolute left-2 top-1 text-base leading-3">
@@ -41,7 +34,16 @@ const Row_Cells: React.FC<{
 const CustomerList: React.FC<{
   customers: CustomerProps[];
   manageCustomer: (customerID: string) => void;
-}> = ({ customers, manageCustomer }) => {
+  currentPage: number;
+  setCurrentPage: (react: React.SetStateAction<number>) => void;
+  totalPages: number;
+}> = ({
+  customers,
+  manageCustomer,
+  currentPage,
+  setCurrentPage,
+  totalPages,
+}) => {
   const [sortConfig, setSortConfig] = useState<{
     key: keyof CustomerProps;
     direction: string;
@@ -160,6 +162,27 @@ const CustomerList: React.FC<{
             ))}
           </tbody>
         </table>
+      </div>
+      <div className="mt-4 flex items-center justify-center gap-2">
+        <button
+          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+          disabled={currentPage === 1}
+          className="rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700 disabled:bg-zinc-300"
+        >
+          Previous
+        </button>
+        <span className="text-xs font-bold uppercase leading-3 tracking-wide text-zinc-500">
+          Page {totalPages > 0 ? currentPage : 0} of {totalPages}
+        </span>
+        <button
+          onClick={() =>
+            setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+          }
+          disabled={currentPage === totalPages || totalPages === 0}
+          className="rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700 disabled:bg-zinc-300"
+        >
+          Next
+        </button>
       </div>
     </>
   );

@@ -94,17 +94,18 @@ const getFullProduct = async (req, res) => {
 };
 
 const getProducts = async (req, res) => {
-  const { filters } = req.query;
- 
+  const { filters, currentPage, limit, archive } = req.query;
+
   try {
-    let query = { isArchived: false };
+    let query = { isArchived: archive };
 
     if (filters && filters.category && filters.category.length > 0) {
       query.category = { $in: filters.category };
     }
 
-    const products = await Product.find(query);
-
+    const products = await Product.find(query)
+      .skip((currentPage - 1) * limit)
+      .limit(limit);
     res.json(products);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -113,7 +114,7 @@ const getProducts = async (req, res) => {
 
 const getArchivedProducts = async (req, res) => {
   const { filters } = req.query;
-  
+
   try {
     let query = { isArchived: false };
 

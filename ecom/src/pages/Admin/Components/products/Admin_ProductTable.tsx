@@ -1,31 +1,24 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { Product } from "../interface/interfaces";
 import PreviewForm from "./ProductView";
 
 interface Table_Content {
   handleEdit: (product: Product) => void;
   products: Product[];
-  handleArchive: (productIds: string[], command: boolean) => void;
+  handleArchive: (productIds: string[]) => void;
+  archive: boolean;
 }
 
 const Admin_ProductTable: React.FC<Table_Content> = ({
   handleEdit,
   products,
   handleArchive,
+  archive,
 }) => {
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
   const [toggleProductView, setToggleProductView] = useState<boolean>(false);
-  const itemsPerPage = 10;
-  const [isExpanded, setIsExpanded] = useState<boolean>(false);
-  const ref = useRef<HTMLTableCellElement>(null);
 
-  const handleClickOutside = (event: MouseEvent) => {
-    if (ref.current && !ref.current.contains(event.target as Node)) {
-      setIsExpanded(false);
-    }
-  };
   const toggleSelectProduct = (productId: string) => {
     setSelectedProducts((prevSelected) =>
       prevSelected.includes(productId)
@@ -33,13 +26,6 @@ const Admin_ProductTable: React.FC<Table_Content> = ({
         : [...prevSelected, productId],
     );
   };
-
-  useEffect(() => {
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
 
   const togglePreview = (product: Product) => {
     setCurrentProduct(product);
@@ -99,8 +85,6 @@ const Admin_ProductTable: React.FC<Table_Content> = ({
     return sortableOrders;
   }, [products, sortConfig]);
 
-  // Calculate paginated products
-
   const Row_Cells: React.FC<{
     product: Product;
     togglePreview: (product: Product) => void;
@@ -123,13 +107,13 @@ const Admin_ProductTable: React.FC<Table_Content> = ({
           <label className="sr-only">checkbox</label>
         </div>
       </td>
-      <td className="pl-8 pr-6 text-left font-medium capitalize">
+      <td className="whitespace-nowrap pl-8 pr-6 text-left font-medium capitalize">
         {product.name}
       </td>
-      <td className="pl-8 pr-6 text-left font-medium capitalize">
+      <td className="whitespace-nowrap pl-8 pr-6 text-left font-medium capitalize">
         {product.category}
       </td>
-      <td className="pl-8 pr-6 text-left capitalize">
+      <td className="whitespace-nowrap pl-8 pr-6 text-left capitalize">
         €{" "}
         {Math.min(
           ...product.variants.map(
@@ -138,10 +122,10 @@ const Admin_ProductTable: React.FC<Table_Content> = ({
         )}
       </td>
 
-      <td className="pl-8 pr-6 text-left capitalize">
+      <td className="whitespace-nowrap pl-8 pr-6 text-left capitalize">
         {product.variants.length - 1}
       </td>
-      <td className="pl-8 pr-6 text-left capitalize">
+      <td className="whitespace-nowrap pl-8 pr-6 text-left capitalize">
         {(() => {
           const stock = product.variants.reduce(
             (acc, variant) => acc + (variant.variantStocks ?? 0),
@@ -175,30 +159,22 @@ const Admin_ProductTable: React.FC<Table_Content> = ({
         <button
           className="ml-2 rounded-lg border-[1px] border-zinc-300 bg-white py-0.5 pl-7 pr-2 text-xs font-medium tracking-wide drop-shadow-sm hover:text-zinc-700 disabled:border-zinc-200 disabled:text-zinc-200 disabled:hover:cursor-not-allowed"
           onClick={async () => {
-            handleArchive(selectedProducts, true);
-            setIsExpanded(false);
+            handleArchive(selectedProducts);
           }}
           disabled={selectedProducts.length === 0}
         >
-          <span className="material-symbols-outlined absolute left-2 top-1 text-base leading-3">
+          <span
+            className={`material-symbols-outlined absolute left-2 top-1 text-base leading-3 ${archive && "rotate-180"}`}
+          >
             archive
           </span>
-          Archive
+          {archive ? "Unarchive" : "Archive"}
         </button>
       </td>
     </tr>
   );
 
-  // Calculate paginated products
-  const indexOfLastProduct = currentPage * itemsPerPage;
-  const indexOfFirstProduct = indexOfLastProduct - itemsPerPage;
-  const currentProducts = sortedOrders.slice(
-    indexOfFirstProduct,
-    indexOfLastProduct,
-  );
-
   // Pagination controls
-  const totalPages = Math.ceil(products.length / itemsPerPage);
 
   return (
     <div className="flex h-full w-full flex-col justify-between">
@@ -223,7 +199,7 @@ const Admin_ProductTable: React.FC<Table_Content> = ({
                           const isChecked = e.target.checked;
                           if (isChecked) {
                             setSelectedProducts(
-                              currentProducts.map((product) =>
+                              sortedOrders.map((product) =>
                                 product._id ? product._id.toString() : "",
                               ),
                             );
@@ -232,8 +208,8 @@ const Admin_ProductTable: React.FC<Table_Content> = ({
                           }
                         }}
                         checked={
-                          currentProducts.length > 0 &&
-                          currentProducts.every(
+                          sortedOrders.length > 0 &&
+                          sortedOrders.every(
                             (product) =>
                               product._id &&
                               selectedProducts.includes(product._id.toString()),
@@ -297,7 +273,7 @@ const Admin_ProductTable: React.FC<Table_Content> = ({
                 <tr>
                   <td colSpan={8} className="h-2"></td>
                 </tr>
-                {currentProducts.map((product, index) => (
+                {sortedOrders.map((product, index) => (
                   <Row_Cells
                     key={index}
                     product={product}
@@ -308,27 +284,6 @@ const Admin_ProductTable: React.FC<Table_Content> = ({
             </table>
           </div>
         </div>
-      </div>
-      <div className="mt-4 flex items-center justify-center gap-2">
-        <button
-          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          disabled={currentPage === 1}
-          className="rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700 disabled:bg-zinc-300"
-        >
-          Previous
-        </button>
-        <span className="text-xs font-bold uppercase leading-3 tracking-wide text-zinc-500">
-          Page {totalPages > 0 ? currentPage : 0} of {totalPages}
-        </span>
-        <button
-          onClick={() =>
-            setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-          }
-          disabled={currentPage === totalPages || totalPages === 0}
-          className="rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700 disabled:bg-zinc-300"
-        >
-          Next
-        </button>
       </div>
     </div>
   );

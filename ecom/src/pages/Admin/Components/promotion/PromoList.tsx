@@ -88,18 +88,6 @@ const Row_Cells: React.FC<{
         </span>
         Edit
       </button>
-      <button
-        className="ml-1 rounded-lg border-[1px] border-zinc-300 bg-white py-0.5 pl-7 pr-2 text-xs font-medium tracking-wide drop-shadow-sm hover:text-zinc-700"
-        onClick={(e) => {
-          e.preventDefault();
-          handleEditPromo(promo);
-        }}
-      >
-        <span className="material-symbols-outlined absolute left-2 top-1 text-base leading-3">
-          archive
-        </span>
-        Archive
-      </button>
     </td>
   </tr>
 );
@@ -108,10 +96,15 @@ const PromoList = () => {
   const [promos, setPromos] = useState<PromoCode[]>([]);
   const [toggleAddPromo, setToggleAddPromo] = useState(false);
   const [toggleEditPromo, setToggleEditPromo] = useState(false);
+  const [search, setSearch] = useState("");
   const [type, setType] = useState<"active" | "inactive">("active");
   const [currentPromo, setCurrentPromo] = useState<PromoCode | undefined>(
     undefined,
   );
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const limit = 10;
+  const totalPages = Math.ceil(promos.length / limit);
 
   const handleAddPromo = () => {
     setToggleAddPromo(!toggleAddPromo);
@@ -135,16 +128,19 @@ const PromoList = () => {
     }
   };
 
-  const fetchPromos = useCallback(async () => {
-    try {
-      const response = await axiosInstance.get(`/get-promos`, {
-        params: { type },
-      });
-      setPromos(response.data);
-    } catch (error) {
-      console.error("Error fetching promo codes:", error);
-    }
-  }, [type]);
+  const fetchPromos = useCallback(
+    async (search: string = "") => {
+      try {
+        const response = await axiosInstance.get(`/get-promos`, {
+          params: { type, search, currentPage, limit },
+        });
+        setPromos(response.data);
+      } catch (error) {
+        console.error("Error fetching promo codes:", error);
+      }
+    },
+    [currentPage, type],
+  );
 
   useEffect(() => {
     fetchPromos();
@@ -214,19 +210,49 @@ const PromoList = () => {
 
   return (
     <>
-      <div className="flex items-center justify-between">
-        <button
-          className="rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700"
-          onClick={() => handlePromoType()}
-        >
-          {type === "active" ? "Show Inactive" : "Show Active"}
-        </button>
-        <button
-          className="rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700"
-          onClick={() => handleAddPromo()}
-        >
-          Add New Promo
-        </button>
+      <div className="flex flex-wrap items-center justify-between">
+        <div className="flex gap-2">
+          <button
+            className="relative self-center rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700"
+            onClick={() => fetchPromos(search)}
+          >
+            Search
+          </button>
+          <div className="relative flex items-center">
+            <input
+              className="roboto-medium w-[15vw] min-w-[175px] rounded-md border-2 border-zinc-200 bg-zinc-50 py-[4.25px] pl-2 pr-8 text-xs leading-3 text-zinc-900 outline-none outline-1 focus:border-zinc-300"
+              placeholder="Search"
+              onChange={(e) => setSearch(e.target.value)}
+              /* onKeyDown={(e) => {
+              if (e.key === "Enter") handleSearch(search);
+            }} */
+              value={search}
+            />
+            <span
+              className={`material-symbols-outlined filled absolute right-2 mr-1 flex items-center text-base leading-3 text-zinc-500 transition-all duration-100 ease-linear hover:cursor-pointer hover:text-zinc-600`}
+              onClick={() => {
+                setSearch("");
+                fetchPromos();
+              }}
+            >
+              cancel
+            </span>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            className="rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700"
+            onClick={() => handlePromoType()}
+          >
+            {type === "active" ? "Show Inactive" : "Show Active"}
+          </button>
+          <button
+            className="rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700"
+            onClick={() => handleAddPromo()}
+          >
+            Add New Promo
+          </button>
+        </div>
       </div>
       <div className="relative h-full w-full overflow-auto bg-white">
         {toggleAddPromo && (
@@ -330,6 +356,27 @@ const PromoList = () => {
             ))}
           </tbody>
         </table>
+      </div>
+      <div className="mt-4 flex items-center justify-center gap-2">
+        <button
+          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+          disabled={currentPage === 1}
+          className="rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700 disabled:bg-zinc-300"
+        >
+          Previous
+        </button>
+        <span className="text-xs font-bold uppercase leading-3 tracking-wide text-zinc-500">
+          Page {totalPages > 0 ? currentPage : 0} of {totalPages}
+        </span>
+        <button
+          onClick={() =>
+            setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+          }
+          disabled={currentPage === totalPages || totalPages === 0}
+          className="rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700 disabled:bg-zinc-300"
+        >
+          Next
+        </button>
       </div>
     </>
   );

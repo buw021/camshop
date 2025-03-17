@@ -44,7 +44,10 @@ const setProductOnSale = async (req, res) => {
         saleExpiryDate: SaleList.endDate,
         salePrice:
           SaleList.discountType === "percentage"
-            ? (product.variantPrice - (product.variantPrice * SaleList.discount) / 100).toFixed(2)
+            ? (
+                product.variantPrice -
+                (product.variantPrice * SaleList.discount) / 100
+              ).toFixed(2)
             : (product.variantPrice - SaleList.discount).toFixed(2),
         isOnSale: true,
       }))
@@ -68,6 +71,7 @@ const setProductOnSale = async (req, res) => {
 };
 
 const getSaleList = async (req, res) => {
+  const { search, currentPage, limit } = req.query;
   try {
     const salesWithProductDetails = await Sale.aggregate([
       {
@@ -87,9 +91,20 @@ const getSaleList = async (req, res) => {
       },
       {
         $match: {
-          $expr: {
-            $eq: ["$productInfo.variants._id", "$variantId"],
-          },
+          $and: [
+            { $expr: { $eq: ["$productInfo.variants._id", "$variantId"] } },
+            {
+              $or: [
+                { "productInfo.name": { $regex: search, $options: "i" } },
+                {
+                  "productInfo.variants.variantName": {
+                    $regex: search,
+                    $options: "i",
+                  },
+                },
+              ],
+            },
+          ],
         },
       },
       {
@@ -107,6 +122,12 @@ const getSaleList = async (req, res) => {
           "productInfo.variants.variantColor": 1,
           "productInfo.variants.variantPrice": 1,
         },
+      },
+      {
+        $skip: (parseInt(currentPage) - 1) * parseInt(limit),
+      },
+      {
+        $limit: parseInt(limit),  
       },
     ]);
 

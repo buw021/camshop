@@ -10,17 +10,21 @@ const Admin_Customers = () => {
   const [selectedCustomer, setSelectedCustomer] =
     useState<CustomerProps | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const limit = 10;
+  
+  const totalPages = Math.ceil(customers.length / limit);
 
   const getCustomers = useCallback(async () => {
     try {
       const response = await axiosInstance.get("/get-users", {
-        params: { searchQuery },
+        params: { searchQuery, currentPage, limit },
       });
       if (response.status === 200) setCustomers(response.data);
     } catch (error) {
       console.log(error);
     }
-  }, [searchQuery]);
+  }, [currentPage, searchQuery]);
 
   useEffect(() => {
     getCustomers();
@@ -46,8 +50,6 @@ const Admin_Customers = () => {
     setSelectedCustomer(null);
   };
 
-  
-
   return (
     <div className="relative flex h-full w-full flex-col gap-1 rounded-xl bg-white p-4 ring-2 ring-zinc-300/70 sm:p-10">
       {selectedCustomer && (
@@ -67,6 +69,9 @@ const Admin_Customers = () => {
       <CustomerList
         customers={customers}
         manageCustomer={manageCustomer}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+        totalPages={totalPages}
       ></CustomerList>
     </div>
   );

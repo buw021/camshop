@@ -1,10 +1,14 @@
 const { PromoCode } = require("../models/promo");
 
 const getPromos = async (req, res) => {
-  const { type } = req.query; // Access query parameters
+  const { type, search, currentPage, limit } = req.query; // Access query parameters
 
   try {
     let promos;
+    const searchCondition = search
+      ? { code: { $regex: search, $options: "i" } }
+      : {};
+
     if (type === "active") {
       promos = await PromoCode.aggregate([
         {
@@ -17,8 +21,15 @@ const getPromos = async (req, res) => {
                   { usageLimit: null },
                 ],
               },
+              searchCondition,
             ],
           },
+        },
+        {
+          $skip: (parseInt(currentPage) - 1) * limit,
+        },
+        {
+          $limit: parseInt(limit),
         },
       ]);
     } else if (type === "inactive") {
@@ -39,11 +50,20 @@ const getPromos = async (req, res) => {
                 usageLimit: { $ne: null },
               },
             ],
+            $and: [searchCondition],
           },
+        },
+        {
+          $skip: (parseInt(currentPage) - 1) * parseInt(limit),
+        },
+        {
+          $limit: parseInt(limit),
         },
       ]);
     } else {
-      promos = await PromoCode.find();
+      promos = await PromoCode.find(searchCondition)
+        .skip((currentPage - 1) * limit)
+        .limit(limit);
     }
     res.json(promos);
   } catch (error) {
@@ -68,24 +88,24 @@ const addPromo = async (req, res) => {
   }
 };
 
-
 const updatePromo = async (req, res) => {
-  const  promo  = req.body;
+  const promo = req.body;
   try {
     const existingPromo = await PromoCode.findOne({ code: promo.code });
     if (existingPromo && existingPromo._id.toString() !== promo._id) {
       return res.status(400).json({ error: "Promo code already exists" });
     }
-    const updatedPromo = await PromoCode.findByIdAndUpdate(promo._id, promo, { new: true });
+    const updatedPromo = await PromoCode.findByIdAndUpdate(promo._id, promo, {
+      new: true,
+    });
     if (!updatedPromo) {
       return res.status(404).json({ error: "Promo code not found" });
     }
-    res.status(200).json({success: "Updated"});
+    res.status(200).json({ success: "Updated" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
   }
 };
-
 
 module.exports = { getPromos, addPromo, updatePromo };

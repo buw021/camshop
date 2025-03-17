@@ -87,14 +87,13 @@ const CustomerCartList: FC<{
                 key={order.variantId}
                 className="flex items-center justify-between gap-2 rounded-lg border-[1px] border-zinc-100 px-2 py-1 hover:border-zinc-200 hover:bg-zinc-100"
               >
-                <p className="py-1.5 text-sm font-medium leading-4 tracking-wide text-zinc-700 max-w-52 sm:max-w-fit">
+                <p className="max-w-52 py-1.5 text-sm font-medium leading-4 tracking-wide text-zinc-700 sm:max-w-fit">
                   {index + 1}. {order.name} {order.variantName}{" "}
                   {order.variantColor && `(${order.variantColor})`}
                 </p>
-                <p>
-                  <p className="py-1.5 text-sm font-medium leading-4 tracking-wide text-zinc-700">
-                    {`(Qty. ${order.quantity})`}
-                  </p>
+
+                <p className="py-1.5 text-sm font-medium leading-4 tracking-wide text-zinc-700">
+                  {`(Qty. ${order.quantity})`}
                 </p>
               </div>
             ))}

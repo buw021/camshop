@@ -167,4 +167,3 @@ const applyPromoCode = async (req, res) => {
 
 module.exports = { applyPromoCode };
 
-module.exports = { applyPromoCode };

@@ -17,11 +17,14 @@ const Admin_Orders = () => {
     dateStart: null,
     dateEnd: null,
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const limit = 10;
+  const totalPages = Math.ceil(orders.length / limit);
 
   const getOrders = useCallback(async () => {
     try {
       const response = await axiosInstance.get("/admin-get-orders", {
-        params: filters,
+        params: { ...filters, currentPage, limit }
       });
       if (response.data) {
         setOrders(response.data);
@@ -29,7 +32,7 @@ const Admin_Orders = () => {
     } catch (error) {
       console.log(error);
     }
-  }, [filters]);
+  }, [filters, currentPage]);
 
   useEffect(() => {
     getOrders();
@@ -80,7 +83,7 @@ const Admin_Orders = () => {
     <div className="relative flex h-full w-full flex-col gap-1 rounded-xl bg-white p-4 ring-2 ring-zinc-300/70 sm:p-10">
       <h1 className="mb-2 text-xl font-bold tracking-wide">Order List</h1>
       <OrderFilters getFilter={getFilter} />
-      <OrderList orders={orders} manageOrder={toggleManageOrder} />
+      <OrderList orders={orders} manageOrder={toggleManageOrder} currentPage={currentPage} setCurrentPage={setCurrentPage} totalPages={totalPages} />
       {manageOrder && (
         <ManageOrder
           orders={orders}

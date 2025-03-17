@@ -3,7 +3,7 @@ const express = require("express");
 const router = express.Router();
 
 const { addPromo, getPromos, updatePromo } = require("../controllers/Promo");
-const { applyPromoCode } = require("../controllers/PromoCode");
+const { applyPromoCode } = require("../controllers/promoCode");
 
 router.post("/add-promo", addPromo);
 router.get("/get-promos", getPromos);

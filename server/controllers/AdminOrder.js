@@ -69,6 +69,8 @@ const getOrdersAdmin = async (req, res) => {
     dateStart,
     dateEnd,
     searchQuery,
+    currentPage,
+    limit,
   } = req.query;
 
   try {
@@ -101,7 +103,10 @@ const getOrdersAdmin = async (req, res) => {
       };
     }
 
-    const orders = await Order.find(orderQuery).sort({ createdAt: -1 });
+    const orders = await Order.find(orderQuery)
+      .sort({ createdAt: -1 })
+      .skip((currentPage - 1) * limit)
+      .limit(limit);
     res.json(orders);
   } catch (error) {
     console.error("Error fetching orders:", error);
