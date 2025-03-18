@@ -182,7 +182,9 @@ const getUserCart = async (req, res) => {
     .populate({
       path: "variants.saleId",
       model: "Sale",
-      match: { isOnSale: true },
+      match: {
+        $and: [{ isOnSale: true }, { saleExpiryDate: { $gte: new Date() } }],
+      },
       select: "salePrice saleStartDate saleExpiryDate",
     })
     .select("_id category name variants");
@@ -297,7 +299,9 @@ const getUserFavs = async (req, res) => {
     .populate({
       path: "variants.saleId",
       model: "Sale",
-      match: { isOnSale: true },
+      match: {
+        $and: [{ isOnSale: true }, { saleExpiryDate: { $gte: new Date() } }],
+      },
       select: "salePrice saleStartDate saleExpiryDate",
     })
     .select("_id category name variants");

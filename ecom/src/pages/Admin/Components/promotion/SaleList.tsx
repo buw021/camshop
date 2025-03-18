@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import SelectProduct from "./SelectProduct";
 import axiosInstance from "../../Services/axiosInstance";
+import { showToast } from "../showToast";
 
 interface VariantInfo {
   variantName: string;
@@ -52,6 +53,21 @@ const SaleList = () => {
     [currentPage],
   );
 
+  const pauseSale = async (id: string) => {
+    try {
+      const response = await axiosInstance.post("/pause-sale", { id });
+      if (response.status === 200) {
+        showToast(`${response.data.message}`, "success");
+        fetchSaleList();
+      } else {
+        showToast("Failed to pause sale", "error");
+      }
+    } catch (err) {
+      console.log(err);
+      showToast("An error occurred while pausing the sale", "error");
+    }
+  };
+
   useEffect(() => {
     fetchSaleList();
   }, [fetchSaleList]);
@@ -59,7 +75,8 @@ const SaleList = () => {
   const Row_Cells: React.FC<{
     saleList: SaleInterface;
     index: number;
-  }> = ({ saleList, index }) => {
+    pauseSale: (id: string) => void;
+  }> = ({ saleList, index, pauseSale }) => {
     const {
       productInfo: { name, variants },
       salePrice,
@@ -138,8 +155,29 @@ const SaleList = () => {
             {new Date(saleExpiryDate).toLocaleDateString("en-GB")}
           </td>
           <td className="whitespace-nowrap pl-8 pr-6 text-left capitalize">
-            <button className="rounded-lg border-[1px] border-zinc-300 bg-white px-2 py-0.5 text-xs font-medium tracking-wide drop-shadow-sm hover:text-zinc-700">
-              Remove
+            <button className="rounded-lg border-[1px] border-zinc-300 bg-white py-0.5 pl-7 pr-2 text-xs font-medium tracking-wide drop-shadow-sm hover:text-zinc-700">
+              <span className="material-symbols-outlined absolute left-2 top-1 text-base leading-3">
+                edit_square
+              </span>
+              Edit
+            </button>
+
+            <button
+              className="ml-2 rounded-lg border-[1px] border-zinc-300 bg-white py-0.5 pl-7 pr-2 text-xs font-medium tracking-wide drop-shadow-sm hover:text-zinc-700 disabled:text-zinc-200"
+              disabled={saleList.isOnsale}
+              onClick={() => {
+                if (
+                  !window.confirm("Are you sure you want to pause this sale?")
+                ) {
+                  return;
+                }
+                pauseSale(saleList._id);
+              }}
+            >
+              <span className="material-symbols-outlined absolute left-2 top-1 text-base leading-3">
+                pause
+              </span>
+              Pause
             </button>
           </td>
         </tr>
@@ -260,7 +298,12 @@ const SaleList = () => {
               <td colSpan={8} className="h-2"></td>
             </tr>
             {saleList.map((saleList, index) => (
-              <Row_Cells key={saleList._id} saleList={saleList} index={index} />
+              <Row_Cells
+                key={saleList._id}
+                saleList={saleList}
+                index={index}
+                pauseSale={pauseSale}
+              />
             ))}
           </tbody>
         </table>

@@ -196,8 +196,10 @@ const getVariants = async (req, res) => {
       .populate({
         path: "variants.saleId",
         model: "Sale",
-        match: { isOnSale: true }, // Only populate if isOnSale is true
-        select: "salePrice saleStartDate saleExpiryDate", // Select specific fields if needed
+        match: {
+          $and: [{ isOnSale: true }, { saleExpiryDate: { $gte: new Date() } }],
+        },
+        select: "salePrice saleStartDate saleExpiryDate",
       })
       .lean();
     const variants = products.flatMap((product) =>
@@ -264,7 +266,9 @@ const getProduct = async (req, res) => {
       .populate({
         path: "variants.saleId",
         model: "Sale",
-        match: { isOnSale: true }, // Only populate if isOnSale is true
+        match: {
+          $and: [{ isOnSale: true }, { saleExpiryDate: { $gte: new Date() } }],
+        },
         select: "salePrice saleStartDate saleExpiryDate", // Select specific fields if needed
       })
       .lean();

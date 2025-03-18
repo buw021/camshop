@@ -127,7 +127,7 @@ const getSaleList = async (req, res) => {
         $skip: (parseInt(currentPage) - 1) * parseInt(limit),
       },
       {
-        $limit: parseInt(limit),  
+        $limit: parseInt(limit),
       },
     ]);
 
@@ -140,8 +140,22 @@ const getSaleList = async (req, res) => {
   }
 };
 
+const pauseSale = async (req, res) => {
+  const { id } = req.body;
+
+  try {
+    const saleProduct = await Sale.findById(id);
+    saleProduct.isOnSale = false;
+    await saleProduct.save();
+    res.status(200).json({ message: "Product sale status is paused" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to pause sale on a product" });
+  }
+};
+
 module.exports = {
   browseProducts,
   setProductOnSale,
   getSaleList,
+  pauseSale,
 };
