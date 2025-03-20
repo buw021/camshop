@@ -30,6 +30,7 @@ const LogIn = () => {
       handleAxiosError(error);
     }
   };
+  
   const handleAxiosError = (error: unknown) => {
     if (axios.isAxiosError(error)) {
       if (error.response) {

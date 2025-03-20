@@ -2,6 +2,7 @@ import { useState } from "react";
 import Register from "../../pages/Main/Register";
 import LogIn from "../../pages/Main/Login";
 import { AnimatePresence, motion } from "framer-motion";
+import { RoundedButton } from "./Buttons";
 
 const variants = {
   "opacity-0": {
@@ -88,12 +89,7 @@ const MiniAuth = () => {
           Login/Register
         </div>
         <div className="flex h-auto w-full flex-col items-center">
-          <button
-            className="roboto-medium w-full rounded-full bg-zinc-900 py-2 text-lg text-white transition-all duration-200 hover:bg-zinc-700 md:max-w-[300px]"
-            onClick={handleLoginButton}
-          >
-            Log in
-          </button>
+          <RoundedButton onClick={handleLoginButton}>Log in</RoundedButton>
           <div className="relative my-8 hidden h-[1px] w-full items-center justify-center bg-zinc-200 md:my-6 md:max-w-[300px]">
             <span className="roboto-regular absolute bg-white p-2 text-[12px] text-zinc-500">
               Already have an account?
@@ -109,9 +105,14 @@ const MiniAuth = () => {
             <span className="h-[1px] w-[50%] bg-zinc-200"></span>
           </div>
           <div className="flex h-auto w-full flex-col items-center gap-2">
-            <button className="roboto-medium w-full rounded-full bg-zinc-200 py-2 text-lg text-zinc-900 transition-all duration-200 hover:bg-zinc-300 md:max-w-[300px]">
+            <RoundedButton
+              buttonType="secondary"
+              onClick={() => {
+                return;
+              }}
+            >
               Continue with Google
-            </button>
+            </RoundedButton>
             <button
               className="roboto-medium w-full rounded-full bg-zinc-900 py-2 text-lg text-white transition-all duration-200 hover:bg-zinc-700 md:max-w-[300px]"
               onClick={handleRegisterButton}
