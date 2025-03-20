@@ -1,10 +1,10 @@
 import React from "react";
-import { useDragToScroll } from "../func/DragtoScroll";
-import { slugify } from "../func/slugify";
+import { useDragToScroll } from "../../func/DragtoScroll";
+import { slugify } from "../../func/slugify";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../../contexts/useCart";
 import { useAuth } from "../../contexts/useAuth";
-import { showToast } from "../func/showToast";
+import { showToast } from "../../func/showToast";
 
 interface CheckoutCart {
   checkout: boolean;

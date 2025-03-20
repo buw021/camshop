@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { slugify } from "../func/slugify";
+import { slugify } from "../../func/slugify";
 import { ItemsProps } from "../../interfaces/order";
 
 interface OrderInfoProps {

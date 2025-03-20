@@ -44,7 +44,7 @@ const useFetchProducts = (
     fetchProducts();
   }, [page, limit, filters, maxRetries]);
 
-  return { variantsF, totalF, loadingF };
+  return { variants, total, loading };
 };
 
 export default useFetchProducts;

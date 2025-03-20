@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import axiosInstance from "../../services/axiosInstance";
 import ProgressBar from "./ProgressBar";
 import { stripePromise } from "../../utils/stripe";
-import { showToast } from "../func/showToast";
+import { showToast } from "../../func/showToast";
 import axios from "axios";
 import OrderInfo from "./OrderInfo";
 import { ItemsProps } from "../../interfaces/order";

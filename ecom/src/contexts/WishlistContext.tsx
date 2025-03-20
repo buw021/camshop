@@ -8,7 +8,7 @@ import {
 import axiosInstance from "../services/axiosInstance";
 import { useCart } from "./useCart";
 import { CartID, CartInterface } from "../interfaces/cart";
-import { showToast } from "../components/func/showToast";
+import { showToast } from "../func/showToast";
 import { useAuth } from "./useAuth";
 
 interface WishlistContext {

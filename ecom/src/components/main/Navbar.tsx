@@ -6,7 +6,7 @@ import Cart from "./Cart";
 import MiniAuth from "./MiniAuth";
 import axiosInstance from "../../services/axiosInstance";
 import { useAuth } from "../../contexts/useAuth";
-import { showToast } from "../func/showToast";
+import { showToast } from "../../func/showToast";
 import { SearchBar } from "./SearchBar";
 import { useCart } from "../../contexts/useCart";
 import { useLocation } from "react-router-dom";

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axiosInstance from "../../services/axiosInstance"; // Adjust the path as necessary
 import { Link, useNavigate } from "react-router-dom";
-import { slugify } from "../func/slugify";
+import { slugify } from "../../func/slugify";
 
 interface SearchInputProps {
   searchRef: React.RefObject<HTMLInputElement>;

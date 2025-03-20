@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import InputField from "../../components/account/AuthInputField";
 import axiosInstance from "../../services/axiosInstance";
 import axios from "axios";
-import { showToast } from "../../components/func/showToast";
+import { showToast } from "../../func/showToast";
 
 const LogIn = () => {
   const [email, setEmail] = useState("");

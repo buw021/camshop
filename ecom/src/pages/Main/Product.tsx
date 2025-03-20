@@ -7,7 +7,7 @@ import { Link, useParams } from "react-router-dom";
 import Navigation from "../../components/main/Navigation";
 import { Bounce, toast } from "react-toastify";
 import { Product, Variant } from "../../interfaces/products";
-import { slugify } from "../../components/func/slugify";
+import { slugify } from "../../func/slugify";
 import { useCart } from "../../contexts/useCart";
 import { WishlistID } from "../../interfaces/wishlist";
 import { Loading } from "../../components/main/Loading";

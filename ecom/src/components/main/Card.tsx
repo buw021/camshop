@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { slugify } from "../func/slugify";
+import { slugify } from "../../func/slugify";
 
 export const ProductCard: React.FC<{
   id?: string;

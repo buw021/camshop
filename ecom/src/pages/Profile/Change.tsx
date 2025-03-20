@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import InputField from "../../components/account/AuthInputField";
 import { motion, AnimatePresence } from "framer-motion";
-import useDebounce from "../../components/func/debouncer";
-import { evaluatePasswordStrength } from "../../components/func/passEvaluation";
+import useDebounce from "../../func/debouncer";
+import { evaluatePasswordStrength } from "../../func/passEvaluation";
 import axios from "axios";
 import { toast, Bounce } from "react-toastify";
 

@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import InputField from "../../components/account/AuthInputField";
 import { motion, AnimatePresence } from "framer-motion";
-import useDebounce from "../../components/func/debouncer";
-import { evaluatePasswordStrength } from "../../components/func/passEvaluation";
+import useDebounce from "../../func/debouncer";
+import { evaluatePasswordStrength } from "../../func/passEvaluation";
 import axios from "axios";
 import axiosInstance from "../../services/axiosInstance";
-import { showToast } from "../../components/func/showToast";
+import { showToast } from "../../func/showToast";
 
 interface Register {
   onSuccess: () => void;

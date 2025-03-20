@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import axiosInstance from "../services/axiosInstance";
 import { CartID, CartInterface } from "../interfaces/cart";
-import { showToast } from "../components/func/showToast";
+import { showToast } from "../func/showToast";
 import { useAuth } from "./useAuth";
 import axios from "axios";
 

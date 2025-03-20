@@ -1,12 +1,16 @@
-
-import { useDragToScroll } from "../func/DragtoScroll";
+import { useDragToScroll } from "../../func/DragtoScroll";
 import type { Wishlist } from "../../interfaces/wishlist";
 
 import { useWishlist } from "../../contexts/useWishlist";
 
 const Wishlist: React.FC = () => {
-  const { favsInfo, removeFromWishlist, handleAddAllToCart, handleAddToCart, clearFavs } =
-    useWishlist();
+  const {
+    favsInfo,
+    removeFromWishlist,
+    handleAddAllToCart,
+    handleAddToCart,
+    clearFavs,
+  } = useWishlist();
   const scrollRef = useDragToScroll();
 
   return (
@@ -34,27 +38,27 @@ const Wishlist: React.FC = () => {
                   {item.name} {item.variantName} {item.variantColor}
                 </h1>
                 {item.saleId?.salePrice ? (
-                    <>
-                      <p className="text-xs">
-                        {item.quantity} x €{" "}
-                        <span>{item.saleId.salePrice.toFixed(2)}</span>
-                      </p>
+                  <>
+                    <p className="text-xs">
+                      {item.quantity} x €{" "}
+                      <span>{item.saleId.salePrice.toFixed(2)}</span>
+                    </p>
 
-                      <p className="text-xs text-zinc-800">
-                        Total: €{" "}
-                        {(item.quantity * item.saleId.salePrice).toFixed(2)}
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-xs">
-                        {item.quantity} x € <span>{item.price}</span>
-                      </p>
-                      <p className="text-xs text-zinc-800">
-                        Total: € {item.quantity * item.price}
-                      </p>
-                    </>
-                  )}
+                    <p className="text-xs text-zinc-800">
+                      Total: €{" "}
+                      {(item.quantity * item.saleId.salePrice).toFixed(2)}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-xs">
+                      {item.quantity} x € <span>{item.price}</span>
+                    </p>
+                    <p className="text-xs text-zinc-800">
+                      Total: € {item.quantity * item.price}
+                    </p>
+                  </>
+                )}
                 <div className="relative flex items-center justify-end gap-1 pt-2">
                   <button
                     onClick={() =>

@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { slugify } from "../func/slugify";
+import { slugify } from "../../func/slugify";
 import { OrderProps } from "../../interfaces/order";
 
 const statusColor = {
@@ -32,7 +32,11 @@ const OrderCard: React.FC<OrderProps> = ({
           Order{" "}
           <span className="underline hover:text-zinc-700">{customOrderId}</span>
         </Link>
-        <p className={`text-sm font-medium capitalize leading-3 ${statusColor[status]}`}>{status}</p>
+        <p
+          className={`text-sm font-medium capitalize leading-3 ${statusColor[status]}`}
+        >
+          {status}
+        </p>
       </div>
       <p className="text-xs leading-3">
         {new Date(createdAt).toLocaleDateString("en-GB")}
