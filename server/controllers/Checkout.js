@@ -53,12 +53,50 @@ const stripeWebhookHandler = async (req, res) => {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
     const customOrderId = session.metadata?.customOrderId;
-
+    const userId = session.metadata?.userId;
+    const promoCode = session.metadata?.promoCode;
+    console.log(userId);
+    console.log(promoCode);
     if (!customOrderId) {
       return res.status(400).send("Order ID not found in metadata.");
     }
 
     const order = await Order.findOne({ customOrderId });
+
+    if (promoCode) {
+      let userPromoUsage = await PromoCodeUsed.findOne({ userId: userId });
+
+      // Initialize usage record if it doesn't exist
+      if (!userPromoUsage) {
+        userPromoUsage = new PromoCodeUsed({
+          userId: userId,
+          promoCodeUsed: [],
+        });
+      }
+
+      // Check if promo code is already used
+      const isUsed = userPromoUsage.promoCodeUsed.some(
+        (entry) => entry.code === promoCode
+      );
+
+      if (!isUsed) {
+        // Add the promo code
+        userPromoUsage.promoCodeUsed.push({ code: promoCode });
+
+        try {
+          await userPromoUsage.save(); // Save user promo usage
+
+          // Update promo code usage count
+          const promo = await PromoCode.findOne({ code: promoCode });
+          if (promo) {
+            promo.usageCount += 1;
+            await promo.save();
+          }
+        } catch (err) {
+          console.error("Error saving promo data:", err);
+        }
+      }
+    }
 
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
@@ -190,7 +228,9 @@ const createNewCheckOutSession = async (req, res) => {
       lineItems,
       customOrderId,
       populatedOrder.shippingCost,
-      populatedOrder.userEmail
+      populatedOrder.userEmail,
+      populatedOrder.promoCode,
+      populated.userId
     );
 
     if (!session.url) {
@@ -209,7 +249,7 @@ const createNewCheckOutSession = async (req, res) => {
 const createCheckoutSession = async (req, res) => {
   const { usertoken } = req.cookies;
   const { cart, address, shippingOption, promoCodeInput, userEmail } = req.body;
-
+  console.log(promoCodeInput);
   try {
     const user = await getUser(usertoken);
     const shippingCost = await getShippingCost(shippingOption._id);
@@ -340,7 +380,9 @@ const createCheckoutSession = async (req, res) => {
       lineItems,
       customOrderId, // This is where the orderId is used
       shippingCost,
-      userEmail
+      userEmail,
+      promoCodeInput,
+      user._id
     );
     if (!session.url) {
       return res.status(500).json({ message: "Error creating stripe session" });
@@ -395,7 +437,9 @@ const createSession = async (
   lineItems,
   customOrderId,
   shippingCost,
-  userEmail
+  userEmail,
+  promoCode,
+  userId
 ) => {
   const sessionData = await STRIPE.checkout.sessions.create({
     payment_method_types: ["card"],
@@ -418,14 +462,15 @@ const createSession = async (
     cancel_url: `${FRONTEND_URL}/order-status?orderId=${customOrderId}`,
     metadata: {
       customOrderId: customOrderId,
+      promoCode: promoCode ? promoCode.toString() : null,
+      userId: userId ? userId.toString() : null,
     },
-    metadata: { customOrderId: customOrderId },
     payment_intent_data: {
       metadata: { customOrderId: customOrderId }, // Explicitly set metadata here
       description: `Order ${customOrderId}'`, // Add a description
     },
   });
-  console.log(sessionData.metadata);
+
   return sessionData;
 };
 
@@ -451,6 +496,10 @@ const applyPromoCode = async (promoCodeInput, cartIDs, userId) => {
       return { error: "Promo code usage limit reached." };
     }
 
+    if (promoCode.endDate && new Date(promoCode.endDate) < new Date()) {
+      return { error: "Promo code has expired." };
+    }
+
     const promoCodeUsed = await PromoCodeUsed.findOne({ userId });
     if (
       promoCodeUsed &&
@@ -465,7 +514,9 @@ const applyPromoCode = async (promoCodeInput, cartIDs, userId) => {
       .populate({
         path: "variants.saleId",
         model: "Sale",
-        match: { isOnSale: true },
+        match: {
+          $and: [{ isOnSale: true }, { saleExpiryDate: { $gte: new Date() } }],
+        },
         select: "salePrice saleStartDate saleExpiryDate",
       })
       .lean();

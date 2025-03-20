@@ -47,20 +47,21 @@ const promoCodeSchema = new Schema({
   },
 });
 
-const promoCodeUsed = new Schema({
-  code: {
-    type: String,
-    required: true,
-  },
-});
-
 const promoCodeUsedSchema = new Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true,
   },
-  promoCodeUsed: [promoCodeUsed],
+  promoCodeUsed: [
+    {
+      code: {
+        type: String,
+        required: true,
+        default: [],
+      },
+    },
+  ],
 });
 
 const PromoCode = mongoose.model("PromoCode", promoCodeSchema);
