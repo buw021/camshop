@@ -17,6 +17,8 @@ interface IconButtonProps {
   additionalClasses?: string;
 }
 
+const categories = ["Camera", "Lens", "Accessories", "Other"];
+
 const Navbar = () => {
   const { token } = useAuth();
   const { cartIDs } = useCart();
@@ -96,8 +98,6 @@ const Navbar = () => {
       document.body.classList.remove("overflow-hidden");
     }
   }, [expand, expandCart, expandSearch, expandMenu, expandProfile]);
-
-  const categories = ["Camera", "Lens", "Accessories", "Other"];
 
   const IconButton: React.FC<IconButtonProps> = ({
     icon,

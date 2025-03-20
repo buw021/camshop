@@ -3,6 +3,17 @@ import Register from "../../pages/Main/Register";
 import LogIn from "../../pages/Main/Login";
 import { AnimatePresence, motion } from "framer-motion";
 
+const variants = {
+  "opacity-0": {
+    opacity: 0,
+    transition: { type: "spring", duration: 0.5 },
+  },
+  "opacity-1": {
+    opacity: 1,
+    transition: { type: "spring", duration: 0.5 },
+  },
+};
+
 const MiniAuth = () => {
   const [registerModal, setRegisterModal] = useState(false);
   const [loginModal, setLoginModal] = useState(false);
@@ -24,16 +35,6 @@ const MiniAuth = () => {
     setLoginModal(false);
   };
 
-  const variants = {
-    "opacity-0": {
-      opacity: 0,
-      transition: { type: "spring", duration: 0.5 },
-    },
-    "opacity-1": {
-      opacity: 1,
-      transition: { type: "spring", duration: 0.5 },
-    },
-  };
   return (
     <>
       {registerModal && (

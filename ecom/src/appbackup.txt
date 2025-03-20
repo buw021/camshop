@@ -1,6 +1,6 @@
 import React, { Suspense, useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Layout from "./components/main/layout";
+import Layout from "./components/main/Layout";
 import ProtectedRoute from "./pages/Main/ProtectedRoute";
 import NotFound from "./pages/Main/NotFound";
 import axios from "axios";

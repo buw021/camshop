@@ -3,36 +3,23 @@ import React from "react";
 interface ProgressBarProps {
   label: string;
 }
+const statusSteps = [
+  { label: "pending", value: 0 },
+  { label: "cancelled", value: 0 },
+  { label: "ordered", value: 1 },
+  { label: "processed", value: 2 },
+  { label: "shipped", value: 3 },
+  { label: "delivered", value: 4 },
+];
+
+const refundSteps = [
+  { label: "refund requested", value: 0 },
+  { label: "refund on process", value: 1 },
+  { label: "refunded", value: 2 },
+];
 
 const ProgressBar: React.FC<ProgressBarProps> = ({ label }) => {
-  /* enum: [
-        "ordered",
-        "paid",
-        "pending",
-        "shipped",
-        "delivered",
-        "cancelled",
-        "refunded",
-        "processed",
-        "refund on process",
-        "payment failed",
-      ], */
-  const statusSteps = [
-    { label: "pending", value: 0 },
-    { label: "cancelled", value: 0 },
-    { label: "ordered", value: 1 },
-    { label: "processed", value: 2 },
-    { label: "shipped", value: 3 },
-    { label: "delivered", value: 4 },
-  ];
   const step = statusSteps.find((step) => step.label === label);
-
-  const refundSteps = [
-    { label: "refund requested", value: 0 },
-    { label: "refund on process", value: 1 },
-    { label: "refunded", value: 2 },
-  ];
-
   const refundStep = refundSteps.find((step) => step.label === label);
 
   return (

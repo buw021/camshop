@@ -1,6 +1,6 @@
 import React, { Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Layout from "./components/main/layout";
+import Layout from "./components/main/Layout";
 import ProtectedRoute from "./pages/Main/ProtectedRoute";
 import { Loading } from "./components/main/Loading";
 import { AuthProvider } from "./contexts/AuthContext"; // Import the AuthProvider

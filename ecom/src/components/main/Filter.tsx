@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import {  useEffect, useState } from "react";
 // bug in pricerange change value
 import { Filter } from "../../interfaces/filter";
 import { AnimatePresence, motion } from "framer-motion";
@@ -26,7 +26,7 @@ const ProductFilter: React.FC<{
     brands: [],
   });
 
-  const lowestPrice = Math.min(...filterList.prices);
+ /*  const lowestPrice = Math.min(...filterList.prices); */
   const highestPrice = Math.max(...filterList.prices);
   const [filters, setFilters] = useState<Filter>({
     subCategory: "",
@@ -38,7 +38,6 @@ const ProductFilter: React.FC<{
     specs: [],
   });
   
-  const [filter, setFilter] = useState(toggle);
 
   useEffect(() => {
     const fetchFilters = async () => {
@@ -75,7 +74,7 @@ const ProductFilter: React.FC<{
     }));
   };
 
-  const handleColorChange = (color: string) => {
+ /*  const handleColorChange = (color: string) => {
     setFilters((prevFilters) => {
       const colors = [...prevFilters.colors];
       if (colors.includes(color as never)) {
@@ -86,7 +85,7 @@ const ProductFilter: React.FC<{
       }
       return { ...prevFilters, colors };
     });
-  };
+  }; */
 
   const handlePriceRangeChange = (min: number, max: number) => {
     setFilters((prev) => ({

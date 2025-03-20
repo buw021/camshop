@@ -1,6 +1,5 @@
 import { useDragToScroll } from "../../func/DragtoScroll";
 import type { Wishlist } from "../../interfaces/wishlist";
-
 import { useWishlist } from "../../contexts/useWishlist";
 
 const Wishlist: React.FC = () => {

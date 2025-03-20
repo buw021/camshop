@@ -1,23 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { AddressInterface } from "../../interfaces/user";
-
-import axiosInstance from "../../services/axiosInstance";
 
 const SFAddress: React.FC<{
   address: AddressInterface;
   toggleEditAddress: () => void;
 }> = ({
   address,
-
   toggleEditAddress,
 }) => {
-  const updateAddress = async (updatedAddresses: AddressInterface[]) => {
-    try {
-      await axiosInstance.post("/update-address", { updatedAddresses });
-    } catch (error) {
-      console.log(error);
-    }
-  };
 
   if (!address) {
     return (
@@ -43,31 +33,6 @@ const SFAddress: React.FC<{
     );
   }
 
-  /* const handleSetDefault = async (addressId: string) => {
-    try {
-      const response = await axiosInstance.post("/set-address-default", {
-        addressId,
-      });
-      if (response.status === 200) {
-        const updatedAddresses = addresses.map((address) => ({
-          ...address,
-          default: address._id === addressId,
-        }));
-        const sortedAddresses = [
-          ...updatedAddresses.filter((address) => address.default),
-          ...updatedAddresses.filter((address) => !address.default),
-        ];
-        setAddresses(sortedAddresses);
-      }
-    } catch (error) {
-      console.error("Failed to set default address", error);
-    }
-  };
-
-  const handleEdit = (address: AddressInterface) => {
-    setCurrentAddress(address);
-    setToggleEdit(!toggleEdit);
-  }; */
 
   return (
     <>
