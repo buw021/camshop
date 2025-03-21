@@ -1,32 +1,66 @@
 const Product = require("../models/products");
 const Sale = require("../models/sale");
+const agenda = require("../jobs/saleJobs");
 
 const browseProducts = async (req, res) => {
   try {
-    const products = await Product.find({ isArchived: false })
-      .populate({
-        path: "variants.saleId",
-        model: "Sale",
-        match: { isOnSale: true }, // Only populate if isOnSale is true
-        select: "salePrice saleStartDate saleExpiryDate", // Select specific fields if needed
-      })
-      .select("_id category name variants");
-
-    const productVariants = products.map((product) => ({
-      _id: product._id,
-      name: product.name,
-      category: product.category,
-      variants: product.variants
-        .filter((variant) => !variant.saleId || !variant.saleId.isOnSale) // Exclude variants with saleId and isOnSale true
-        .map((variant) => ({
-          _id: variant._id,
-          variantName: variant.variantName,
-          variantColor: variant.variantColor,
-          variantPrice: variant.variantPrice,
-        })),
-    }));
-
-    res.json(productVariants);
+    const products = await Product.aggregate([
+      { $match: { isArchived: false } },
+      {
+        $lookup: {
+          from: "sales",
+          localField: "variants.saleId",
+          foreignField: "_id",
+          as: "saleInfo",
+        },
+      },
+      { $unwind: "$variants" },
+      {
+        $lookup: {
+          from: "sales",
+          localField: "variants.saleId",
+          foreignField: "_id",
+          as: "variantSaleInfo",
+        },
+      },
+      {
+        $unwind: { path: "$variantSaleInfo", preserveNullAndEmptyArrays: true },
+      },
+      {
+        $match: {
+          $or: [
+            { "variantSaleInfo.isOnSale": { $ne: true } },
+            { "variantSaleInfo.saleExpiryDate": { $lt: new Date() } },
+            { variantSaleInfo: { $eq: null } },
+          ],
+        },
+      },
+      {
+        $group: {
+          _id: "$_id",
+          name: { $first: "$name" },
+          category: { $first: "$category" },
+          variants: {
+            $push: {
+              _id: "$variants._id",
+              variantName: "$variants.variantName",
+              variantColor: "$variants.variantColor",
+              variantPrice: "$variants.variantPrice",
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          category: 1,
+          variants: 1,
+        },
+      },
+    ]);
+    console.log;
+    res.json(products);
   } catch (error) {
     console.error("Error fetching product variants:", error);
     res.status(500).json({ error: "Failed to fetch product variants." });
@@ -36,6 +70,7 @@ const browseProducts = async (req, res) => {
 const setProductOnSale = async (req, res) => {
   const { SaleList } = req.body;
   try {
+    //check is the product + variantId is already on sale
     const sales = await Sale.insertMany(
       SaleList.selectedProducts.map((product) => ({
         productId: product.productId,
@@ -60,10 +95,13 @@ const setProductOnSale = async (req, res) => {
           { _id: sale.productId, "variants._id": sale.variantId },
           { $set: { "variants.$.saleId": sale._id } }
         );
+        await agenda.schedule(sale.saleExpiryDate, "disable sale", {
+          saleId: sale._id,
+        });
       })
     );
 
-    res.json(sales);
+    res.status(200).json({ message: "Sale created and scheduled!", sales });
   } catch (error) {
     console.error("Error setting products on sale:", error);
     res.status(500).json({ error: "Failed to set products on sale." });
@@ -71,7 +109,15 @@ const setProductOnSale = async (req, res) => {
 };
 
 const getSaleList = async (req, res) => {
-  const { search, currentPage, limit } = req.query;
+  const { status, search, currentPage, limit } = req.query;
+  let query = [];
+  if (status === "true") {
+    query = [{ isOnSale: true }, { saleExpiryDate: { $gt: new Date() } }];
+  } else {
+    query = [
+      { $or: [{ isOnSale: false }, { saleExpiryDate: { $lt: new Date() } }] },
+    ];
+  }
   try {
     const salesWithProductDetails = await Sale.aggregate([
       {
@@ -104,6 +150,7 @@ const getSaleList = async (req, res) => {
                 },
               ],
             },
+            ...query,
           ],
         },
       },
@@ -123,6 +170,7 @@ const getSaleList = async (req, res) => {
           "productInfo.variants.variantPrice": 1,
         },
       },
+
       {
         $skip: (parseInt(currentPage) - 1) * parseInt(limit),
       },

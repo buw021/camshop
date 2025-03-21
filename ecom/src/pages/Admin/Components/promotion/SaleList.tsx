@@ -29,9 +29,9 @@ interface SaleInterface {
 const SaleList = () => {
   const [selectProd, setSelectProd] = useState(false);
   const [saleList, setSaleList] = useState<SaleInterface[]>([]);
-
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [status, setStatus] = useState<boolean>(true);
   const limit = 10;
   const totalPages = Math.ceil(saleList.length / limit);
 
@@ -43,15 +43,19 @@ const SaleList = () => {
     async (search: string = "") => {
       try {
         const response = await axiosInstance.get("/get-sale-list", {
-          params: { search, currentPage, limit },
+          params: { status, search, currentPage, limit },
         });
         setSaleList(response.data);
       } catch (err) {
         console.log(err);
       }
     },
-    [currentPage],
+    [currentPage, status],
   );
+
+  const handleStatus = () => {
+    setStatus(!status);
+  };
 
   const pauseSale = async (id: string) => {
     try {
@@ -215,8 +219,11 @@ const SaleList = () => {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button className="rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700">
-            Archive
+          <button
+            className="rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700"
+            onClick={handleStatus}
+          >
+            {status ? "Show Inactive" : "Show Active"}
           </button>
           <button
             type="button"
