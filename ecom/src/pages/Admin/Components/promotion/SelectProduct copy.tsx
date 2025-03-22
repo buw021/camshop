@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import BrowseProduct from "./BrowseProduct";
 import axiosInstance from "../../Services/axiosInstance";
-import { showToast } from "../showToast";
 
 interface SelectedProducts {
   productId: string;
@@ -55,14 +54,12 @@ const SelectProduct: React.FC<{ handleClose: () => void }> = ({
       sale.selectedProducts.length === 0 ||
       !sale.startDate
     ) {
-      showToast("Please fill in all required fields.", "error");
+      console.log("Please fill in all required fields.");
       return;
     }
 
     try {
-      const response = await axiosInstance.post("/set-product-on-sale", {
-        SaleList: sale,
-      });
+      const response = await axiosInstance.post("/set-product-on-sale", { SaleList: sale });
       if (response.data) {
         console.log("Sale set successfully");
       }
@@ -158,8 +155,8 @@ const SelectProduct: React.FC<{ handleClose: () => void }> = ({
   const Row_Cells: React.FC<{
     selected: SelectedProducts;
   }> = ({ selected }) => (
-    <tr className="border-y-[1px] hover:bg-zinc-100">
-      <td className="whitespace-nowrap py-1.5 pl-6 pr-6 text-left capitalize">
+    <tr className="hover:bg-zinc-200">
+      <td scope="col" className="px-4">
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -176,16 +173,16 @@ const SelectProduct: React.FC<{ handleClose: () => void }> = ({
           <label className="sr-only">checkbox</label>
         </div>
       </td>
-      <td className="whitespace-nowrap pl-8 pr-6 text-left font-medium">
+      <td className="whitespace-nowrap px-6 text-center">
         {selected.name} {selected.variantName}
       </td>
-      <td className="whitespace-nowrap pl-8 pr-6 text-left font-medium capitalize">
+      <td className="whitespace-nowrap px-6 text-center capitalize">
         {selected.category}
       </td>
-      <td className="whitespace-nowrap pl-8 pr-6 text-left font-medium capitalize">
+      <td className="whitespace-nowrap px-6 text-center">
         € {selected.variantPrice}
       </td>
-      <td className="whitespace-nowrap pl-8 pr-6 text-left font-medium capitalize">
+      <td className="whitespace-nowrap px-6 text-center font-medium">
         €{" "}
         {sale.discountType && sale.discount !== null
           ? sale.discountType === "percentage"
@@ -196,7 +193,7 @@ const SelectProduct: React.FC<{ handleClose: () => void }> = ({
             : (selected.variantPrice - sale.discount).toFixed(2)
           : ""}
       </td>
-      <td className="whitespace-nowrap pl-8 pr-6 text-left font-medium capitalize">
+      <td className="whitespace-nowrap px-6 text-center">
         €{" "}
         {sale.discountType && sale.discount !== null
           ? sale.discountType === "percentage"
@@ -205,27 +202,7 @@ const SelectProduct: React.FC<{ handleClose: () => void }> = ({
           : ""}
       </td>
       <td className="whitespace-nowrap px-6 text-center">
-        <button
-          className="ml-2 rounded-lg border-[1px] border-zinc-300 bg-white py-0.5 pl-7 pr-2 text-xs font-medium tracking-wide drop-shadow-sm hover:text-zinc-700 disabled:text-zinc-200"
-          onClick={() => {
-            setSale((prev) => ({
-              ...prev,
-              selectedProducts: prev.selectedProducts.filter(
-                (sp) =>
-                  !toRemove.some(
-                    (removeItem) =>
-                      removeItem.productId === sp.productId &&
-                      removeItem.variantId === sp.variantId,
-                  ),
-              ),
-            }));
-            setToRemove([]);
-          }}
-        >
-          {" "}
-          <span className="material-symbols-outlined absolute left-2 top-1 text-base leading-3">
-            delete
-          </span>
+        <button className="font-medium text-blue-700 hover:underline">
           Remove
         </button>
       </td>
@@ -257,7 +234,7 @@ const SelectProduct: React.FC<{ handleClose: () => void }> = ({
         <span className="material-symbols-outlined text-md">close</span>
       </button>
 
-      <div className="flex h-[90%] w-[90%] flex-col gap-2 overflow-hidden rounded-lg border-[1px] bg-white p-4 shadow-sm drop-shadow-sm">
+      <div className="flex h-[90%] w-[90%] flex-col gap-2 overflow-hidden rounded bg-white p-2 drop-shadow-sm">
         <div className="flex flex-col gap-2 px-1">
           <div className="flex flex-wrap items-center gap-2">
             <label htmlFor={"promo-type"} className="pr-1 text-sm font-medium">
@@ -305,7 +282,9 @@ const SelectProduct: React.FC<{ handleClose: () => void }> = ({
             </label>
             <input
               type="number"
-              className="roboto-medium w-20 rounded-md border-2 border-zinc-200 bg-zinc-50 px-2 py-1 text-xs text-zinc-900 outline-none outline-1 focus:border-zinc-300"
+              className={
+                "w-20 select-none rounded-sm bg-zinc-50 px-2 py-1 text-zinc-700 outline-none ring-1 ring-zinc-200 focus:bg-white focus:ring-2 focus:ring-blue-400 disabled:cursor-not-allowed disabled:bg-zinc-200 disabled:ring-zinc-300"
+              }
               placeholder="Ex. 5"
               disabled={!sale.discountType}
               value={
@@ -333,81 +312,59 @@ const SelectProduct: React.FC<{ handleClose: () => void }> = ({
               max={sale.discountType === "percentage" ? 100 : undefined}
             ></input>
           </div>
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex flex-row gap-2">
-              <div className="flex flex-col gap-1">
-                <label htmlFor={"promoCode"} className="text-xs font-medium">
-                  Start Date:
-                </label>
-                <input
-                  type="date"
-                  value={
-                    sale.startDate instanceof Date
-                      ? sale.startDate.toISOString().slice(0, 10)
-                      : ""
-                  }
-                  className="border-zinc-150 w-26 rounded-md border-[1px] bg-zinc-50 px-1 py-1 text-xs font-medium tracking-wide text-zinc-900 outline-none outline-1 drop-shadow-sm hover:border-zinc-300 focus:border-zinc-300"
-                  title="Start Date"
-                  onChange={(e) => handleDateChange(e, "startDate")}
-                  required
-                ></input>
-              </div>
-              <div className="flex flex-col gap-1">
-                <label htmlFor={"promoCode"} className="text-xs font-medium">
-                  Expiration Date:
-                </label>
-                <input
-                  type="date"
-                  value={
-                    sale.endDate instanceof Date
-                      ? sale.endDate.toISOString().slice(0, 10)
-                      : ""
-                  }
-                  className="border-zinc-150 w-26 rounded-md border-[1px] bg-zinc-50 px-1 py-1 text-xs font-medium tracking-wide text-zinc-900 outline-none outline-1 drop-shadow-sm hover:border-zinc-300 focus:border-zinc-300"
-                  title="Expiration Date"
-                  onChange={(e) => handleDateChange(e, "endDate")}
-                ></input>
-              </div>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <div className="flex flex-col gap-1">
+              <label htmlFor={"promoCode"} className="text-xs font-medium">
+                Start Date:
+              </label>
+              <input
+                type="date"
+                value={
+                  sale.startDate instanceof Date
+                    ? sale.startDate.toISOString().slice(0, 10)
+                    : ""
+                }
+                className="w-36 select-none rounded-sm bg-zinc-50 px-2 py-1 text-zinc-700 outline-none ring-1 ring-zinc-200 focus:bg-white focus:ring-2 focus:ring-blue-400"
+                onChange={(e) => handleDateChange(e, "startDate")}
+                required
+              ></input>
             </div>
-            <div className="flex flex-wrap gap-2 self-end">
-              <button
-                type="button"
-                className="relative rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setToggleBrose(true);
-                }}
-              >
-                Browse Products
-              </button>
-              <button
-                type="button"
-                className="relative rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700"
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (
-                    window.confirm(
-                      "Are you sure you want to confirm this sale?",
-                    )
-                  ) {
-                    handleConfirm();
-                  }
-                }}
-              >
-                Confirm
-              </button>
+            <div className="flex flex-col gap-1">
+              <label htmlFor={"promoCode"} className="text-xs font-medium">
+                End Date:
+              </label>
+              <input
+                type="date"
+                value={
+                  sale.endDate instanceof Date
+                    ? sale.endDate.toISOString().slice(0, 10)
+                    : ""
+                }
+                className="w-36 select-none rounded-sm bg-zinc-50 px-2 py-1 text-zinc-700 outline-none ring-1 ring-zinc-200 focus:bg-white focus:ring-2 focus:ring-blue-400"
+                onChange={(e) => handleDateChange(e, "endDate")}
+              ></input>
             </div>
           </div>
+          <button
+            type="button"
+            className="roboto-medium rounded-md bg-zinc-400 px-2 py-1 text-sm uppercase tracking-wide text-white transition-all duration-100 hover:bg-zinc-500"
+            onClick={(e) => {
+              e.preventDefault();
+              setToggleBrose(true);
+            }}
+          >
+            Browse Products
+          </button>
         </div>
-        <div className="relative h-full w-full overflow-auto rounded">
-          <table className="w-full table-auto overflow-hidden text-sm">
-            <thead className="">
-              <tr className="h-8 text-nowrap bg-zinc-100">
-                <th className="cursor-pointer rounded-l-lg px-6 text-left font-medium capitalize tracking-wide text-zinc-500 hover:text-zinc-600">
+        <div className="h-full w-full overflow-auto rounded">
+          <table className="w-full table-auto divide-y divide-gray-300 overflow-auto text-sm">
+            <thead className="bg-zinc-200">
+              <tr className="">
+                <th scope="col" className="px-4 py-2">
                   <div className="flex items-center">
                     <input
                       type="checkbox"
-                      className="h-4 w-4 border-gray-300 bg-gray-100 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600"
+                      className="h-4 w-4 rounded border-gray-300 bg-gray-100 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600"
                       onChange={(e) => {
                         const isChecked = e.target.checked;
                         setToRemove(isChecked ? sale.selectedProducts : []);
@@ -420,36 +377,27 @@ const SelectProduct: React.FC<{ handleClose: () => void }> = ({
                     <label className="sr-only">checkbox</label>
                   </div>
                 </th>
-                <th className="cursor-pointer px-6 text-left font-medium capitalize tracking-wide text-zinc-500 hover:text-zinc-600">
-                  <span className="mr-2 rounded border-[1px]" />
+                <th className="px-6 text-center font-medium uppercase tracking-wider text-zinc-500">
                   No.
                 </th>
-                <th className="cursor-pointer px-6 text-left font-medium capitalize tracking-wide text-zinc-500 hover:text-zinc-600">
-                  <span className="mr-2 rounded border-[1px]" />
+                <th className="px-6 text-center font-medium uppercase tracking-wider text-zinc-500">
                   Product Name
                 </th>
-                <th className="cursor-pointer px-6 text-left font-medium capitalize tracking-wide text-zinc-500 hover:text-zinc-600">
-                  <span className="mr-2 rounded border-[1px]" />
+                <th className="px-6 text-center font-medium uppercase tracking-wider text-zinc-500">
                   Original Price
                 </th>
-                <th className="cursor-pointer px-6 text-left font-medium capitalize tracking-wide text-zinc-500 hover:text-zinc-600">
-                  <span className="mr-2 rounded border-[1px]" />
+                <th className="px-6 text-center font-medium uppercase tracking-wider text-zinc-500">
                   Sale Price
                 </th>
-                <th className="cursor-pointer px-6 text-left font-medium capitalize tracking-wide text-zinc-500 hover:text-zinc-600">
-                  <span className="mr-2 rounded border-[1px]" />
+                <th className="px-6 text-center font-medium uppercase tracking-wider text-zinc-500">
                   Discount
                 </th>
-                <th className="cursor-pointer rounded-r-lg px-6 text-left font-medium capitalize tracking-wide text-zinc-500 hover:text-zinc-600">
-                  <span className="mr-2 rounded border-[1px]" />
+                <th className="px-6 text-center font-medium uppercase tracking-wider text-zinc-500">
                   Action
                 </th>
               </tr>
             </thead>
-            <tbody className="">
-              <tr>
-                <td colSpan={8} className="h-2"></td>
-              </tr>
+            <tbody className="divide-y divide-gray-300">
               {currentProducts.map((selected, index) => (
                 <Row_Cells key={index} selected={selected} />
               ))}
@@ -460,11 +408,11 @@ const SelectProduct: React.FC<{ handleClose: () => void }> = ({
           <button
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
-            className="rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700 disabled:bg-zinc-300"
+            className="roboto-medium self-center rounded-md bg-zinc-400 px-4 py-2 text-sm uppercase tracking-wide text-white transition-all duration-100 hover:bg-zinc-500 disabled:bg-zinc-200"
           >
             Previous
           </button>
-          <span className="text-xs font-bold uppercase leading-3 tracking-wide text-zinc-500">
+          <span>
             Page {totalPages > 0 ? currentPage : 0} of {totalPages}
           </span>
           <button
@@ -472,11 +420,23 @@ const SelectProduct: React.FC<{ handleClose: () => void }> = ({
               setCurrentPage((prev) => Math.min(prev + 1, totalPages))
             }
             disabled={currentPage === totalPages || totalPages === 0}
-            className="rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700 disabled:bg-zinc-300"
+            className="roboto-medium self-center rounded-md bg-zinc-400 px-4 py-2 text-sm uppercase tracking-wide text-white transition-all duration-100 hover:bg-zinc-500 disabled:bg-zinc-200"
           >
             Next
           </button>
         </div>
+        <button
+          type="button"
+          className="roboto-medium rounded-md bg-zinc-400 px-2 py-1 text-sm uppercase tracking-wide text-white transition-all duration-100 hover:bg-zinc-500"
+          onClick={(e) => {
+            e.preventDefault();
+            if (window.confirm("Are you sure you want to confirm this sale?")) {
+              handleConfirm();
+            }
+          }}
+        >
+          Confirm
+        </button>
       </div>
     </div>
   );

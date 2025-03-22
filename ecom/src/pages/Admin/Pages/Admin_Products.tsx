@@ -106,7 +106,7 @@ const Admin_Products: React.FC<{ setIsDirty: (dirty: boolean) => void }> = ({
 
   return (
     <>
-      <div className="relative flex h-full w-full flex-col rounded-xl bg-white p-10 ring-2 ring-zinc-300/70">
+      <div className="relative flex h-full w-full flex-col rounded-xl bg-white p-4 ring-2 ring-zinc-300/70 sm:p-10">
         <AnimatePresence>
           {addPopUp && (
             <motion.div
@@ -145,7 +145,7 @@ const Admin_Products: React.FC<{ setIsDirty: (dirty: boolean) => void }> = ({
         <h1 className="roboto-bold mb-5 text-xl text-zinc-800">
           {archive ? "Archive" : "Product"} List{" "}
         </h1>
-        <div className="roboto-medium flex items-center justify-between uppercase text-zinc-500">
+        <div className="roboto-medium flex flex-wrap items-center justify-between gap-2 uppercase text-zinc-500">
           <div className="flex items-center gap-4">
             <button
               className="rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700"
@@ -172,7 +172,7 @@ const Admin_Products: React.FC<{ setIsDirty: (dirty: boolean) => void }> = ({
             </div>
             <div className="flex items-center">
               <div
-                className="relative z-10"
+                className="relative"
                 onBlur={(e) => {
                   if (!e.currentTarget.contains(e.relatedTarget)) {
                     setShowDropdown(false);
@@ -190,7 +190,7 @@ const Admin_Products: React.FC<{ setIsDirty: (dirty: boolean) => void }> = ({
                   </span>
                 </button>
                 {showDropdown && (
-                  <div className="absolute mt-2 w-48 gap-1 rounded-md bg-white py-1 text-sm font-medium tracking-wide shadow-lg ring-1 ring-black ring-opacity-5">
+                  <div className="absolute z-10 mt-2 w-48 gap-1 rounded-md bg-white py-1 text-sm font-medium tracking-wide shadow-lg ring-1 ring-black ring-opacity-5">
                     <div className="py-1">
                       {categoryList.map((category, index) => (
                         <label

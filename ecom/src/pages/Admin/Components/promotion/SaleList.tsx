@@ -18,7 +18,7 @@ interface ProductInfo {
 interface SaleInterface {
   productId: string;
   variantId: string;
-  isOnsale: boolean;
+  isOnSale: boolean;
   salePrice: number;
   saleStartDate: string;
   saleExpiryDate: string;
@@ -72,6 +72,21 @@ const SaleList = () => {
     }
   };
 
+  const resumeSale = async (id: string) => {
+    try {
+      const response = await axiosInstance.post("/resume-sale", { id });
+      if (response.status === 200) {
+        showToast(`${response.data.message}`, "success");
+        fetchSaleList();
+      } else {
+        showToast("Failed to resume sale", "error");
+      }
+    } catch (err) {
+      console.log(err);
+      showToast("An error occurred while pausing the sale", "error");
+    }
+  };
+
   useEffect(() => {
     fetchSaleList();
   }, [fetchSaleList]);
@@ -90,85 +105,63 @@ const SaleList = () => {
     const { variantName, variantColor, variantPrice } = variants;
 
     return (
-      <>
-        <tr className="border-y-[1px] hover:bg-zinc-100">
-          {/*   <td scope="col" className="flex items-center px-4 py-1.5">
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                className="h-4 w-4 rounded border-gray-300 bg-gray-100 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600"
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    setSelectedSale((prevSelected) => [
-                      ...prevSelected,
-                      saleList._id,
-                    ]);
-                  } else {
-                    setSelectedSale((prevSelected) =>
-                      prevSelected.filter((id) => id !== saleList._id),
-                    );
-                  }
-                }}
-                checked={selectedSale.includes(saleList._id)}
-              />
-              <label className="sr-only">checkbox</label>
-            </div>
-          </td> */}
-          <td className="whitespace-nowrap py-1 pl-8 pr-6 text-left capitalize">
-            {index + 1}
-          </td>
-          <td className="whitespace-nowrap pl-8 pr-6 text-left font-medium capitalize">
-            {name} {variantName ? variantName : ""}{" "}
-            {variantColor ? `(${variantColor})` : ""}
-          </td>
-          <td className="whitespace-nowrap pl-8 pr-6 text-left capitalize">
-            € {variantPrice}
-          </td>
-          <td className="whitespace-nowrap pl-8 pr-6 text-left capitalize">
-            € {salePrice}
-          </td>
-          <td className="whitespace-nowrap pl-8 pr-6 text-left capitalize">
-            € {(variantPrice - salePrice).toFixed(2)} (
-            {((1 - salePrice / variantPrice) * 100).toFixed(2)}%)
-          </td>
-          <td className="whitespace-nowrap pl-8 pr-6 text-left capitalize">
-            {saleStartDate && saleExpiryDate ? (
-              (() => {
-                const daysLeft = Math.ceil(
-                  (new Date(saleExpiryDate).getTime() - Date.now()) /
-                    (1000 * 60 * 60 * 24),
-                );
-                return (
-                  <span
-                    className={
-                      daysLeft <= 0 ? "text-red-600" : "text-green-600"
-                    }
-                  >
-                    {daysLeft <= 0 ? "Expired" : daysLeft}
-                  </span>
-                );
-              })()
-            ) : (
-              <span className="text-green-600">Unlimited</span>
-            )}
-          </td>
-          <td className="whitespace-nowrap pl-8 pr-6 text-left capitalize">
-            {new Date(saleStartDate).toLocaleDateString("en-GB")}
-          </td>
-          <td className="whitespace-nowrap pl-8 pr-6 text-left capitalize">
-            {new Date(saleExpiryDate).toLocaleDateString("en-GB")}
-          </td>
-          <td className="whitespace-nowrap pl-8 pr-6 text-left capitalize">
-            <button className="rounded-lg border-[1px] border-zinc-300 bg-white py-0.5 pl-7 pr-2 text-xs font-medium tracking-wide drop-shadow-sm hover:text-zinc-700">
-              <span className="material-symbols-outlined absolute left-2 top-1 text-base leading-3">
-                edit_square
-              </span>
-              Edit
-            </button>
+      <tr className="border-y-[1px] hover:bg-zinc-100">
+        <td className="whitespace-nowrap py-1 pl-8 pr-6 text-left capitalize">
+          {index + 1}
+        </td>
+        <td className="whitespace-nowrap pl-8 pr-6 text-left font-medium capitalize">
+          {name} {variantName ? variantName : ""}{" "}
+          {variantColor ? `(${variantColor})` : ""}
+        </td>
+        <td className="whitespace-nowrap pl-8 pr-6 text-left capitalize">
+          € {variantPrice}
+        </td>
+        <td className="whitespace-nowrap pl-8 pr-6 text-left capitalize">
+          € {salePrice}
+        </td>
+        <td className="whitespace-nowrap pl-8 pr-6 text-left capitalize">
+          € {(variantPrice - salePrice).toFixed(2)} (
+          {((1 - salePrice / variantPrice) * 100).toFixed(2)}%)
+        </td>
+        <td className="whitespace-nowrap pl-8 pr-6 text-left capitalize">
+          {saleStartDate && saleExpiryDate ? (
+            (() => {
+              const daysLeft = Math.ceil(
+                (new Date(saleExpiryDate).getTime() - Date.now()) /
+                  (1000 * 60 * 60 * 24),
+              );
+              return (
+                <span
+                  className={daysLeft <= 0 ? "text-red-600" : "text-green-600"}
+                >
+                  {daysLeft <= 0 ? "Expired" : daysLeft}
+                </span>
+              );
+            })()
+          ) : (
+            <span className="text-green-600">Unlimited</span>
+          )}
+        </td>
+        <td className="whitespace-nowrap pl-8 pr-6 text-left capitalize">
+          {new Date(saleStartDate).toLocaleDateString("en-GB")}
+        </td>
+        <td className="whitespace-nowrap pl-8 pr-6 text-left capitalize">
+          {new Date(saleExpiryDate).toLocaleDateString("en-GB")}
+        </td>
+        <td className="whitespace-nowrap pl-8 pr-6 text-left capitalize">
+          <button
+            className="rounded-lg border-[1px] border-zinc-300 bg-white py-0.5 pl-7 pr-2 text-xs font-medium tracking-wide drop-shadow-sm hover:text-zinc-700 disabled:text-zinc-200"
+            disabled={saleList.isOnSale}
+          >
+            <span className="material-symbols-outlined absolute left-2 top-1 text-base leading-3">
+              edit_square
+            </span>
+            Edit
+          </button>
 
+          {saleList.isOnSale ? (
             <button
               className="ml-2 rounded-lg border-[1px] border-zinc-300 bg-white py-0.5 pl-7 pr-2 text-xs font-medium tracking-wide drop-shadow-sm hover:text-zinc-700 disabled:text-zinc-200"
-              disabled={saleList.isOnsale}
               onClick={() => {
                 if (
                   !window.confirm("Are you sure you want to pause this sale?")
@@ -183,16 +176,42 @@ const SaleList = () => {
               </span>
               Pause
             </button>
-          </td>
-        </tr>
-      </>
+          ) : (
+            <button
+              className="ml-2 rounded-lg border-[1px] border-zinc-300 bg-white py-0.5 pl-7 pr-2 text-xs font-medium tracking-wide drop-shadow-sm hover:text-zinc-700 disabled:text-zinc-200"
+              onClick={() => {
+                const expiryDate = new Date(saleList.saleExpiryDate);
+                if (expiryDate < new Date()) {
+                  showToast(
+                    "Cannot resume sale. The sale has already expired.",
+                    "error",
+                  );
+                  return;
+                }
+
+                if (
+                  !window.confirm("Are you sure you want to resume this sale?")
+                ) {
+                  return;
+                }
+                resumeSale(saleList._id);
+              }}
+            >
+              <span className="material-symbols-outlined absolute left-2 top-1 text-base leading-3">
+                play_arrow
+              </span>
+              Resume
+            </button>
+          )}
+        </td>
+      </tr>
     );
   };
 
   return (
     <>
       {selectProd && <SelectProduct handleClose={handleSelectProd} />}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex gap-2">
           <button
             className="relative self-center rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700"
@@ -241,27 +260,6 @@ const SaleList = () => {
         <table className="w-full table-auto overflow-hidden text-sm">
           <thead className="">
             <tr className="h-8 text-nowrap bg-zinc-100">
-              {/* <th scope="col" className="rounded-l-lg px-4">
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 rounded border-gray-300 bg-gray-100 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600"
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        const allSaleIds = saleList.map((sale) => sale._id);
-                        setSelectedSale(allSaleIds);
-                      } else {
-                        setSelectedSale([]);
-                      }
-                    }}
-                    checked={
-                      selectedSale.length === saleList.length &&
-                      saleList.length > 0
-                    }
-                  />
-                  <label className="sr-only">checkbox</label>
-                </div>
-              </th> */}
               <th className="cursor-pointer rounded-l-lg px-6 text-left font-medium capitalize tracking-wide text-zinc-500 hover:text-zinc-600">
                 <span className="mr-2 rounded border-[1px]" />
                 No.
@@ -300,7 +298,7 @@ const SaleList = () => {
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-300">
+          <tbody className="">
             <tr>
               <td colSpan={8} className="h-2"></td>
             </tr>

@@ -72,8 +72,7 @@ const OrderFilters: React.FC<{ getFilter: (filter: FiltersProps) => void }> = ({
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
   return (
     <div className="flex w-full flex-col gap-2">
-      <div className="relative flex items-center justify-between">
-      </div>
+      <div className="relative flex items-center justify-between"></div>
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex gap-2">
           <button
@@ -165,7 +164,7 @@ const OrderFilters: React.FC<{ getFilter: (filter: FiltersProps) => void }> = ({
             )}
           </div>
         </div>
-        <div className="flex flex-col gap-4 sm:flex-row">
+        <div className="flex flex-row gap-4">
           <div className="flex flex-col gap-1">
             <label
               htmlFor={"start-date"}

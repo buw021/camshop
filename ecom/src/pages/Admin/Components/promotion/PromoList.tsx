@@ -75,7 +75,7 @@ const Row_Cells: React.FC<{
         ? new Date(promo.endDate).toLocaleDateString("en-GB")
         : "None"}
     </td>
-    <td className="pr-6text-left whitespace-nowrap pl-8 text-xs font-medium capitalize">
+    <td className="whitespace-nowrap pl-8 pr-6 text-left text-xs font-medium capitalize">
       <button
         className="rounded-lg border-[1px] border-zinc-300 bg-white py-0.5 pl-7 pr-2 text-xs font-medium tracking-wide drop-shadow-sm hover:text-zinc-700"
         onClick={(e) => {
@@ -210,7 +210,7 @@ const PromoList = () => {
 
   return (
     <>
-      <div className="flex flex-wrap items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex gap-2">
           <button
             className="relative self-center rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700"
@@ -336,7 +336,7 @@ const PromoList = () => {
                 End Date
               </th>
 
-              <th className="cursor-pointer px-6 text-left font-medium capitalize tracking-wide text-zinc-500 hover:text-zinc-600">
+              <th className="cursor-pointer rounded-r-lg px-6 text-left font-medium capitalize tracking-wide text-zinc-500 hover:text-zinc-600">
                 <span className="mr-2 rounded border-[1px]" />
                 Manage
               </th>

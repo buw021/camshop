@@ -1,6 +1,7 @@
 const Product = require("../models/products");
 const Sale = require("../models/sale");
 const agenda = require("../jobs/saleJobs");
+const { start } = require("agenda/dist/agenda/start");
 
 const browseProducts = async (req, res) => {
   try {
@@ -28,7 +29,7 @@ const browseProducts = async (req, res) => {
       },
       {
         $match: {
-          $or: [
+          $and: [
             { "variantSaleInfo.isOnSale": { $ne: true } },
             { "variantSaleInfo.saleExpiryDate": { $lt: new Date() } },
             { variantSaleInfo: { $eq: null } },
@@ -70,7 +71,9 @@ const browseProducts = async (req, res) => {
 const setProductOnSale = async (req, res) => {
   const { SaleList } = req.body;
   try {
-    //check is the product + variantId is already on sale
+    //check if the product + variantId is already on sale
+
+
     const sales = await Sale.insertMany(
       SaleList.selectedProducts.map((product) => ({
         productId: product.productId,
@@ -201,9 +204,65 @@ const pauseSale = async (req, res) => {
   }
 };
 
+const resumeSale = async (req, res) => {
+  const { id } = req.body;
+  const dateToday = new Date();
+  try {
+    const saleProduct = await Sale.findById(id);
+    if (saleProduct) {
+      if (!saleProduct.isOnSale && saleProduct.saleExpiryDate > dateToday) {
+        saleProduct.isOnSale = true;
+        await saleProduct.save();
+        res.status(200).json({ message: "Product sale status is resumed" });
+      } else {
+        res.status(400).json({
+          error:
+            "Sale cannot be resumed. It is either already on sale or expired.",
+        });
+      }
+    } else {
+      res.status(404).json({ error: "Sale product not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Failed to resume sale on a product" });
+  }
+};
+
+const editSaleData = async (req, res) => {
+  const { id, startDate, expiryDate } = req.body;
+  const newStartDate = new Date(startDate);
+  const newExpiryDate = new Date(expiryDate);
+
+  if (newStartDate > newExpiryDate) {
+    return res
+      .status(400)
+      .json({ error: "Start date cannot be later than expiry date." });
+  }
+  try {
+    const saleProduct = await Sale.findById(id);
+    if (saleProduct) {
+      if (startDate) {
+        saleProduct.saleStartDate = newStartDate;
+      }
+      if (expiryDate) {
+        saleProduct.saleExpiryDate = newExpiryDate;
+      }
+      await saleProduct.save();
+      res.status(200).json({ message: "Sale data updated successfully" });
+    } else {
+      res.status(404).json({ error: "Sale product not found" });
+    }
+  } catch (error) {
+    console.error("Error updating sale data:", error);
+    res.status(500).json({ error: "Failed to update sale data." });
+  }
+};
+
 module.exports = {
   browseProducts,
   setProductOnSale,
   getSaleList,
   pauseSale,
+  resumeSale,
+  editSaleData,
 };
