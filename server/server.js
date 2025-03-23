@@ -1,8 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv").config();
-const { mongoose } = require("mongoose");
-
+const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const { hashPassword } = require("./helpers/auth");
 
@@ -12,12 +11,14 @@ const app = express();
 const port = 3000;
 
 //mongodb connection
+
 mongoose
   .connect(process.env.MONGO_URL)
-  .then(() => console.log("db connceted"))
-  .catch((err) => console.log("db not connecteed", err));
+  .then(async () => {
+    console.log("DB connected");
+  })
+  .catch((err) => console.log("DB not connected", err));
 
-//middleware
 app.use(
   cors({
     origin: "http://localhost:5173",

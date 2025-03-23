@@ -1,7 +1,6 @@
 const Product = require("../models/products");
 const Sale = require("../models/sale");
-const agenda = require("../jobs/saleJobs");
-const { start } = require("agenda/dist/agenda/start");
+const agenda = require("../jobs/agenda");
 
 const browseProducts = async (req, res) => {
   try {
@@ -29,10 +28,15 @@ const browseProducts = async (req, res) => {
       },
       {
         $match: {
-          $and: [
-            { "variantSaleInfo.isOnSale": { $ne: true } },
-            { "variantSaleInfo.saleExpiryDate": { $lt: new Date() } },
+          $or: [
             { variantSaleInfo: { $eq: null } },
+            { "variantSaleInfo.saleExpiryDate": { $lt: new Date() } },
+            {
+              $and: [
+                { "variantSaleInfo.isOnSale": false }, // Paused sale
+                { "variantSaleInfo.saleExpiryDate": { $lt: new Date() } }, // Expired sale
+              ],
+            },
           ],
         },
       },
@@ -73,6 +77,22 @@ const setProductOnSale = async (req, res) => {
   try {
     //check if the product + variantId is already on sale
 
+    const existingSales = await Sale.find({
+      productId: {
+        $in: SaleList.selectedProducts.map((product) => product.productId),
+      },
+      variantId: {
+        $in: SaleList.selectedProducts.map((product) => product.variantId),
+      },
+      saleExpiryDate: { $gt: new Date() },
+      isOnSale: true,
+    });
+
+    if (existingSales.length > 0) {
+      return res
+        .status(400)
+        .json({ error: "One or more products are already on sale." });
+    }
 
     const sales = await Sale.insertMany(
       SaleList.selectedProducts.map((product) => ({

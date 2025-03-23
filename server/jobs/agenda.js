@@ -1,20 +1,19 @@
-const Agenda = require('agenda');
-const mongoose = require('mongoose');
+const Agenda = require("agenda");
+const saleJobs = require("./saleJobs");
+const mongoConnectionString = process.env.MONGO_URL;
 
-// Use the existing Mongoose connection
 const agenda = new Agenda({
-    mongo: mongoose.connection, // Reuse existing connection
-    collection: 'agendaJobs' // Optional: Custom collection name
+  db: { address: mongoConnectionString, collection: "agendaJobs" },
 });
 
-// Event listeners (optional but helpful for debugging)
-agenda.on('ready', () => console.log('Agenda is connected to MongoDB'));
-agenda.on('error', (err) => console.error('Agenda connection error:', err));
+//  Debugging: Show all scheduled jobs on startup
 
-// Start Agenda when ready
+saleJobs(agenda);
+
 (async function () {
-    await agenda.start();
-    console.log('Agenda has started processing jobs');
+  await agenda.start();
 })();
+
+//  Debugging: Log when a job is being processed
 
 module.exports = agenda;

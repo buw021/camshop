@@ -21,9 +21,10 @@ interface SaleInterface {
   selectedProducts: SelectedProducts[];
 }
 
-const SelectProduct: React.FC<{ handleClose: () => void }> = ({
-  handleClose,
-}) => {
+const SelectProduct: React.FC<{
+  handleClose: () => void;
+  fetchSaleList: () => void;
+}> = ({ handleClose, fetchSaleList }) => {
   const [sale, setSale] = useState<SaleInterface>({
     startDate: null,
     endDate: null,
@@ -64,7 +65,9 @@ const SelectProduct: React.FC<{ handleClose: () => void }> = ({
         SaleList: sale,
       });
       if (response.data) {
-        console.log("Sale set successfully");
+        showToast("Successfully set the product/s on sale", "success");
+        fetchSaleList();
+        handleClose();
       }
     } catch (error) {
       console.error("Error setting sale:", error);
@@ -87,7 +90,7 @@ const SelectProduct: React.FC<{ handleClose: () => void }> = ({
           [dateType]: new Date(e.target.value),
         }));
       } else {
-        console.log("please enter a valid date");
+        showToast("please enter a valid date", "error");
       }
     }
     if (dateType === "endDate") {
@@ -100,7 +103,7 @@ const SelectProduct: React.FC<{ handleClose: () => void }> = ({
             [dateType]: new Date(e.target.value),
           }));
         } else {
-          console.log("please enter a valid date");
+          showToast("please enter a valid date", "error");
         }
     }
   };

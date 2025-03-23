@@ -210,7 +210,12 @@ const SaleList = () => {
 
   return (
     <>
-      {selectProd && <SelectProduct handleClose={handleSelectProd} />}
+      {selectProd && (
+        <SelectProduct
+          handleClose={handleSelectProd}
+          fetchSaleList={fetchSaleList}
+        />
+      )}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex gap-2">
           <button
