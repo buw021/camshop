@@ -12,6 +12,7 @@ const buildOrderQuery = ({
 }) => {
   let orderQuery = {};
   if (status) {
+    console.log(status);
     const statusArray = Array.isArray(status) ? status : status.split(",");
     orderQuery.status = { $in: statusArray };
   } else {
@@ -63,8 +64,13 @@ const updateOrderStatus = async (req, res) => {
             error: "Cannot cancel an order that has been shipped or delivered.",
           });
         }
-        order.status = "cancelled";
-        message = "Order has been cancelled.";
+        if (order.fulfilled) {
+          order.status = "refund requested";
+          message = "Refund requested";
+        } else {
+          order.status = "cancelled";
+          message = "Order has been cancelled.";
+        }
         break;
       case "shipped":
         order.status = "shipped";
@@ -74,10 +80,15 @@ const updateOrderStatus = async (req, res) => {
         order.status = "delivered";
         message = "Order has been delivered.";
         break;
-      case "refund":
+      case "refunding":
         order.status = "refund on process";
         message = "Refund process initiated.";
         break;
+      case "refunded":
+        order.status = "refunded";
+        message = "Order has been Refunded";
+        break;
+
       case "updateTracking":
         message = "Tracking number updated.";
       default:

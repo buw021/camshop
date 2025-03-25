@@ -7,28 +7,27 @@ import CustomerWishlist from "./CustomerWishlist";
 
 const ManageCustomerInfo: React.FC<{
   customer: CustomerProps;
-  customertList: CustomerProps[];
-  setCustomer: (customer: string) => void;
+  nextPage: () => void;
+  prevPage: () => void;
+  fetchCustomer: (id: string) => void;
+  getCustomers: () => void;
   close: () => void;
-}> = ({ customer, customertList, close, setCustomer }) => {
+  currentIndex: number;
+  totalUsers: number;
+}> = ({
+  customer,
+  close,
+  nextPage,
+  prevPage,
+
+  currentIndex,
+  totalUsers,
+}) => {
   const [toggleAddress, setToggleAddress] = useState<boolean>(false);
   const [toggleOrders, setToggleOrders] = useState<boolean>(false);
   const [toggleCart, setToggleCart] = useState<boolean>(false);
   const [toggleWishlist, setToggleWishlist] = useState<boolean>(false);
 
-  const currentIndex = customertList.findIndex(
-    (l_customer) => l_customer._id === customer._id,
-  );
-  const handleNextOrder = () => {
-    if (currentIndex < customertList.length - 1) {
-      setCustomer(customertList[currentIndex + 1]._id);
-    }
-  };
-  const handlePreviousOrder = () => {
-    if (currentIndex > 0) {
-      setCustomer(customertList[currentIndex - 1]._id);
-    }
-  };
   const handleToggleAddress = () => {
     setToggleAddress(!toggleAddress);
   };
@@ -66,7 +65,7 @@ const ManageCustomerInfo: React.FC<{
             <div className="flex items-center justify-center gap-0.5">
               <button
                 className={`relative flex h-8 w-8 items-center justify-center rounded-l-md border-[1px] border-zinc-300 bg-zinc-200 text-sm font-medium text-zinc-700 drop-shadow-sm hover:cursor-pointer`}
-                onClick={handlePreviousOrder}
+                onClick={prevPage}
                 style={{ opacity: currentIndex === 0 ? 0.5 : 1 }}
               >
                 <span className="material-symbols-outlined absolute right-0.5 text-lg leading-3">
@@ -75,9 +74,9 @@ const ManageCustomerInfo: React.FC<{
               </button>
               <button
                 className={`relative flex h-8 w-8 items-center justify-center rounded-r-md border-[1px] border-zinc-300 bg-zinc-200 text-sm font-medium text-zinc-700 drop-shadow-sm hover:cursor-pointer`}
-                onClick={handleNextOrder}
+                onClick={nextPage}
                 style={{
-                  opacity: currentIndex === customertList.length - 1 ? 0.5 : 1,
+                  opacity: currentIndex === totalUsers - 1 ? 0.5 : 1,
                 }}
               >
                 <span className="material-symbols-outlined absolute right-1 text-lg leading-3">

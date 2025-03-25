@@ -17,6 +17,7 @@ const getUsers = async (req, res) => {
     }
     const users = await User.find(query)
       .select("_id firstName lastName email phoneNo address")
+      .sort({ createdAt: -1 })
       .skip((currentPage - 1) * limit)
       .limit(limit);
     res.status(200).json(users);
@@ -31,8 +32,17 @@ const getUserDetails = async (req, res) => {
     const userID = customerID;
     if (!userID) return res.status(400).json({ message: "User ID is empty" });
     const user = await User.findById(userID).select("-password");
+    const users = await User.find()
+      .sort({ createdAt: -1 })
+      .select("_id")
+      .lean();
+    const userIndex = users.findIndex((u) => u._id.toString() === userID);
+    const prevUser = userIndex > 0 ? users[userIndex - 1]._id : null;
+    const nextUser =
+      userIndex < users.length - 1 ? users[userIndex + 1]._id : null;
+    const totalUsers = await User.countDocuments();
     if (!user) res.status(400).json({ message: "User not found" });
-    res.status(200).json(user);
+    res.status(200).json({ user, prevUser, nextUser, totalUsers, userIndex });
   } catch (error) {
     res.status(404).json({ message: error.message });
   }

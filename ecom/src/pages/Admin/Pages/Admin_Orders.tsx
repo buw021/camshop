@@ -51,9 +51,15 @@ const Admin_Orders = () => {
     getOrders();
   }, [getOrders]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters]);
+
   const getFilter = (filter: FiltersProps) => {
     setFilters(filter);
   };
+
+  
 
   const closeManageOrder = () => {
     setCurrentOrder(null);

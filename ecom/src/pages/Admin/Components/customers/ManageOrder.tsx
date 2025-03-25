@@ -25,8 +25,8 @@ const ManageOrder: React.FC<ManageOrderProps> = ({
 
   const updateOrderStatus = (
     action: string,
-    trackingNo: string,
-    trackingLink: string,
+    trackingNo?: string,
+    trackingLink?: string,
   ) => {
     if (currentOrder) {
       axiosInstance
@@ -235,19 +235,27 @@ const ManageOrder: React.FC<ManageOrderProps> = ({
             </p>
           </div>
         </div>
-        <div className="flex w-full justify-between">
-          {currentOrder.status !== "shipped" &&
-            currentOrder.status !== "delivered" && (
-              <button
-                className="relative self-end rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:border-[1px] disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-300"
-                disabled={
-                  currentOrder.status === "shipped" ||
-                  currentOrder.status === "delivered"
+        <div className="flex w-full justify-end gap-2">
+          {!["shipped", "cancelled", "delivered"].includes(
+            currentOrder.status,
+          ) && (
+            <button
+              className="relative self-end rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:border-[1px] disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-300"
+              onClick={() => {
+                if (
+                  window.confirm("Are you sure you want to fulfill this order?")
+                ) {
+                  updateOrderStatus("cancel");
                 }
-              >
-                Cancel Order
-              </button>
-            )}
+              }}
+              disabled={
+                currentOrder.status === "shipped" ||
+                currentOrder.status === "delivered"
+              }
+            >
+              Cancel Order
+            </button>
+          )}
           {!currentOrder.fulfilled && currentOrder.status === "ordered" && (
             <button
               className="relative self-end rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:border-[1px] disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-300"
@@ -262,42 +270,58 @@ const ManageOrder: React.FC<ManageOrderProps> = ({
               Fulfill Order
             </button>
           )}
-          {!currentOrder.fulfilled &&
-            currentOrder.status === "refund on process" && (
-              <button
-                className="relative self-end rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:border-[1px] disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-300"
-                onClick={() => {
-                  if (
-                    window.confirm(
-                      "Are you sure you want to refund this order?",
-                    )
-                  ) {
-                    console.log("refunding");
-                  }
-                }}
-              >
-                Refund
-              </button>
-            )}
-          {currentOrder.fulfilled && currentOrder.status !== "shipped" && (
+          {currentOrder.status === "refund requested" && (
             <button
               className="relative self-end rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:border-[1px] disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-300"
               onClick={() => {
-                if (!trackingNo || !trackingLink) {
-                  showToast(
-                    "Please fill in the tracking number and link",
-                    "error",
-                  );
-                  return;
-                }
-                if (window.confirm("Update status to shipped?")) {
-                  updateOrderStatus("shipped", trackingNo, trackingLink);
+                if (
+                  window.confirm("Are you sure you want to refund this order?")
+                ) {
+                  updateOrderStatus("refunding");
                 }
               }}
             >
-              Ship Order
+              Refund
             </button>
           )}
+          {currentOrder.status === "refund on process" && (
+            <button
+              className="relative self-end rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:border-[1px] disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-300"
+              onClick={() => {
+                if (window.confirm("Are you sure this order is refunded?")) {
+                  updateOrderStatus("refunded");
+                }
+              }}
+            >
+              Refunded
+            </button>
+          )}
+          {currentOrder.fulfilled &&
+            ![
+              "shipped",
+              "refund requested",
+              "refund on process",
+              "refunded",
+              "delivered",
+            ].includes(currentOrder.status) && (
+              <button
+                className="relative self-end rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:border-[1px] disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-300"
+                onClick={() => {
+                  if (!trackingNo || !trackingLink) {
+                    showToast(
+                      "Please fill in the tracking number and link",
+                      "error",
+                    );
+                    return;
+                  }
+                  if (window.confirm("Update status to shipped?")) {
+                    updateOrderStatus("shipped", trackingNo, trackingLink);
+                  }
+                }}
+              >
+                Ship Order
+              </button>
+            )}
 
           {currentOrder.fulfilled && currentOrder.status === "shipped" && (
             <button

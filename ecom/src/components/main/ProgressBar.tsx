@@ -180,12 +180,12 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ label }) => {
             <>
               <span
                 style={{ animationDuration: `3s` }}
-                className={`material-symbols-outlined sm:text-[50px] ${label === "refund on process" ? "text-yellow-500" : "text-zinc-200"} ${label === "refunded" && "text-green-500"}`}
+                className={`material-symbols-outlined sm:text-[50px] ${label === "refund on process" ? "text-yellow-500" : `${label === "refunded" ? "text-green-500" : "text-zinc-200"} `} `}
               >
                 credit_card_clock
               </span>
               <span
-                className={`text-xs leading-3 tracking-normal ${label === "refund on process" ? "text-yellow-600" : "text-zinc-200"} ${label === "refunded" && "text-green-600"}`}
+                className={`text-xs leading-3 tracking-normal ${label === "refunded" ? "text-green-600" : ""} ${label === "refund on process" ? "text-yellow-600" : `${label === "refunded" ? "text-green-600" : "text-zinc-200"} `} `}
               >
                 Refund on Process
               </span>
