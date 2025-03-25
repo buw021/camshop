@@ -2,6 +2,45 @@ const Order = require("../models/orders");
 const Stripe = require("stripe");
 const STRIPE = new Stripe(process.env.STRIPE_SK);
 
+const buildOrderQuery = ({
+  status,
+  paymentStatus,
+  fulfillmentStatus,
+  dateStart,
+  dateEnd,
+  searchQuery,
+}) => {
+  let orderQuery = {};
+  if (status) {
+    const statusArray = Array.isArray(status) ? status : status.split(",");
+    orderQuery.status = { $in: statusArray };
+  } else {
+    orderQuery.status = { $ne: "cancelled" };
+  }
+  if (paymentStatus) {
+    orderQuery.paymentStatus = paymentStatus === "paid" ? true : false;
+  }
+  if (fulfillmentStatus) {
+    orderQuery.fulfilled = fulfillmentStatus === "fulfilled" ? true : false;
+  }
+  if (dateStart && dateEnd) {
+    orderQuery.createdAt = {
+      $gte: new Date(new Date(dateStart).setHours(0, 0, 0, 0)),
+      $lt: new Date(new Date(dateEnd).setHours(23, 59, 59, 999)),
+    };
+  }
+  if (searchQuery) {
+    orderQuery = {
+      $or: [
+        { customOrderId: { $regex: searchQuery, $options: "i" } },
+        { email: { $regex: searchQuery, $options: "i" } },
+        { name: { $regex: searchQuery, $options: "i" } },
+      ],
+    };
+  }
+  return orderQuery;
+};
+
 const updateOrderStatus = async (req, res) => {
   const { orderId, action, trackingNo, trackingLink } = req.body;
 
@@ -74,40 +113,68 @@ const getOrdersAdmin = async (req, res) => {
   } = req.query;
 
   try {
-    let orderQuery = {};
-    if (status) {
-      const statusArray = Array.isArray(status) ? status : status.split(",");
-      orderQuery.status = { $in: statusArray };
-    } else {
-      orderQuery.status = { $ne: "cancelled" };
-    }
-    if (paymentStatus) {
-      orderQuery.paymentStatus = paymentStatus === "paid" ? true : false;
-    }
-    if (fulfillmentStatus) {
-      orderQuery.fulfilled = fulfillmentStatus === "fulfilled" ? true : false;
-    }
-    if (dateStart && dateEnd) {
-      orderQuery.createdAt = {
-        $gte: new Date(new Date(dateStart).setHours(0, 0, 0, 0)),
-        $lt: new Date(new Date(dateEnd).setHours(23, 59, 59, 999)),
-      };
-    }
-    if (searchQuery) {
-      orderQuery = {
-        $or: [
-          { customOrderId: { $regex: searchQuery, $options: "i" } },
-          { email: { $regex: searchQuery, $options: "i" } },
-          { name: { $regex: searchQuery, $options: "i" } },
-        ],
-      };
-    }
-
+    const orderQuery = buildOrderQuery({
+      status,
+      paymentStatus,
+      fulfillmentStatus,
+      dateStart,
+      dateEnd,
+      searchQuery,
+    });
+    const totalOrders = await Order.countDocuments(orderQuery);
+    const totalPages = Math.ceil(totalOrders / limit);
     const orders = await Order.find(orderQuery)
       .sort({ createdAt: -1 })
       .skip((currentPage - 1) * limit)
       .limit(limit);
-    res.json(orders);
+    res.json({ totalPages, orders, totalOrders });
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    res.status(500).json({ error: "Failed to fetch orders." });
+  }
+};
+
+const fetchOrder = async (req, res) => {
+  const {
+    status,
+    paymentStatus,
+    fulfillmentStatus,
+    dateStart,
+    dateEnd,
+    searchQuery,
+    orderId,
+  } = req.query;
+  try {
+    const orderQuery = buildOrderQuery({
+      status,
+      paymentStatus,
+      fulfillmentStatus,
+      dateStart,
+      dateEnd,
+      searchQuery,
+    });
+    const totalOrders = await Order.countDocuments(orderQuery);
+    const currentOrder = await Order.findById(orderId);
+    const orders = await Order.find(orderQuery)
+      .sort({ createdAt: -1 })
+      .select("_id")
+      .lean(); // Use lean() for better performance if no methods on the document are required
+    const currentOrderIndex = orders.findIndex(
+      (order) => order._id.toString() === orderId
+    );
+    const previousOrder =
+      currentOrderIndex > 0 ? orders[currentOrderIndex - 1]._id : null;
+    const nextOrder =
+      currentOrderIndex < orders.length - 1
+        ? orders[currentOrderIndex + 1]._id
+        : null;
+    res.json({
+      currentOrder,
+      currentOrderIndex,
+      totalOrders,
+      nextOrder,
+      previousOrder,
+    });
   } catch (error) {
     console.error("Error fetching orders:", error);
     res.status(500).json({ error: "Failed to fetch orders." });
@@ -117,4 +184,5 @@ const getOrdersAdmin = async (req, res) => {
 module.exports = {
   updateOrderStatus,
   getOrdersAdmin,
+  fetchOrder,
 };

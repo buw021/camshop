@@ -4,7 +4,7 @@ import { OrderProps } from "../interface/interfaces";
 import { statusColor } from "../assets/statusColor";
 const Row_Cells: React.FC<{
   order: OrderProps;
-  manageOrder: (order: OrderProps) => void;
+  manageOrder: (orderId: string) => void;
 }> = ({ order, manageOrder }) => (
   <tr className="border-y-[1px] hover:bg-zinc-100">
     <td className="px-6 py-1 text-left font-medium tracking-tight">
@@ -50,7 +50,7 @@ const Row_Cells: React.FC<{
     <td className="px-6 pl-8 text-left">
       <button
         className="rounded-lg border-[1px] border-zinc-300 bg-white py-0.5 pl-7 pr-2 text-xs font-medium tracking-wide drop-shadow-sm hover:text-zinc-700"
-        onClick={() => manageOrder(order)}
+        onClick={() => manageOrder(order._id)}
       >
         <span className="material-symbols-outlined absolute left-2 top-1 text-base leading-3">
           edit_square
@@ -63,11 +63,8 @@ const Row_Cells: React.FC<{
 
 const OrderList: React.FC<{
   orders: OrderProps[];
-  manageOrder: (order: OrderProps) => void;
-  currentPage: number;
-  setCurrentPage: (react: React.SetStateAction<number>) => void;
-  totalPages: number;
-}> = ({ orders, manageOrder, currentPage, setCurrentPage, totalPages }) => {
+  manageOrder: (orderId: string) => void;
+}> = ({ orders, manageOrder }) => {
   const [sortConfig, setSortConfig] = useState<{
     key: keyof OrderProps;
     direction: string;
@@ -231,27 +228,6 @@ const OrderList: React.FC<{
             ))}
           </tbody>
         </table>
-      </div>
-      <div className="mt-4 flex items-center justify-center gap-2">
-        <button
-          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          disabled={currentPage === 1}
-          className="rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700 disabled:bg-zinc-300"
-        >
-          Previous
-        </button>
-        <span className="text-xs font-bold uppercase leading-3 tracking-wide text-zinc-500">
-          Page {totalPages > 0 ? currentPage : 0} of {totalPages}
-        </span>
-        <button
-          onClick={() =>
-            setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-          }
-          disabled={currentPage === totalPages || totalPages === 0}
-          className="rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700 disabled:bg-zinc-300"
-        >
-          Next
-        </button>
       </div>
     </>
   );

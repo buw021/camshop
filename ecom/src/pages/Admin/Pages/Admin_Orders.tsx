@@ -1,14 +1,28 @@
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import OrderList from "../Components/orders/OrderList";
 import OrderFilters from "../Components/orders/OrderFilters";
-import ManageOrder from "../Components/orders/ManageOrder";
+
 import { FiltersProps, OrderProps } from "../Components/interface/interfaces";
 import axiosInstance from "../Services/axiosInstance";
-import { showToast } from "../Components/showToast";
+
+import { PageButtons } from "../../../components/main/Buttons";
+import ManageOrder from "../Components/orders/ManageOrder";
 
 const Admin_Orders = () => {
   const [orders, setOrders] = useState<OrderProps[]>([]);
-  const [manageOrder, setManageOrder] = useState<OrderProps | null>(null);
+  const [totalPages, setTotalPages] = useState<number>(0);
+  const [currentOrder, setCurrentOrder] = useState<OrderProps | null>();
+  const [manageOrderInfos, setManageOrderInfos] = useState<{
+    nextId: string | null;
+    prevId: string | null;
+    currentOrderIndex: number;
+    totalOrders: number;
+  }>({
+    nextId: null,
+    prevId: null,
+    currentOrderIndex: 0,
+    totalOrders: 0,
+  });
   const [filters, setFilters] = useState<FiltersProps>({
     status: [],
     paymentStatus: "",
@@ -19,15 +33,14 @@ const Admin_Orders = () => {
   });
   const [currentPage, setCurrentPage] = useState(1);
   const limit = 10;
-  const totalPages = Math.ceil(orders.length / limit);
-
   const getOrders = useCallback(async () => {
     try {
       const response = await axiosInstance.get("/admin-get-orders", {
-        params: { ...filters, currentPage, limit }
+        params: { ...filters, currentPage, limit },
       });
       if (response.data) {
-        setOrders(response.data);
+        setOrders(response.data.orders);
+        setTotalPages(response.data.totalPages);
       }
     } catch (error) {
       console.log(error);
@@ -38,63 +51,67 @@ const Admin_Orders = () => {
     getOrders();
   }, [getOrders]);
 
-  const toggleManageOrder = (order: OrderProps) => {
-    if (order) {
-      setManageOrder(order);
-    }
+  const getFilter = (filter: FiltersProps) => {
+    setFilters(filter);
   };
 
   const closeManageOrder = () => {
-    setManageOrder(null);
+    setCurrentOrder(null);
   };
 
-  const updateOrderStatus = (
-    action: string,
-    trackingNo: string,
-    trackingLink: string,
-  ) => {
-    if (manageOrder) {
-      axiosInstance
-        .post("/update-order-status", {
-          orderId: manageOrder._id,
-          customOrderId: manageOrder.customOrderId,
-          trackingNo,
-          trackingLink,
-          action,
-        })
-        .then((response) => {
-          if (response.data) {
-            getOrders();
-            showToast(response.data.message, "success");
-            setManageOrder(response.data.order);
-          }
-        })
-        .catch((error) => {
-          console.log(error);
+  const fetchOrderData = async (orderId: string) => {
+    try {
+      const response = await axiosInstance.get("/fetch-order-data", {
+        params: { ...filters, orderId },
+      });
+      if (response.data) {
+        setCurrentOrder(response.data.currentOrder);
+        setManageOrderInfos({
+          nextId: response.data.nextOrder,
+          prevId: response.data.previousOrder,
+          currentOrderIndex: response.data.currentOrderIndex,
+          totalOrders: response.data.totalOrders,
         });
+        console.log(response.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch order data:", error);
     }
   };
 
-  const getFilter = (filter: FiltersProps) => {
-    setFilters(filter);
+  const nextPage = async () => {
+    if (!manageOrderInfos.nextId) return; // Prevent navigating if no next order
+    await fetchOrderData(manageOrderInfos.nextId);
+  };
+
+  const prevPage = async () => {
+    if (!manageOrderInfos.prevId) return; // Prevent navigating if no previous order
+    await fetchOrderData(manageOrderInfos.prevId);
   };
 
   return (
     <div className="relative flex h-full w-full flex-col gap-1 rounded-xl bg-white p-4 ring-2 ring-zinc-300/70 sm:p-10">
       <h1 className="mb-2 text-xl font-bold tracking-wide">Order List</h1>
       <OrderFilters getFilter={getFilter} />
-      <OrderList orders={orders} manageOrder={toggleManageOrder} currentPage={currentPage} setCurrentPage={setCurrentPage} totalPages={totalPages} />
-      {manageOrder && (
-        <ManageOrder
-          orders={orders}
-          currentOrder={manageOrder}
-          setManageOrder={setManageOrder}
-          closeManageOrder={closeManageOrder}
-          fulfillOrder={updateOrderStatus}
-          shipOrder={updateOrderStatus}
-          deliveredOrder={updateOrderStatus}
-          updateTracking={updateOrderStatus}
+      <OrderList orders={orders} manageOrder={fetchOrderData} />
+      <div className="flex justify-center">
+        <PageButtons
+          setCurrentPage={setCurrentPage}
+          currentPage={currentPage}
+          totalPages={totalPages}
         />
+      </div>
+      {currentOrder && (
+        <ManageOrder
+          order={currentOrder}
+          close={closeManageOrder}
+          nextPage={nextPage}
+          prevPage={prevPage}
+          fetchOrder={fetchOrderData}
+          currentOrderIndex={manageOrderInfos.currentOrderIndex}
+          totalOrders={manageOrderInfos.totalOrders}
+          getOrders={getOrders}
+        ></ManageOrder>
       )}
     </div>
   );
