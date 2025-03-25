@@ -59,7 +59,6 @@ const Admin_Orders = () => {
     setFilters(filter);
   };
 
-  
 
   const closeManageOrder = () => {
     setCurrentOrder(null);

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { CustomerProps } from "../Components/interface/interfaces";
 import axiosInstance from "../Services/axiosInstance";
 import CustomerList from "../Components/customers/CustomerList";

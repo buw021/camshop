@@ -102,29 +102,13 @@ const getProducts = async (req, res) => {
     if (filters && filters.category && filters.category.length > 0) {
       query.category = { $in: filters.category };
     }
-
+    const totalProducts = await Product.countDocuments(query);
+    const totalPages = Math.ceil(totalProducts / limit);
     const products = await Product.find(query)
+      .sort({ createdAt: -1 })
       .skip((currentPage - 1) * limit)
       .limit(limit);
-    res.json(products);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-const getArchivedProducts = async (req, res) => {
-  const { filters } = req.query;
-
-  try {
-    let query = { isArchived: false };
-
-    if (filters && filters.category && filters.category.length > 0) {
-      query.category = { $in: filters.category };
-    }
-
-    const products = await Product.find(query);
-
-    res.json(products);
+    res.json({ products, totalPages });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -402,7 +386,6 @@ module.exports = {
   getProduct,
   getVariants,
   updateProduct,
-  getArchivedProducts,
   archiveProducts,
   getFullProduct,
 };

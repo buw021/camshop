@@ -78,14 +78,10 @@ router.post("/update-address", updateAddress);
 router.post("/update-profile", updateProfile);
 router.post("/change-password", changePassword);
 
-
 router.get("/get-useradmin", getUserAdmin);
 router.get("/get-user", getUser);
 router.get("/get-products", getProducts);
-router.get("/get-archived-products", getArchivedProducts);
 router.get("/getFullProduct", getFullProduct);
-
-
 
 router.get("/getFilters", getFilters);
 

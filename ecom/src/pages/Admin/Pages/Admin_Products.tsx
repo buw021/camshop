@@ -19,7 +19,7 @@ const Admin_Products: React.FC<{ setIsDirty: (dirty: boolean) => void }> = ({
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const limit = 10;
-  const totalPages = Math.ceil(products.length / limit);
+  const [totalPages, setTotalPages] = useState<number>(0);
 
   const [showDropdown, setShowDropdown] = useState(false);
   const [filters, setFilters] = useState<{ category: string[] }>({
@@ -34,7 +34,10 @@ const Admin_Products: React.FC<{ setIsDirty: (dirty: boolean) => void }> = ({
       const response = await axiosInstance.get("/get-products", {
         params: { filters: filters, currentPage, limit, archive },
       });
-      setProducts(response.data);
+      if (response.data) {
+        setProducts(response.data.products);
+        setTotalPages(response.data.totalPages);
+      }
     } catch (error) {
       console.error("Error fetching products:", error);
     }
@@ -52,6 +55,10 @@ const Admin_Products: React.FC<{ setIsDirty: (dirty: boolean) => void }> = ({
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters]);
 
   const handleEdit = (product: Product) => {
     if (product._id) fetchProducToEdit(product._id);
