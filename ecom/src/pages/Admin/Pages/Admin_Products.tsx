@@ -22,26 +22,31 @@ const Admin_Products: React.FC<{ setIsDirty: (dirty: boolean) => void }> = ({
   const [totalPages, setTotalPages] = useState<number>(0);
 
   const [showDropdown, setShowDropdown] = useState(false);
-  const [filters, setFilters] = useState<{ category: string[] }>({
+  const [filters, setFilters] = useState<{
+    category: string[];
+  }>({
     category: [],
   });
   const toggleAddProduct = () => {
     setAddPopup(!addPopUp);
   };
 
-  const fetchProducts = useCallback(async () => {
-    try {
-      const response = await axiosInstance.get("/get-products", {
-        params: { filters: filters, currentPage, limit, archive },
-      });
-      if (response.data) {
-        setProducts(response.data.products);
-        setTotalPages(response.data.totalPages);
+  const fetchProducts = useCallback(
+    async (search: string = "") => {
+      try {
+        const response = await axiosInstance.get("/get-products", {
+          params: { filters: filters, currentPage, limit, archive, search },
+        });
+        if (response.data) {
+          setProducts(response.data.products);
+          setTotalPages(response.data.totalPages);
+        }
+      } catch (error) {
+        console.error("Error fetching products:", error);
       }
-    } catch (error) {
-      console.error("Error fetching products:", error);
-    }
-  }, [currentPage, filters, archive]);
+    },
+    [filters, currentPage, archive],
+  );
 
   const fetchProducToEdit = async (id: string) => {
     try {
@@ -95,6 +100,7 @@ const Admin_Products: React.FC<{ setIsDirty: (dirty: boolean) => void }> = ({
     }
   };
 
+  /* Search from database
   const handleSearch = async (search: string) => {
     const command = archive ? true : false;
     if (search === "") {
@@ -105,11 +111,12 @@ const Admin_Products: React.FC<{ setIsDirty: (dirty: boolean) => void }> = ({
       const response = await axiosInstance.get(
         `/search-products?search=${search}&command=${command}`,
       );
+
       setProducts(response.data);
     } catch (error) {
       console.error("Error fetching products:", error);
     }
-  };
+  }; */
 
   return (
     <>
@@ -153,26 +160,29 @@ const Admin_Products: React.FC<{ setIsDirty: (dirty: boolean) => void }> = ({
           {archive ? "Archive" : "Product"} List{" "}
         </h1>
         <div className="roboto-medium flex flex-wrap items-center justify-between gap-2 uppercase text-zinc-500">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
             <button
               className="rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700"
-              onClick={() => handleSearch(search)}
+              onClick={() => fetchProducts(search)}
             >
               Search
             </button>
             <div className="relative flex items-center">
               <input
-                className="roboto-medium w-[15vw] min-w-[175px] rounded-md border-2 border-zinc-200 bg-zinc-50 py-[4.25px] pl-2 pr-8 text-xs leading-3 text-zinc-900 outline-none outline-1 focus:border-zinc-300"
-                placeholder="Search"
+                className="roboto-medium w-[275px] min-w-[175px] rounded-md border-2 border-zinc-200 bg-zinc-50 py-[4.25px] pl-2 pr-8 text-xs leading-3 text-zinc-900 outline-none outline-1 focus:border-zinc-300"
+                placeholder="Search Product Name, Brand or Category"
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") handleSearch(search);
+                  if (e.key === "Enter") fetchProducts(search);
                 }}
                 value={search}
               />
               <span
                 className={`material-symbols-outlined filled absolute right-2 mr-1 flex items-center text-base leading-3 text-zinc-500 transition-all duration-100 ease-linear hover:cursor-pointer hover:text-zinc-600`}
-                onClick={() => setSearch("")}
+                onClick={() => {
+                  setSearch("");
+                  fetchProducts();
+                }}
               >
                 cancel
               </span>
@@ -246,7 +256,7 @@ const Admin_Products: React.FC<{ setIsDirty: (dirty: boolean) => void }> = ({
               onClick={() => {
                 setArchive(!archive);
                 setFilters({ category: [] });
-                setSearch("");
+                /* setSearch(""); */
               }}
             >
               {!archive ? (

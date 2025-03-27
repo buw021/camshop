@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import  { useState } from "react";
 
 import PromoList from "../Components/promotion/PromoList";
 import SaleList from "../Components/promotion/SaleList";

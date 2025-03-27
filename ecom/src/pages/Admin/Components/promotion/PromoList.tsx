@@ -104,7 +104,7 @@ const PromoList = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const limit = 10;
-  const totalPages = Math.ceil(promos.length / limit);
+  const [totalPages, setTotalPages] = useState(0);
 
   const handleAddPromo = () => {
     setToggleAddPromo(!toggleAddPromo);
@@ -134,7 +134,10 @@ const PromoList = () => {
         const response = await axiosInstance.get(`/get-promos`, {
           params: { type, search, currentPage, limit },
         });
-        setPromos(response.data);
+        if (response.data) {
+          setPromos(response.data.promos);
+          setTotalPages(response.data.totalPages);
+        }
       } catch (error) {
         console.error("Error fetching promo codes:", error);
       }
@@ -145,6 +148,10 @@ const PromoList = () => {
   useEffect(() => {
     fetchPromos();
   }, [fetchPromos]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
 
   const [sortConfig, setSortConfig] = useState<{
     key: keyof PromoCode | null;
@@ -220,12 +227,12 @@ const PromoList = () => {
           </button>
           <div className="relative flex items-center">
             <input
-              className="roboto-medium w-[15vw] min-w-[175px] rounded-md border-2 border-zinc-200 bg-zinc-50 py-[4.25px] pl-2 pr-8 text-xs leading-3 text-zinc-900 outline-none outline-1 focus:border-zinc-300"
+              className="roboto-medium w-[275px] min-w-[175px] rounded-md border-2 border-zinc-200 bg-zinc-50 py-[4.25px] pl-2 pr-8 text-xs leading-3 text-zinc-900 outline-none outline-1 focus:border-zinc-300"
               placeholder="Search"
               onChange={(e) => setSearch(e.target.value)}
-              /* onKeyDown={(e) => {
-              if (e.key === "Enter") handleSearch(search);
-            }} */
+              onKeyDown={(e) => {
+                if (e.key === "Enter") fetchPromos(search);
+              }}
               value={search}
             />
             <span

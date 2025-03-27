@@ -32,12 +32,16 @@ const CustomerSearchBar: React.FC<{
         </button>
         <div className="relative flex items-center">
           <input
-            className="roboto-medium w-[15vw] min-w-[175px] rounded-md border-2 border-zinc-200 bg-zinc-50 py-[4.25px] pl-2 pr-8 text-xs leading-3 text-zinc-900 outline-none outline-1 focus:border-zinc-300"
-            placeholder="Search"
+            className="roboto-medium w-[275px] min-w-[175px] rounded-md border-2 border-zinc-200 bg-zinc-50 py-[4.25px] pl-2 pr-8 text-xs leading-3 text-zinc-900 outline-none outline-1 focus:border-zinc-300"
+            placeholder="Search Name or Email"
             onChange={(e) => setSearch(e.target.value)}
-            /* onKeyDown={(e) => {
-              if (e.key === "Enter") handleSearch(search);
-            }} */
+            onKeyDown={(e) => {
+              if (e.key === "Enter")
+                setFilters((prev) => ({
+                  ...prev,
+                  searchQuery: search,
+                }));
+            }}
             value={search}
           />
           <span
@@ -46,7 +50,7 @@ const CustomerSearchBar: React.FC<{
               setSearch("");
               setFilters((prev) => ({
                 ...prev,
-                searchQuery: search,
+                searchQuery: "",
               }));
             }}
           >

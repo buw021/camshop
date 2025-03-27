@@ -111,6 +111,9 @@ const Admin_ProductTable: React.FC<Table_Content> = ({
         {product.name}
       </td>
       <td className="whitespace-nowrap pl-8 pr-6 text-left font-medium capitalize">
+        {product.brand ? product.brand : "None"}
+      </td>
+      <td className="whitespace-nowrap pl-8 pr-6 text-left font-medium capitalize">
         {product.category}
       </td>
       <td className="whitespace-nowrap pl-8 pr-6 text-left capitalize">
@@ -236,6 +239,15 @@ const Admin_ProductTable: React.FC<Table_Content> = ({
                     <span className="material-symbols-outlined absolute top-2.5 px-1 text-sm leading-3">
                       swap_vert
                     </span>
+                  </th>
+                  <th
+                    className="cursor-pointer px-6 text-left font-medium capitalize tracking-wide text-zinc-500 hover:text-zinc-600"
+                    onClick={() => {
+                      handleSort("brand");
+                    }}
+                  >
+                    <span className="mr-2 rounded border-[1px]" />
+                    Brand
                   </th>
                   <th
                     className="cursor-pointer px-6 text-left font-medium capitalize tracking-wide text-zinc-500 hover:text-zinc-600"

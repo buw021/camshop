@@ -321,6 +321,12 @@ const SelectProduct: React.FC<{
                 if (sale.discountType === "percentage" && value > 100) {
                   value = 100;
                 }
+                if (
+                  sale.discountType === "fixed" &&
+                  value > Math.min(...sale.selectedProducts.map((p) => p.variantPrice))
+                ) {
+                  value = 1;
+                }
                 setSale((prev) => ({
                   ...prev,
                   discount: value,

@@ -10,6 +10,19 @@ const getPromos = async (req, res) => {
       : {};
 
     if (type === "active") {
+      const totalPromos = await PromoCode.countDocuments({
+        $and: [
+          { $or: [{ endDate: { $gte: new Date() } }, { endDate: null }] },
+          {
+            $or: [
+              { $expr: { $lt: ["$usageCount", "$usageLimit"] } },
+              { usageLimit: null },
+            ],
+          },
+          searchCondition,
+        ],
+      });
+
       promos = await PromoCode.aggregate([
         {
           $match: {
@@ -32,7 +45,27 @@ const getPromos = async (req, res) => {
           $limit: parseInt(limit),
         },
       ]);
+
+      res.json({ promos, totalPages: Math.ceil(totalPromos / limit) });
     } else if (type === "inactive") {
+      const totalPromos = await PromoCode.countDocuments({
+        $or: [
+          { endDate: { $lt: new Date() } },
+          {
+            $and: [
+              { $expr: { $gte: ["$usageCount", "$usageLimit"] } },
+              { endDate: null },
+              { usageLimit: { $ne: null } },
+            ],
+          },
+          {
+            $expr: { $gte: ["$usageCount", "$usageLimit"] },
+            usageLimit: { $ne: null },
+          },
+        ],
+        $and: [searchCondition],
+      });
+
       promos = await PromoCode.aggregate([
         {
           $match: {
@@ -60,12 +93,15 @@ const getPromos = async (req, res) => {
           $limit: parseInt(limit),
         },
       ]);
+
+      res.json({ promos, totalPages: Math.ceil(totalPromos / limit) });
     } else {
+      const totalPromos = await PromoCode.countDocuments(searchCondition);
       promos = await PromoCode.find(searchCondition)
         .skip((currentPage - 1) * limit)
         .limit(limit);
+      res.json({ promos, totalPages: Math.ceil(totalPromos / limit) });
     }
-    res.json(promos);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });

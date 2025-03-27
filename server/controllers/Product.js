@@ -94,13 +94,19 @@ const getFullProduct = async (req, res) => {
 };
 
 const getProducts = async (req, res) => {
-  const { filters, currentPage, limit, archive } = req.query;
+  const { filters, currentPage, limit, archive, search } = req.query;
 
   try {
     let query = { isArchived: archive };
 
     if (filters && filters.category && filters.category.length > 0) {
       query.category = { $in: filters.category };
+    }
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { brand: { $regex: search, $options: "i" } },
+      ];
     }
     const totalProducts = await Product.countDocuments(query);
     const totalPages = Math.ceil(totalProducts / limit);

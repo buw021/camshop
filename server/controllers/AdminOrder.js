@@ -12,7 +12,6 @@ const buildOrderQuery = ({
 }) => {
   let orderQuery = {};
   if (status) {
-    console.log(status);
     const statusArray = Array.isArray(status) ? status : status.split(",");
     orderQuery.status = { $in: statusArray };
   } else {
@@ -31,14 +30,13 @@ const buildOrderQuery = ({
     };
   }
   if (searchQuery) {
-    orderQuery = {
-      $or: [
-        { customOrderId: { $regex: searchQuery, $options: "i" } },
-        { email: { $regex: searchQuery, $options: "i" } },
-        { name: { $regex: searchQuery, $options: "i" } },
-      ],
-    };
+    orderQuery.$or = [
+      { customOrderId: { $regex: searchQuery, $options: "i" } },
+      { email: { $regex: searchQuery, $options: "i" } },
+      { name: { $regex: searchQuery, $options: "i" } },
+    ];
   }
+
   return orderQuery;
 };
 
