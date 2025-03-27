@@ -261,22 +261,22 @@ const PromoList = () => {
           </button>
         </div>
       </div>
+      {toggleAddPromo && (
+        <PromoCodeForm
+          onClose={handleAddPromo}
+          type="add"
+          fetch={fetchPromos}
+        ></PromoCodeForm>
+      )}
+      {toggleEditPromo && (
+        <PromoCodeForm
+          onClose={handleCloseEditPromo}
+          type="edit"
+          fetch={fetchPromos}
+          promo={currentPromo}
+        ></PromoCodeForm>
+      )}
       <div className="relative h-full w-full overflow-auto bg-white">
-        {toggleAddPromo && (
-          <PromoCodeForm
-            onClose={handleAddPromo}
-            type="add"
-            fetch={fetchPromos}
-          ></PromoCodeForm>
-        )}
-        {toggleEditPromo && (
-          <PromoCodeForm
-            onClose={handleCloseEditPromo}
-            type="edit"
-            fetch={fetchPromos}
-            promo={currentPromo}
-          ></PromoCodeForm>
-        )}
         <table className="w-full table-auto overflow-hidden text-sm">
           <thead className="">
             <tr className="h-8 text-nowrap bg-zinc-100">

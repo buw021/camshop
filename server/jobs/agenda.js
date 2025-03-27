@@ -12,6 +12,7 @@ saleJobs(agenda);
 
 (async function () {
   await agenda.start();
+  console.log("agendaStarted");
 })();
 
 //  Debugging: Log when a job is being processed

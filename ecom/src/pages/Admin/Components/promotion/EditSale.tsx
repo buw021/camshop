@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { RoundedMdButton } from "../main/Buttons";
 import { showToast } from "../showToast";
+import axiosInstance from "../../Services/axiosInstance";
 
 interface VariantInfo {
   variantName: string;
@@ -29,30 +30,11 @@ interface SaleInterface {
 interface EditSaleProps {
   sale: SaleInterface;
   close: () => void;
+  fetch: () => void;
 }
 
-const EditSale: React.FC<EditSaleProps> = ({ sale, close }) => {
-  const [saleDetails, setSaleDetails] = useState<SaleInterface>({
-    productId: sale.productId,
-    variantId: sale.variantId,
-    isOnSale: sale.isOnSale,
-    salePrice: sale.salePrice,
-    saleStartDate: sale.saleStartDate,
-    saleExpiryDate: sale.saleExpiryDate,
-    _id: sale._id,
-    productInfo: sale.productInfo,
-  });
-
-  const {
-    productId,
-    variantId,
-    isOnSale,
-    salePrice,
-    saleStartDate,
-    saleExpiryDate,
-    _id,
-    productInfo,
-  } = sale;
+const EditSale: React.FC<EditSaleProps> = ({ sale, close, fetch }) => {
+  const { salePrice, _id, productInfo } = sale;
   const [duration, setDuration] = useState<{
     startDate: Date;
     expiryDate: Date;
@@ -60,9 +42,12 @@ const EditSale: React.FC<EditSaleProps> = ({ sale, close }) => {
     startDate: new Date(),
     expiryDate: new Date(new Date().setDate(new Date().getDate() + 1)),
   });
-  const [discountType, setDiscountType] = useState<"percentage" | "fixed">();
-  const [value, setValue] = useState<number>(0);
-
+  const [discountType, setDiscountType] = useState<
+    "percentage" | "fixed" | undefined
+  >();
+  const [value, setValue] = useState<number | undefined>();
+  const [newSalePriceBttn, setNewSalePriceBttn] = useState<boolean>(false);
+  const [newSalePrice, setNewSalePrice] = useState<number | undefined>();
   const handleDateChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     dateType: "startDate" | "expiryDate",
@@ -95,25 +80,49 @@ const EditSale: React.FC<EditSaleProps> = ({ sale, close }) => {
     }
   };
 
-  const newSalePrice = (
-    origPrice: number,
-    discountType: "percentage" | "fixed" | undefined,
-    value: number,
-  ) => {
-    if (!value || !discountType || !origPrice) return "0.00";
-
-    switch (discountType) {
-      case "percentage":
-        return (origPrice - (origPrice * value) / 100).toFixed(2);
-      case "fixed":
-        return (origPrice - value).toFixed(2);
-      default:
-        return origPrice.toFixed(2);
+  const saveNewSaleData = async () => {
+    try {
+      const response = await axiosInstance.post("/save-new-sale-data", {
+        saleData: { _id, value, newSalePrice, discountType, duration },
+      });
+      if (response.status === 200) {
+        showToast("Success on saving new sale data", "success");
+        fetch();
+        close();
+      } else {
+        showToast(`${response.data.message}`, "error");
+      }
+    } catch (error) {
+      console.log(error);
     }
   };
 
+  const calculateSalePrice = (
+    origPrice: number,
+    discountType: "percentage" | "fixed" | undefined,
+    value: number | undefined,
+  ) => {
+    if (!value || !discountType || !origPrice) return;
+    let price: number = origPrice;
+    switch (discountType) {
+      case "percentage":
+        price = parseFloat((origPrice - (origPrice * value) / 100).toFixed(2));
+        return setNewSalePrice(price);
+
+      case "fixed":
+        price = parseFloat((origPrice - value).toFixed(2));
+        return setNewSalePrice(price);
+      default:
+        return setNewSalePrice(price);
+    }
+  };
+
+  useEffect(() => {
+    calculateSalePrice(productInfo.variants.variantPrice, discountType, value);
+  }, [discountType, productInfo.variants.variantPrice, value]);
+
   return (
-    <div className="absolute left-0 top-0 z-20 flex h-full w-full items-center justify-center rounded-xl bg-zinc-900/20 backdrop-blur-sm sm:py-4">
+    <div className="absolute left-0 top-0 z-20 flex h-full w-full items-center justify-center rounded-xl bg-zinc-900/20 backdrop-blur-sm sm:px-2 sm:py-4">
       <div className="relative flex w-full flex-col gap-2 rounded-xl bg-white p-4 ring-2 ring-zinc-300/70 sm:max-w-[800px] sm:p-8">
         <span
           className={`material-symbols-outlined absolute right-4 top-4 z-20 flex h-7 w-7 select-none items-center justify-center rounded-full bg-zinc-900/10 text-center text-xl text-zinc-800 backdrop-blur-sm transition-all duration-100 ease-linear hover:cursor-pointer hover:text-zinc-500`}
@@ -142,16 +151,37 @@ const EditSale: React.FC<EditSaleProps> = ({ sale, close }) => {
                 {productInfo.variants.variantPrice.toFixed(2)}
               </p>
               <p>
-                <span className="font-medium tracking-wide">
-                  Old Sale Price:
-                </span>{" "}
-                € {salePrice.toFixed(2)}{" "}
+                <span className="font-medium tracking-wide">Sale Price:</span> €{" "}
+                {salePrice.toFixed(2)}{" "}
                 {`(${(((productInfo.variants.variantPrice - salePrice) / productInfo.variants.variantPrice) * 100).toFixed(2)}%)`}
               </p>
             </div>
             <div className="flex flex-col gap-2 rounded-lg border-[1px] p-2 sm:p-4">
-              <div className="flex flex-col gap-2">
-                <div className="flex flex-col gap-2 items-start">
+              <div className="felx-wrap flex gap-2">
+                <RoundedMdButton onClick={() => setNewSalePriceBttn(true)}>
+                  <span className="material-symbols-outlined -ml-1 text-base leading-3">
+                    edit_square
+                  </span>
+                  Set New Sale Price
+                </RoundedMdButton>
+                <RoundedMdButton
+                  onClick={() => {
+                    setNewSalePriceBttn(false);
+                    setDiscountType(undefined);
+                    setValue(0);
+                  }}
+                >
+                  <span className="material-symbols-outlined -ml-1 text-base leading-3">
+                    cycle
+                  </span>
+                  Keep Current Sale Price
+                </RoundedMdButton>
+              </div>
+
+              <div
+                className={`flex select-none flex-col gap-2 ${!newSalePriceBttn && "opacity-50"} relative`}
+              >
+                <div className="flex flex-col items-start gap-2">
                   <label
                     htmlFor={"promo-type"}
                     className="pr-1 text-xs font-medium"
@@ -159,8 +189,10 @@ const EditSale: React.FC<EditSaleProps> = ({ sale, close }) => {
                     Discount Type :
                   </label>
 
-                  <div className="items flex flex-col gap-2 rounded-md border-[1px] border-zinc-200 p-2.5">
-                    <div className="flex items-center gap-2 text-sm leading-3">
+                  <div className="items flex gap-2">
+                    <div
+                      className={`flex items-center gap-2 rounded-md border-[1px] border-zinc-200 text-sm leading-3 ${discountType === "percentage" ? "border-white ring-2 ring-blue-500 drop-shadow-sm" : ""}`}
+                    >
                       <input
                         type="radio"
                         id={"percentage"}
@@ -169,26 +201,37 @@ const EditSale: React.FC<EditSaleProps> = ({ sale, close }) => {
                         onChange={() => {
                           setDiscountType("percentage");
                           setValue(0);
+                          setNewSalePrice(undefined);
                         }}
+                        className="ml-2"
+                        disabled={!newSalePriceBttn}
                       />
                       <label
                         htmlFor={"percentage"}
-                        className="text-xs leading-[11px]"
+                        className="select-none py-2 pr-2 text-xs leading-[11px]"
                       >
                         Percentage
                       </label>
                     </div>
-                    <div className="flex items-center gap-2 text-sm">
+                    <div
+                      className={`flex items-center gap-2 rounded-md border-[1px] border-zinc-200 text-sm leading-3 ${discountType === "fixed" ? "border-white ring-2 ring-blue-500 drop-shadow-sm" : ""}`}
+                    >
                       <input
                         type="radio"
                         id={"fixed"}
                         name={"discount-type"}
                         checked={discountType === "fixed"}
-                        onChange={() => setDiscountType("fixed")}
+                        onChange={() => {
+                          setDiscountType("fixed");
+                          setValue(0);
+                          setNewSalePrice(undefined);
+                        }}
+                        className="ml-2"
+                        disabled={!newSalePriceBttn}
                       />
                       <label
                         htmlFor={"fixed"}
-                        className="text-xs leading-[11px]"
+                        className="select-none py-2 pr-2 text-xs leading-[11px]"
                       >
                         Fixed
                       </label>
@@ -210,12 +253,12 @@ const EditSale: React.FC<EditSaleProps> = ({ sale, close }) => {
                     value={value !== null && value !== 0 ? value : 0}
                     onChange={(e) => {
                       let newValue = Number(e.target.value);
-                      if (discountType === "percentage" && value > 100) {
+                      if (discountType === "percentage" && newValue > 100) {
                         newValue = 1;
                       }
                       if (
                         discountType === "fixed" &&
-                        value > sale.productInfo.variants.variantPrice
+                        newValue > sale.productInfo.variants.variantPrice
                       ) {
                         newValue = 1;
                       }
@@ -232,6 +275,7 @@ const EditSale: React.FC<EditSaleProps> = ({ sale, close }) => {
                   ></input>
                 </div>
               </div>
+
               <div className="flex flex-wrap gap-2">
                 <div className="flex flex-col gap-1">
                   <label htmlFor={"promoCode"} className="text-xs font-medium">
@@ -268,16 +312,11 @@ const EditSale: React.FC<EditSaleProps> = ({ sale, close }) => {
                 </div>
               </div>
               <div className="my-2 h-[1px] w-full bg-zinc-200"></div>
-              <p className="">
+              <p className={` ${!newSalePriceBttn && "opacity-50"}`}>
                 <span className="font-medium tracking-wide">
                   New Sale Price:
                 </span>{" "}
-                €{" "}
-                {newSalePrice(
-                  productInfo.variants.variantPrice,
-                  discountType,
-                  value,
-                )}
+                € {newSalePrice ?? "0.00"}
               </p>
               <p className="">
                 <span className="font-medium tracking-wide">Start Date:</span>{" "}
@@ -322,13 +361,13 @@ const EditSale: React.FC<EditSaleProps> = ({ sale, close }) => {
             Discard Changes
           </RoundedMdButton>
           <RoundedMdButton
-            onClick={() => {
+            onClick={async () => {
               if (
                 window.confirm(
                   "Saving changes will resume the product on sale. Would you like to save?",
                 )
               ) {
-                close();
+                saveNewSaleData();
               }
               return;
             }}

@@ -235,6 +235,7 @@ const SaleList = () => {
             setSelectedSale(undefined);
           }}
           sale={selectedSale}
+          fetch={fetchSaleList}
         />
       )}
       <div className="flex flex-wrap items-center justify-between gap-2">

@@ -144,83 +144,82 @@ const getSaleList = async (req, res) => {
   try {
     const totalSales = await Sale.countDocuments({
       $and: [
-      ...query,
-      {
-        $or: [
-        { "productInfo.name": { $regex: search, $options: "i" } },
+        ...query,
         {
-          "productInfo.variants.variantName": {
-          $regex: search,
-          $options: "i",
-          },
+          $or: [
+            { "productInfo.name": { $regex: search, $options: "i" } },
+            {
+              "productInfo.variants.variantName": {
+                $regex: search,
+                $options: "i",
+              },
+            },
+          ],
         },
-        ],
-      },
       ],
     });
 
     const saleList = await Sale.aggregate([
       {
-      $lookup: {
-        from: "products",
-        localField: "productId",
-        foreignField: "_id",
-        as: "productInfo",
-      },
+        $lookup: {
+          from: "products",
+          localField: "productId",
+          foreignField: "_id",
+          as: "productInfo",
+        },
       },
       { $unwind: "$productInfo" },
       {
-      $unwind: {
-        path: "$productInfo.variants",
-        preserveNullAndEmptyArrays: true,
-      },
+        $unwind: {
+          path: "$productInfo.variants",
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
-      $match: {
-        $and: [
-        { $expr: { $eq: ["$productInfo.variants._id", "$variantId"] } },
-        {
-          $or: [
-          { "productInfo.name": { $regex: search, $options: "i" } },
-          {
-            "productInfo.variants.variantName": {
-            $regex: search,
-            $options: "i",
+        $match: {
+          $and: [
+            { $expr: { $eq: ["$productInfo.variants._id", "$variantId"] } },
+            {
+              $or: [
+                { "productInfo.name": { $regex: search, $options: "i" } },
+                {
+                  "productInfo.variants.variantName": {
+                    $regex: search,
+                    $options: "i",
+                  },
+                },
+              ],
             },
-          },
+            ...query,
           ],
         },
-        ...query,
-        ],
-      },
       },
       {
-      $project: {
-        _id: 1,
-        productId: 1,
-        variantId: 1,
-        isOnSale: 1,
-        salePrice: 1,
-        saleStartDate: 1,
-        saleExpiryDate: 1,
-        "productInfo.name": 1,
-        "productInfo.category": 1,
-        "productInfo.variants.variantName": 1,
-        "productInfo.variants.variantColor": 1,
-        "productInfo.variants.variantPrice": 1,
-      },
+        $project: {
+          _id: 1,
+          productId: 1,
+          variantId: 1,
+          isOnSale: 1,
+          salePrice: 1,
+          saleStartDate: 1,
+          saleExpiryDate: 1,
+          "productInfo.name": 1,
+          "productInfo.category": 1,
+          "productInfo.variants.variantName": 1,
+          "productInfo.variants.variantColor": 1,
+          "productInfo.variants.variantPrice": 1,
+        },
       },
 
       {
-      $skip: (parseInt(currentPage) - 1) * parseInt(limit),
+        $skip: (parseInt(currentPage) - 1) * parseInt(limit),
       },
       {
-      $limit: parseInt(limit),
+        $limit: parseInt(limit),
       },
     ]);
 
     res.json({ saleList, totalPages: Math.ceil(totalSales / limit) });
-
   } catch (error) {
     console.error("Error fetching sales with product details:", error);
     res
@@ -266,25 +265,29 @@ const resumeSale = async (req, res) => {
   }
 };
 
-const editSaleData = async (req, res) => {
-  const { id, startDate, expiryDate } = req.body;
-  const newStartDate = new Date(startDate);
-  const newExpiryDate = new Date(expiryDate);
-
+const saveNewSaleData = async (req, res) => {
+  const { _id, value, newSalePrice, discountType, duration } =
+    req.body.saleData;
+  const newStartDate = new Date(duration.startDate);
+  const newExpiryDate = new Date(duration.expiryDate);
   if (newStartDate > newExpiryDate) {
     return res
       .status(400)
       .json({ error: "Start date cannot be later than expiry date." });
   }
   try {
-    const saleProduct = await Sale.findById(id);
+    const saleProduct = await Sale.findById(_id);
     if (saleProduct) {
-      if (startDate) {
+      if (duration.startDate) {
         saleProduct.saleStartDate = newStartDate;
       }
-      if (expiryDate) {
+      if (duration.expiryDate) {
         saleProduct.saleExpiryDate = newExpiryDate;
       }
+      if (newSalePrice) {
+        saleProduct.salePrice = newSalePrice;
+      }
+      saleProduct.isOnSale = true;
       await saleProduct.save();
       res.status(200).json({ message: "Sale data updated successfully" });
     } else {
@@ -302,5 +305,5 @@ module.exports = {
   getSaleList,
   pauseSale,
   resumeSale,
-  editSaleData,
+  saveNewSaleData,
 };
