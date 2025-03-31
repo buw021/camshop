@@ -64,7 +64,7 @@ const browseProducts = async (req, res) => {
         },
       },
     ]);
-    console.log;
+
     res.json(products);
   } catch (error) {
     console.error("Error fetching product variants:", error);
@@ -93,20 +93,27 @@ const setProductOnSale = async (req, res) => {
         .status(400)
         .json({ error: "One or more products are already on sale." });
     }
+    const startDate = new Date(SaleList.endDate);
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date(SaleList.endDate);
+    endDate.setHours(23, 59, 59, 999);
 
     const sales = await Sale.insertMany(
       SaleList.selectedProducts.map((product) => ({
         productId: product.productId,
         variantId: product.variantId,
         saleStartDate: SaleList.startDate,
-        saleExpiryDate: SaleList.endDate,
+        saleExpiryDate: endDate,
         salePrice:
           SaleList.discountType === "percentage"
-            ? (
-                product.variantPrice -
-                (product.variantPrice * SaleList.discount) / 100
-              ).toFixed(2)
-            : (product.variantPrice - SaleList.discount).toFixed(2),
+            ? parseFloat(
+                (
+                  product.variantPrice -
+                  (product.variantPrice * SaleList.discount) / 100
+                ).toFixed(2)
+              )
+            : parseFloat((product.variantPrice - SaleList.discount).toFixed(2)),
+
         isOnSale: true,
       }))
     );
@@ -268,33 +275,65 @@ const resumeSale = async (req, res) => {
 const saveNewSaleData = async (req, res) => {
   const { _id, value, newSalePrice, discountType, duration } =
     req.body.saleData;
+
+  if (!duration) {
+    return res.status(400).json({
+      error: "Start Date and Expiration Date cannot be empty",
+    });
+  }
+
   const newStartDate = new Date(duration.startDate);
   const newExpiryDate = new Date(duration.expiryDate);
+  newStartDate.setHours(0, 0, 0, 0);
+  newExpiryDate.setHours(23, 59, 59, 999);
+
   if (newStartDate > newExpiryDate) {
-    return res
-      .status(400)
-      .json({ error: "Start date cannot be later than expiry date." });
+    return res.status(400).json({
+      error: "Start date cannot be later than expiry date.",
+    });
   }
+
   try {
-    const saleProduct = await Sale.findById(_id);
-    if (saleProduct) {
-      if (duration.startDate) {
-        saleProduct.saleStartDate = newStartDate;
-      }
-      if (duration.expiryDate) {
-        saleProduct.saleExpiryDate = newExpiryDate;
-      }
-      if (newSalePrice) {
-        saleProduct.salePrice = newSalePrice;
-      }
-      saleProduct.isOnSale = true;
-      await saleProduct.save();
-      res.status(200).json({ message: "Sale data updated successfully" });
-    } else {
-      res.status(404).json({ error: "Sale product not found" });
+    const session = await Sale.startSession(); // Start transaction
+    session.startTransaction();
+
+    const saleProduct = await Sale.findById(_id).session(session);
+    if (!saleProduct) {
+      await session.abortTransaction();
+      return res.status(404).json({ error: "Sale product not found" });
     }
+
+    saleProduct.saleStartDate = newStartDate;
+    saleProduct.saleExpiryDate = newExpiryDate;
+
+    if (newSalePrice) {
+      saleProduct.salePrice = newSalePrice;
+    }
+
+    await Product.updateOne(
+      { _id: saleProduct.productId, "variants._id": saleProduct.variantId },
+      { $set: { "variants.$.saleId": _id } },
+      { session }
+    );
+
+    await agenda.schedule(newExpiryDate, "disable sale", { saleId: _id });
+
+    saleProduct.isOnSale = true;
+    await saleProduct.save({ session });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    res.status(200).json({ message: "Sale data updated successfully" });
   } catch (error) {
     console.error("Error updating sale data:", error);
+
+    // If transaction fails, rollback changes
+    if (session) {
+      await session.abortTransaction();
+      session.endSession();
+    }
+
     res.status(500).json({ error: "Failed to update sale data." });
   }
 };
