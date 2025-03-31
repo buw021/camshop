@@ -2,18 +2,15 @@ import React, { useEffect, useState } from "react";
 import ImagePreview from "../../components/products/ImagePreview";
 import Rating, { reviewStats } from "../../components/reviews/Rating";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-
 import { Link, useParams } from "react-router-dom";
 import Navigation from "../../components/main/Navigation";
-import { Bounce, toast } from "react-toastify";
 import { Product, Variant } from "../../interfaces/products";
 import { slugify } from "../../func/slugify";
 import { useCart } from "../../contexts/useCart";
-import { WishlistID } from "../../interfaces/wishlist";
 import { Loading } from "../../components/main/Loading";
-import { useAuth } from "../../contexts/useAuth";
 import axiosInstance from "../../services/axiosInstance";
 import { useWishlist } from "../../contexts/useWishlist";
+import { showToast } from "../../func/showToast";
 
 const reviewData = [
   {
@@ -50,7 +47,6 @@ const reviewData = [
 //ADD USER DATA
 
 const ProductDisplay: React.FC = () => {
-  const { token } = useAuth();
   const { details } = useParams();
   const { addToCart } = useCart();
   const { addToFavs } = useWishlist();
@@ -100,6 +96,12 @@ const ProductDisplay: React.FC = () => {
   };
 
   const handleAddToCart = () => {
+    if (variantStocks <= 0) {
+      showToast(
+        "No stock available. Try again later or Contact Customer Service",
+        "warning",
+      );
+    }
     const cartItem = {
       productId: prodId,
       variantId: variantId,
@@ -211,8 +213,9 @@ const ProductDisplay: React.FC = () => {
                   <button
                     className="roboto-medium w-full max-w-[250px] self-center rounded-full bg-zinc-900 py-2 text-lg text-white transition-all duration-100 hover:bg-zinc-700 focus:bg-zinc-950"
                     onClick={handleAddToCart}
+                    disabled={variantStocks === 0}
                   >
-                    Add to cart
+                    {variantStocks > 0 ? "Add to cart" : "Not Available"}
                   </button>
                   <div className="group">
                     <button
