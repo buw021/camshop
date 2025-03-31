@@ -15,6 +15,4 @@ saleJobs(agenda);
   console.log("agendaStarted");
 })();
 
-//  Debugging: Log when a job is being processed
-
 module.exports = agenda;
