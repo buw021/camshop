@@ -3,6 +3,7 @@ import React, {
   ReactNode,
   useCallback,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 import axiosInstance from "../services/axiosInstance";
@@ -112,26 +113,11 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
     fetchUserCart();
   };
 
-  /*  useEffect(() => {
-    if (!token) {
-      const storedCart = JSON.parse(localStorage.getItem("cart") || "[]");
-      setCartIDs(storedCart);
-      fetchUserCart();
-    } else {
-      fetchUserCart();
-    }
-  }, [fetchUserCart, token]); */
-
   useEffect(() => {
     fetchUserCart();
   }, [fetchUserCart, token]);
 
-  useEffect(() => {
-    if (!token) {
-      localStorage.setItem("cart", JSON.stringify(cartIDs));
-      document.cookie = `cart=${JSON.stringify(cartIDs)}; path=/;`;
-    }
-
+  /*   useEffect(() => {
     const calculatedTotal = cartInfo.reduce(
       (acc, item) =>
         acc +
@@ -160,13 +146,39 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
 
     setTotalPrice(finalTotal);
     setSubtotal(calculatedTotal);
-  }, [
-    cartIDs,
-    cartInfo,
-    discountedByCode.fixed,
-    token,
-    discountedByCode.percentage,
-  ]);
+  }, [cartIDs, cartInfo, discountedByCode.fixed, discountedByCode.percentage]); */
+  const calcSubTotal = useMemo(() => {
+    return cartInfo.reduce(
+      (acc, item) =>
+        acc + (item.saleId?.salePrice ?? item.price) * item.quantity,
+      0,
+    );
+  }, [cartInfo]);
+
+  const total = useMemo(() => {
+    let total = subtotal;
+
+    if (discountedByCode.fixed) {
+      total -= discountedByCode.fixed;
+    }
+
+    if (discountedByCode.percentage.length > 0) {
+      total = cartInfo.reduce(
+        (acc, item) =>
+          acc +
+          (item.discountedPrice ?? item.saleId?.salePrice ?? item.price) *
+            item.quantity,
+        0,
+      );
+    }
+
+    return total;
+  }, [subtotal, cartInfo, discountedByCode.fixed, discountedByCode.percentage]);
+
+  useEffect(() => {
+    setTotalPrice(total);
+    setSubtotal(calcSubTotal);
+  }, [total, calcSubTotal]);
 
   const addToCart = async (cartItem: CartID): Promise<boolean> => {
     if (token) {

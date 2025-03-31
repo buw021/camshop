@@ -36,28 +36,6 @@ const Wishlist: React.FC = () => {
                 <h1 className="roboto-medium text-sm text-zinc-800">
                   {item.name} {item.variantName} {item.variantColor}
                 </h1>
-                {item.saleId?.salePrice ? (
-                  <>
-                    <p className="text-xs">
-                      {item.quantity} x €{" "}
-                      <span>{item.saleId.salePrice.toFixed(2)}</span>
-                    </p>
-
-                    <p className="text-xs text-zinc-800">
-                      Total: €{" "}
-                      {(item.quantity * item.saleId.salePrice).toFixed(2)}
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-xs">
-                      {item.quantity} x € <span>{item.price}</span>
-                    </p>
-                    <p className="text-xs text-zinc-800">
-                      Total: € {item.quantity * item.price}
-                    </p>
-                  </>
-                )}
                 <div className="relative flex items-center justify-end gap-1 pt-2">
                   <button
                     onClick={() =>
