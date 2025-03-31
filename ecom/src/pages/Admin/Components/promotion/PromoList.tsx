@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { PromoCode } from "../interface/interfaces";
 import axiosInstance from "../../Services/axiosInstance";
 import PromoCodeForm from "./PromoCodeForm";
+import { TimerCell } from "./Timer";
 
 const Row_Cells: React.FC<{
   handleEditPromo: (promo: PromoCode) => void;
@@ -33,19 +34,9 @@ const Row_Cells: React.FC<{
       {`${promo.minimumOrderValue} €` || "None"}
     </td>
 
-    <td className="whitespace-nowrap pl-8 pr-6 text-left capitalize">
+    <td className="whitespace-nowrap pl-8 pr-6 text-left">
       {promo.startDate && promo.endDate ? (
-        (() => {
-          const daysLeft = Math.ceil(
-            (new Date(promo.endDate).getTime() - Date.now()) /
-              (1000 * 60 * 60 * 24),
-          );
-          return (
-            <span className={daysLeft <= 0 ? "text-red-600" : "text-green-600"}>
-              {daysLeft <= 0 ? "Expired" : daysLeft}
-            </span>
-          );
-        })()
+        <TimerCell saleExpiryDate={promo.endDate} />
       ) : (
         <span className="text-green-600">Unlimited</span>
       )}

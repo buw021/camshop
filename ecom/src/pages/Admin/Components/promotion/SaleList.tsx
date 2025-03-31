@@ -3,6 +3,7 @@ import SelectProduct from "./SelectProduct";
 import axiosInstance from "../../Services/axiosInstance";
 import { showToast } from "../showToast";
 import EditSale from "./EditSale";
+import { TimerCell } from "./Timer";
 
 interface VariantInfo {
   variantName: string;
@@ -61,24 +62,8 @@ const Row_Cells: React.FC<{
         € {(variantPrice - salePrice).toFixed(2)} (
         {((1 - salePrice / variantPrice) * 100).toFixed(2)}%)
       </td>
-      <td className="whitespace-nowrap pl-8 pr-6 text-left capitalize">
-        {saleStartDate && saleExpiryDate ? (
-          (() => {
-            const daysLeft = Math.ceil(
-              (new Date(saleExpiryDate).getTime() - Date.now()) /
-                (1000 * 60 * 60 * 24),
-            );
-            return (
-              <span
-                className={daysLeft <= 0 ? "text-red-600" : "text-green-600"}
-              >
-                {daysLeft <= 0 ? "Expired" : daysLeft}
-              </span>
-            );
-          })()
-        ) : (
-          <span className="text-green-600">Unlimited</span>
-        )}
+      <td className="whitespace-nowrap pl-8 pr-6 text-left ">
+        <TimerCell saleExpiryDate={saleExpiryDate} />
       </td>
       <td className="whitespace-nowrap pl-8 pr-6 text-left capitalize">
         {new Date(saleStartDate).toLocaleDateString("en-GB")}
