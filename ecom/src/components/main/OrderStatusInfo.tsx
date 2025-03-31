@@ -26,6 +26,7 @@ interface OrderProps {
   paymentStatus: boolean;
   totalAmount: number;
   trackingNo: string | null;
+  receiptLink: string | null;
   _id: string;
 }
 
@@ -385,6 +386,15 @@ const OrderStatusInfo = () => {
             >
               Return/Refund
             </button>
+          )}
+          {order?.paymentStatus && (
+            <a
+              href={`${order.receiptLink}`}
+              target="_blank"
+              className="roboto-medium max-w-40 self-end rounded-md bg-zinc-900 px-3 py-2 leading-3 text-white transition-all duration-200 hover:cursor-pointer hover:bg-zinc-700"
+            >
+              View Receipt
+            </a>
           )}
         </div>
       </div>
