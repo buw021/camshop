@@ -138,10 +138,10 @@ const getUser = async (req, res) => {
   }
 
   try {
-    const decoded = jwt.verify(usertoken, process.env.JWT_SECRET);
+    const id = decodeJWT(usertoken);
 
     // Fetch user data using the decoded user ID
-    const user = await User.findById(decoded.id).select(
+    const user = await User.findById(id).select(
       "email firstName lastName phoneNo address"
     ); // Exclude the password field
 
