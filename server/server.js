@@ -34,15 +34,17 @@ app.use(express.urlencoded({ extended: false }));
 app.use("/", require("./routes/stripeRoutes"));
 app.use(express.json());
 //Routes
-app.use("/", require("./routes/routes"));
+app.use("/", require("./routes/authRoutes"));
+app.use("/", require("./routes/productRoutes"));
+app.use("/", require("./routes/userRoutes"));
 app.use("/", require("./routes/orderRoutes"));
+app.use("/", require("./routes/orderRoutesAdmin"));
 app.use("/", require("./routes/promoRoutes"));
 app.use("/", require("./routes/saleRoutes"));
-app.use("/", require("./routes/customerRoutes"));
+app.use("/", require("./routes/searchRoutes"));
+app.use("/", require("./routes/customerRoutesAdmin"));
 app.use("/", require("./routes/shippingRoutes"));
-app.use("/", require("./routes/adminOrderRoutes"));
-app.use("/", require("./routes/authRoutes"));
-
+app.use("/", require("./routes/uploadRoutes"));
 app.use("/uploads", express.static("uploads"));
 
 app.listen(port, () => {

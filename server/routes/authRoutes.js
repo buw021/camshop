@@ -10,7 +10,11 @@ const {
   getUserAdmin,
   loginUser,
   getUser,
+  registerUser,
+  checkEmail,
 } = require("../controllers/authController");
+
+
 
 //admin
 // Public route (no middleware here)
@@ -27,5 +31,9 @@ router.post("/login", loginUser);
 // Protected routes (middleware applied)
 router.post("/logout", verifyUserToken, logout);
 router.get("/get-user", verifyUserToken, getUser);
+
+//Register and Email checker 
+router.post("/register", registerUser);
+router.get("/check-email", checkEmail);
 
 module.exports = router;
