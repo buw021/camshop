@@ -27,14 +27,15 @@ const LogIn = () => {
         window.location.reload();
       }
     } catch (error) {
+      console.log(error);
       handleAxiosError(error);
     }
   };
-  
+
   const handleAxiosError = (error: unknown) => {
     if (axios.isAxiosError(error)) {
       if (error.response) {
-        showToast(`Error response: ${error.response.data}`, "error");
+        showToast(`Error response: ${error.response.data.error}`, "error");
       } else if (error.request) {
         showToast("No response received", "error");
       } else {

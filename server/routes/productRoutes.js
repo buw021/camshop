@@ -9,7 +9,7 @@ const {
   addToFavs,
   addToCart,
   addAllToCart,
-} = require("../controllers/authController");
+} = require("../controllers/userCartWishlist");
 const {
   addProduct,
   getProducts,

@@ -60,7 +60,9 @@ const userSchema = new Schema(
   {
     email: {
       type: String,
+      required: true,
       unique: true,
+      trim: true,
     },
     firstName: {
       type: String,
@@ -70,9 +72,14 @@ const userSchema = new Schema(
       type: String,
       default: "",
     },
-    password: String,
+    password: {
+      type: String,
+      required: true,
+      select: false,
+    },
     phoneNo: {
       type: String,
+      required: true,
       default: "",
     },
     address: {
