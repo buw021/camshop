@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { body } = require("express-validator");
 const {
   verifyAdminToken,
   verifyUserToken,
@@ -12,9 +13,7 @@ const {
   getUser,
   registerUser,
   checkEmail,
-} = require("../controllers/authController");
-
-
+} = require("../controllers/authAndRegister");
 
 //admin
 // Public route (no middleware here)
@@ -26,13 +25,17 @@ router.get("/get-useradmin", verifyAdminToken, getUserAdmin);
 
 //user
 // Public route (no middleware here)
-router.post("/login", loginUser);
+router.post(
+  "/login",
+  [body("email").isEmail(), body("password").isLength({ min: 8 })],
+  loginUser
+);
 
 // Protected routes (middleware applied)
 router.post("/logout", verifyUserToken, logout);
 router.get("/get-user", verifyUserToken, getUser);
 
-//Register and Email checker 
+//Register and Email checker
 router.post("/register", registerUser);
 router.get("/check-email", checkEmail);
 
