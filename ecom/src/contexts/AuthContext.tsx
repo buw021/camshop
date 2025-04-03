@@ -26,7 +26,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         const data = await UserService.getUserSession();
         if (data) {
           setToken(data.token);
-          setEmail(data.user.email);
+          setEmail(data.user?.email);
         }
       } catch (error) {
         console.error("Error fetching session:", error);
