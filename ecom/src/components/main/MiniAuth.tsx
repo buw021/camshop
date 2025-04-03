@@ -90,14 +90,9 @@ const MiniAuth = () => {
         </div>
         <div className="flex h-auto w-full flex-col items-center">
           <RoundedButton onClick={handleLoginButton}>Log in</RoundedButton>
-          <div className="relative my-8 hidden h-[1px] w-full items-center justify-center bg-zinc-200 md:my-6 md:max-w-[300px]">
-            <span className="roboto-regular absolute bg-white p-2 text-[12px] text-zinc-500">
-              Already have an account?
-            </span>
-          </div>
         </div>
         <div className="flex h-auto w-full flex-col items-center">
-          <div className="relative my-8 flex w-full items-center justify-between md:my-6 md:max-w-[300px]">
+          <div className="relative my-6 flex w-full items-center justify-between max-w-[400px]">
             <span className="h-[1px] w-[50%] bg-zinc-200"></span>
             <span className="roboto-regular w-full bg-transparent p-2 text-center text-[12px] text-zinc-700">
               Don't have an account ?
@@ -113,14 +108,14 @@ const MiniAuth = () => {
             >
               Continue with Google
             </RoundedButton>
-            <button
-              className="roboto-medium w-full rounded-full bg-zinc-900 py-2 text-lg text-white transition-all duration-200 hover:bg-zinc-700 md:max-w-[300px]"
+            <RoundedButton
+              buttonType="primary"
               onClick={handleRegisterButton}
             >
               Register by e-mail
-            </button>
+            </RoundedButton>
           </div>
-          <div className="relative my-8 flex w-full items-center justify-center md:my-6 md:max-w-[300px]">
+          <div className="relative my-8 flex w-full items-center justify-center my-6 max-w-[400px]">
             <span className="roboto-regular absolute bg-transparent p-2 text-center text-[11px] text-zinc-500">
               By logging in with my social media account, I agree to link the
               account in accordance with the{" "}
