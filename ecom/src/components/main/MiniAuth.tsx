@@ -92,7 +92,7 @@ const MiniAuth = () => {
           <RoundedButton onClick={handleLoginButton}>Log in</RoundedButton>
         </div>
         <div className="flex h-auto w-full flex-col items-center">
-          <div className="relative my-6 flex w-full items-center justify-between max-w-[400px]">
+          <div className="relative my-6 flex w-full max-w-[400px] items-center justify-between">
             <span className="h-[1px] w-[50%] bg-zinc-200"></span>
             <span className="roboto-regular w-full bg-transparent p-2 text-center text-[12px] text-zinc-700">
               Don't have an account ?
@@ -108,14 +108,11 @@ const MiniAuth = () => {
             >
               Continue with Google
             </RoundedButton>
-            <RoundedButton
-              buttonType="primary"
-              onClick={handleRegisterButton}
-            >
+            <RoundedButton buttonType="primary" onClick={handleRegisterButton}>
               Register by e-mail
             </RoundedButton>
           </div>
-          <div className="relative my-8 flex w-full items-center justify-center my-6 max-w-[400px]">
+          <div className="relative my-6 flex w-full max-w-[400px] items-center justify-center">
             <span className="roboto-regular absolute bg-transparent p-2 text-center text-[11px] text-zinc-500">
               By logging in with my social media account, I agree to link the
               account in accordance with the{" "}
