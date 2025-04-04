@@ -106,9 +106,10 @@ const loginUser = async (req, res) => {
       return res.json({ error: "Invalid email or password" });
     }
 
-    if (user.confirmed === false) {
+    //Uncomment this when email confirmation is implemented
+    /* if (user.confirmed === false) {
       return res.json({ warning: "Email not confirmed" });
-    }
+    } */
 
     const match = await comparePassword(password, user.password);
     if (match) {

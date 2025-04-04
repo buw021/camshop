@@ -109,9 +109,14 @@ const userSchema = new Schema(
       type: [],
       default: [],
     },
+
+    //for password reset
+    
     otp: { type: String, default: null },
     otpExpires: { type: Date, default: null },
-    confirmed: { type: Boolean, default: false },
+
+    //set to false when confirmation email function is implemented
+    confirmed: { type: Boolean, default: true },
   },
 
   { timestamps: true }
