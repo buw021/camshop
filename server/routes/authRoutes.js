@@ -17,12 +17,13 @@ const {
   loginValidation,
   registerValidation,
   emailValidation,
+  adminLoginValidation,
 } = require("../validators/authValidators");
 const { validateRequest } = require("../middleware/validateRequest");
 const { emailRateLimiter } = require("../middleware/rateLimit");
 //admin
 // Public route (no middleware here)
-router.post("/admin_login", loginAdmin);
+router.post("/admin_login", adminLoginValidation, validateRequest, loginAdmin);
 
 // Protected routes (middleware applied)
 router.post("/logout-admin", verifyAdminToken, logout);

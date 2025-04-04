@@ -7,6 +7,14 @@ exports.loginValidation = [
     .withMessage("Password must be at least 8 characters"),
 ];
 
+exports.adminLoginValidation = [
+  body("username")
+    .trim()
+    .escape()
+    .notEmpty()
+    .withMessage("Username is required"),
+];
+
 exports.registerValidation = [
   body("email").isEmail().withMessage("Invalid email format"),
   body("password")
