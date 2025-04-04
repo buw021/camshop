@@ -8,6 +8,7 @@ interface InputFieldProps {
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   addError: boolean;
+  disabled?: boolean;
 }
 
 const variants = {
@@ -31,6 +32,7 @@ const InputField: React.FC<InputFieldProps> = ({
   value,
   onChange,
   addError,
+  disabled,
 }) => {
   const [isFocused, setFocus] = useState(false);
   return (
@@ -65,6 +67,7 @@ const InputField: React.FC<InputFieldProps> = ({
         onChange={onChange}
         onFocus={() => setFocus(true)} // Set focus state to true when input is focused
         onBlur={() => setFocus(false)} // Set focus state to false when input loses focus
+        disabled={disabled}
       />
     </motion.div>
   );

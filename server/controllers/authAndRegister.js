@@ -1,39 +1,89 @@
 const User = require("../models/user");
 const Admin = require("../models/admin");
-const { validationResult } = require("express-validator");
 const { hashPassword, comparePassword, decodeJWT } = require("../helpers/auth");
 const jwt = require("jsonwebtoken");
+
+/* const generateConfirmationToken = (user) => {
+  return jwt.sign(
+    { email: user.email, id: user._id },
+    process.env.JWT_SECRET,
+    { expiresIn: "1d" } // Token expires in 1 day
+  );
+};
+const sendConfirmationEmail = async (email, token) => {
+  const confirmationLink = `${process.env.FRONTEND_URL}/confirm-email?token=${token}`;
+
+  // Use a mailer like nodemailer to send the email
+  await mailer.sendMail({
+    to: email,
+    subject: "Email Confirmation",
+    text: `Please click the following link to confirm your email: ${confirmationLink}`,
+  });
+};
+const confirmEmail = async (req, res) => {
+  try {
+    const { token } = req.query;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Find the user by ID and update confirmation status
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    user.confirmation = true;
+    await user.save();
+
+    return res.status(200).json({ message: "Email confirmed successfully" });
+  } catch (error) {
+    console.error("Error during email confirmation:", error);
+    return res.status(400).json({ error: "Invalid or expired token" });
+  }
+};
+const requireConfirmation = async (req, res, next) => {
+  const user = await User.findById(req.user.id);
+  if (!user.confirmation) {
+    return res.status(403).json({ error: "Email not confirmed" });
+  }
+  next();
+}; */
 
 //Register
 const registerUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
-    const existingUser = await User.findOne({ email: email });
-    // Check if email and password are provided
+    const { email, password, firstname, lastname } = req.body;
 
-    if (existingUser) {
-      return res.json({ error: "Email already in use" });
+    if (!email || !password || !firstname || !lastname) {
+      return res.status(400).json({ error: "Missing required fields" });
     }
-    if (!email || !password) {
-      return res.json({
-        error: "Email and password are required",
-      });
+
+    const existingUser = await User.findOne({ email: email });
+    if (existingUser) {
+      return res.status(409).json({ error: "Email already in use" });
     }
 
     const hashedPassword = await hashPassword(password);
 
-    const user = await User.create({ email, password: hashedPassword });
+    try {
+      await User.create({
+        email,
+        password: hashedPassword,
+        firstname,
+        lastname,
+      });
+    } catch (error) {
+      console.error("Error during user creation:", error);
+      return res
+        .status(500)
+        .json({ error: "Internal server error during user creation" });
+    }
 
-    const { password: _, ...userWithoutPassword } = user.toObject();
-
-    return res.status(201).json(userWithoutPassword);
+    return res.status(201).json({ message: "User created successfully" });
   } catch (error) {
-    return res.json({
-      error: "Internal server error",
-    });
+    console.error("Unhandled server error:", error);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
-
 //Check-email
 const checkEmail = async (req, res) => {
   const email = req.query.email;
@@ -47,10 +97,6 @@ const checkEmail = async (req, res) => {
 
 //LoginUser
 const loginUser = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ error: "Invalid email or password" });
-  }
   try {
     const { email, password, rememberMe } = req.body;
     const tokenOptions = rememberMe ? { expiresIn: "7d" } : {};
@@ -59,6 +105,11 @@ const loginUser = async (req, res) => {
     if (!user) {
       return res.json({ error: "Invalid email or password" });
     }
+
+    if (user.confirmed === false) {
+      return res.json({ warning: "Email not confirmed" });
+    }
+
     const match = await comparePassword(password, user.password);
     if (match) {
       jwt.sign(
@@ -83,10 +134,10 @@ const loginUser = async (req, res) => {
             user.cart = mergedCart;
             await user.save();
             res.cookie("cart", "", { maxAge: 0 });
-            res.json(user);
           } catch (innerError) {
             console.error("Error merging carts:", innerError);
           }
+          res.json(user);
         }
       );
     } else {

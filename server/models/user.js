@@ -64,11 +64,11 @@ const userSchema = new Schema(
       unique: true,
       trim: true,
     },
-    firstName: {
+    firstname: {
       type: String,
       default: "",
     },
-    lastName: {
+    lastname: {
       type: String,
       default: "",
     },
@@ -79,7 +79,6 @@ const userSchema = new Schema(
     },
     phoneNo: {
       type: String,
-      required: true,
       default: "",
     },
     address: {
@@ -112,6 +111,7 @@ const userSchema = new Schema(
     },
     otp: { type: String, default: null },
     otpExpires: { type: Date, default: null },
+    confirmed: { type: Boolean, default: false },
   },
 
   { timestamps: true }

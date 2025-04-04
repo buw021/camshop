@@ -18,6 +18,12 @@ const LogIn = () => {
     try {
       setInvalid(false);
       const response = await axiosInstance.post("/login", data);
+      if (response.data.warning) {
+        showToast(response.data.warning, "warning");
+        setEmail("");
+        setPassword("");
+        return;
+      }
       if (response.data.error) {
         setInvalid(true);
       } else {
@@ -56,7 +62,7 @@ const LogIn = () => {
 
   return (
     <section className="relative flex h-screen w-screen select-none items-center justify-center bg-zinc-900/60 backdrop-blur-[2px]">
-      <div className="relative flex w-[80%] flex-col items-center justify-center gap-1 rounded-2xl bg-white px-10 py-10 md:h-[600px] md:w-[600px] md:flex-col">
+      <div className="relative flex h-full w-full flex-col items-center justify-center gap-1 rounded-2xl bg-white px-10 py-10 md:max-h-[750px] md:max-w-[750px] md:flex-col">
         <div className="flex flex-col items-center gap-3">
           <div
             className={`roboto-medium relative transition-opacity duration-100 ease-linear md:mb-5`}
