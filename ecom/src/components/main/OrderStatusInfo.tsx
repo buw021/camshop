@@ -270,6 +270,7 @@ const OrderStatusInfo = () => {
               couponUsed={order.promoCode || ""}
               paymentMethod={order.paymentMethod}
               shippingOption={order.shippingOption}
+              paymentStatus={order.paymentStatus}
             />
           </>
         )}

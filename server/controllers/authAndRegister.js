@@ -101,7 +101,7 @@ const loginUser = async (req, res) => {
     const { email, password, rememberMe } = req.body;
     const tokenOptions = rememberMe ? { expiresIn: "7d" } : {};
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select("+password");
     if (!user) {
       return res.json({ error: "Invalid email or password" });
     }

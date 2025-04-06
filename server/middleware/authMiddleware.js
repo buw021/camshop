@@ -20,7 +20,7 @@ const verifyUserToken = (req, res, next, secret) => {
   const token = req.cookies.usertoken;
 
   if (!token) {
-    return res.status(401).json({ message: "No token provided" });
+    return res.status(401).json({ message: "User not found" });
   }
 
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
