@@ -12,12 +12,50 @@ const {
 
 const router = express.Router();
 
-router.post("/save-new-address", saveNewAddress);
-router.post("/delete-address", deleteAddress);
-router.post("/set-address-default", setDefaultAddress);
-router.post("/update-address", updateAddress);
-router.post("/update-profile", updateProfile);
-router.get("/get-user-data", getUserData);
-router.get("/get-address", getUserAddress);
+const { verifyUserToken } = require("../middleware/authMiddleware");
+const { validateRequest } = require("../middleware/validateRequest");
+const {
+  buildAddressValidation,
+  validateAddressId,
+} = require("../validators/addressValidator");
+const { validateUserData } = require("../validators/userDataValidator");
+
+router.post(
+  "/save-new-address",
+  verifyUserToken,
+  buildAddressValidation("newAddress"),
+  validateRequest,
+  saveNewAddress
+);
+router.post(
+  "/delete-address",
+  verifyUserToken,
+  validateAddressId,
+  validateRequest,
+  deleteAddress
+);
+router.post(
+  "/set-address-default",
+  verifyUserToken,
+  validateAddressId,
+  validateRequest,
+  setDefaultAddress
+);
+router.post(
+  "/update-address",
+  verifyUserToken,
+  validateAddressId,
+  validateRequest,
+  updateAddress
+);
+router.post(
+  "/update-profile",
+  verifyUserToken,
+  validateUserData,
+  validateRequest,
+  updateProfile
+);
+router.get("/get-user-data", verifyUserToken, getUserData);
+router.get("/get-address", verifyUserToken, getUserAddress);
 
 module.exports = router;

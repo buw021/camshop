@@ -37,4 +37,10 @@ const buildAddressValidation = (prefix) => [
     .withMessage(`${prefix}.country must contain only letters`),
 ];
 
-module.exports = { buildAddressValidation };
+const validateAddressId = () => [
+  body("addressId")
+    .isMongoId()
+    .withMessage("addressId must be a valid MongoDB ObjectId"),
+];
+
+module.exports = { buildAddressValidation, validateAddressId };
