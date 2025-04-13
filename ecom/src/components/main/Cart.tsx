@@ -23,6 +23,7 @@ const Cart: React.FC<CheckoutCart> = ({
     updateCartItemQuantity,
     removeFromCart,
     clearCart,
+    availableItems,
   } = useCart();
   const { token } = useAuth();
   const navigate = useNavigate();
@@ -55,34 +56,14 @@ const Cart: React.FC<CheckoutCart> = ({
         {cartInfo?.length > 0 ? (
           cartInfo?.map((item, index) => {
             const productSlug = slugify(item.name);
-            return (
-              <div
-                key={index}
-                className="flex items-center justify-between border-b-[1px] border-zinc-300 pb-4"
-              >
-                <Link
-                  to={`/product/${productSlug}_${item.productId}_${item.variantId}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (checkout) {
-                      window.open(
-                        `/product/${productSlug}_${item.productId}_${item.variantId}`,
-                        "_blank",
-                      );
-                    } else {
-                      window.location.href = `/product/${productSlug}_${item.productId}_${item.variantId}`;
-                    }
-                  }}
+            if (checkout && item.variantStocks <= 0) {
+              return null;
+            } else {
+              return (
+                <div
+                  key={index}
+                  className={`flex items-center justify-between border-b-[1px] border-zinc-300 pb-4`}
                 >
-                  <div className="relative flex h-28 w-28 select-none flex-col justify-center overflow-hidden rounded-xl border-zinc-500 shadow-inner">
-                    <img
-                      className="h-full object-scale-down p-2"
-                      src={`http://localhost:3000/uploads/${item.variantImg}`}
-                    ></img>
-                  </div>
-                </Link>
-
-                <div className="flex flex-col justify-between text-right text-zinc-700">
                   <Link
                     to={`/product/${productSlug}_${item.productId}_${item.variantId}`}
                     onClick={(e) => {
@@ -92,144 +73,178 @@ const Cart: React.FC<CheckoutCart> = ({
                           `/product/${productSlug}_${item.productId}_${item.variantId}`,
                           "_blank",
                         );
-                      }
-                      if (!checkout) {
+                      } else {
                         window.location.href = `/product/${productSlug}_${item.productId}_${item.variantId}`;
                       }
                     }}
                   >
-                    <h1 className="roboto-medium text-sm text-zinc-800 hover:underline">
-                      {item.name} {item.variantName} {item.variantColor}
-                    </h1>
+                    <div className="relative flex h-28 w-28 select-none flex-col justify-center overflow-hidden rounded-xl border-zinc-500 shadow-inner">
+                      <img
+                        className={`h-full object-scale-down p-2 ${item.variantStocks > 0 ? "" : "opacity-50"}`}
+                        src={`http://localhost:3000/uploads/${item.variantImg}`}
+                      ></img>
+                    </div>
                   </Link>
 
-                  {checkout ? (
-                    <>
-                      {item.saleId?.salePrice ? (
-                        <>
-                          <span className="text-xs text-zinc-500 line-through">
-                            € {item.price.toFixed(2)}
-                          </span>
-                          <p className="text-xs">
-                            {item.quantity} x €{" "}
-                            <span>
-                              {item.discountedPrice && item.discountedPrice > 0
-                                ? item.discountedPrice.toFixed(2)
-                                : item.saleId.salePrice.toFixed(2)}
-                            </span>
-                          </p>
-
-                          <p className="text-xs text-zinc-800">
-                            Total: €{" "}
-                            {(
-                              item.quantity *
-                              (item.discountedPrice && item.discountedPrice > 0
-                                ? item.discountedPrice
-                                : item.saleId.salePrice)
-                            ).toFixed(2)}
-                          </p>
-                        </>
-                      ) : (
-                        <>
-                          <span className="text-xs text-zinc-500 line-through">
-                            € {item.price.toFixed(2)}
-                          </span>
-                          <p className="text-xs">
-                            {item.quantity} x €{" "}
-                            <span>
-                              {item.discountedPrice && item.discountedPrice > 0
-                                ? item.discountedPrice.toFixed(2)
-                                : item.price.toFixed(2)}
-                            </span>
-                          </p>
-                          <p className="text-xs text-zinc-800">
-                            Total: €{" "}
-                            {(
-                              item.quantity *
-                              (item.discountedPrice && item.discountedPrice > 0
-                                ? item.discountedPrice
-                                : item.price)
-                            ).toFixed(2)}
-                          </p>
-                        </>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      {item.saleId?.salePrice ? (
-                        <>
-                          <span className="text-xs text-zinc-500 line-through">
-                            € {item.price.toFixed(2)}
-                          </span>
-                          <p className="text-xs">
-                            {item.quantity} x €{" "}
-                            <span>{item.saleId.salePrice.toFixed(2)}</span>
-                          </p>
-
-                          <p className="text-xs text-zinc-800">
-                            Total: €{" "}
-                            {(item.quantity * item.saleId.salePrice).toFixed(2)}
-                          </p>
-                        </>
-                      ) : (
-                        <>
-                          <p className="text-xs">{item.quantity} x € </p>
-                          <p className="text-xs text-zinc-800">
-                            Total: € {(item.quantity * item.price).toFixed(2)}
-                          </p>
-                        </>
-                      )}
-                    </>
-                  )}
-
-                  <div className="relative flex items-center justify-end gap-1 pt-2">
-                    <button
-                      type="button"
+                  <div className="flex flex-col justify-between text-right text-zinc-700">
+                    <Link
+                      to={`/product/${productSlug}_${item.productId}_${item.variantId}`}
                       onClick={(e) => {
                         e.preventDefault();
-                        updateCartItemQuantity(
-                          item.productId,
-                          item.variantId,
-                          item.quantity - 1,
-                        );
-                        quantityChange?.();
+                        if (checkout) {
+                          window.open(
+                            `/product/${productSlug}_${item.productId}_${item.variantId}`,
+                            "_blank",
+                          );
+                        }
+                        if (!checkout) {
+                          window.location.href = `/product/${productSlug}_${item.productId}_${item.variantId}`;
+                        }
                       }}
                     >
-                      <span className="material-symbols-outlined h-6 w-6 rounded-full bg-zinc-100 text-center text-xl leading-[26px] hover:cursor-pointer hover:bg-zinc-200">
-                        remove
-                      </span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        updateCartItemQuantity(
-                          item.productId,
-                          item.variantId,
-                          item.quantity + 1,
-                        );
-                        quantityChange?.();
-                      }}
-                    >
-                      <span className="material-symbols-outlined h-6 w-6 rounded-full bg-zinc-100 text-center text-xl leading-6 hover:cursor-pointer hover:bg-zinc-200">
-                        add
-                      </span>
-                    </button>
+                      <h1 className="roboto-medium text-sm text-zinc-800 hover:underline">
+                        {item.name} {item.variantName} {item.variantColor}
+                      </h1>
+                    </Link>
 
-                    <button
-                      type="button"
-                      onClick={() =>
-                        removeFromCart(item.productId, item.variantId)
-                      }
-                    >
-                      <span className="material-symbols-outlined h-6 w-6 rounded-full bg-white text-center text-xl leading-6 hover:cursor-pointer hover:bg-zinc-100">
-                        delete
-                      </span>
-                    </button>
+                    {checkout ? (
+                      <>
+                        {item.saleId?.salePrice ? (
+                          <>
+                            <span className="text-xs text-zinc-500 line-through">
+                              € {item.price.toFixed(2)}
+                            </span>
+                            <p className="text-xs">
+                              {item.quantity} x €{" "}
+                              <span>
+                                {item.discountedPrice &&
+                                item.discountedPrice > 0
+                                  ? item.discountedPrice.toFixed(2)
+                                  : item.saleId.salePrice.toFixed(2)}
+                              </span>
+                            </p>
+
+                            <p className="text-xs text-zinc-800">
+                              Total: €{" "}
+                              {(
+                                item.quantity *
+                                (item.discountedPrice &&
+                                item.discountedPrice > 0
+                                  ? item.discountedPrice
+                                  : item.saleId.salePrice)
+                              ).toFixed(2)}
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-xs">
+                              {item.quantity} x €{" "}
+                              <span>
+                                {item.discountedPrice &&
+                                item.discountedPrice > 0
+                                  ? item.discountedPrice.toFixed(2)
+                                  : item.price.toFixed(2)}
+                              </span>
+                            </p>
+                            <p className="text-xs text-zinc-800">
+                              Total: €{" "}
+                              {(
+                                item.quantity *
+                                (item.discountedPrice &&
+                                item.discountedPrice > 0
+                                  ? item.discountedPrice
+                                  : item.price)
+                              ).toFixed(2)}
+                            </p>
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        {item.saleId?.salePrice ? (
+                          <>
+                            <span className="text-xs text-zinc-500 line-through">
+                              € {item.price.toFixed(2)}
+                            </span>
+                            <p className="text-xs">
+                              {item.quantity} x €{" "}
+                              <span>{item.saleId.salePrice.toFixed(2)}</span>
+                            </p>
+
+                            <p className="text-xs text-zinc-800">
+                              Total: €{" "}
+                              {(item.quantity * item.saleId.salePrice).toFixed(
+                                2,
+                              )}
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-xs">{item.quantity} x € </p>
+                            <p className="text-xs text-zinc-800">
+                              Total: € {(item.quantity * item.price).toFixed(2)}
+                            </p>
+                          </>
+                        )}
+                      </>
+                    )}
+
+                    <div className="relative flex items-center justify-end gap-1 pt-2">
+                      {item.variantStocks > 0 ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              updateCartItemQuantity(
+                                item.productId,
+                                item.variantId,
+                                item.quantity - 1,
+                              );
+                              quantityChange?.();
+                            }}
+                          >
+                            <span className="material-symbols-outlined h-6 w-6 rounded-full bg-zinc-100 text-center text-xl leading-[26px] hover:cursor-pointer hover:bg-zinc-200">
+                              remove
+                            </span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              updateCartItemQuantity(
+                                item.productId,
+                                item.variantId,
+                                item.quantity + 1,
+                              );
+                              quantityChange?.();
+                            }}
+                          >
+                            <span className="material-symbols-outlined h-6 w-6 rounded-full bg-zinc-100 text-center text-xl leading-6 hover:cursor-pointer hover:bg-zinc-200">
+                              add
+                            </span>
+                          </button>
+                        </>
+                      ) : (
+                        <p className="mb-1 text-xs font-medium tracking-wide text-red-700">
+                          (Not Available)
+                        </p>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          removeFromCart(item.productId, item.variantId)
+                        }
+                      >
+                        <span className="material-symbols-outlined h-6 w-6 rounded-full bg-white text-center text-xl leading-6 hover:cursor-pointer hover:bg-zinc-100">
+                          delete
+                        </span>
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
+              );
+            }
           })
         ) : (
           <div className="text-right">Your cart is empty</div>
@@ -262,6 +277,7 @@ const Cart: React.FC<CheckoutCart> = ({
                   className="roboto-medium rounded-md bg-zinc-900 px-4 py-1 text-white transition-all duration-200 hover:bg-zinc-700 md:max-w-[300px]"
                   type="button"
                   onClick={handleCheckout}
+                  disabled={availableItems === 0}
                 >
                   Check out
                 </button>

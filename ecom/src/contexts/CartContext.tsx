@@ -11,6 +11,7 @@ import { CartID, CartInterface } from "../interfaces/cart";
 import { showToast } from "../func/showToast";
 import { useAuth } from "./useAuth";
 import axios from "axios";
+import { checkItemStock } from "../hooks/itemStockChecker";
 
 interface DiscountedPrice {
   productId: string;
@@ -42,6 +43,7 @@ interface CartContextProps {
   saveLocalCart: (cart: CartID[]) => void;
   applyCode: (code: string) => void;
   clearAppliedCode: () => void;
+  availableItems: number | undefined;
 }
 
 export const CartContext = createContext<CartContextProps | undefined>(
@@ -56,6 +58,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
   const [cartIDs, setCartIDs] = useState<CartID[]>([]);
   const [totalPrice, setTotalPrice] = useState<number>(0);
   const [subtotal, setSubtotal] = useState<number>(0);
+  const [availableItems, setAvailableItems] = useState<number>();
   const [discountedByCode, setDiscountedByCode] = useState<DiscountedByCode>({
     percentage: [],
     fixed: 0,
@@ -86,6 +89,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
           quantity: item.quantity,
         })),
       );
+      setAvailableItems(response.data.noOfAvailableItems);
     } catch (error) {
       console.error("Error fetching user cart:", error);
     }
@@ -96,6 +100,10 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
       if (!token) return;
       try {
         const response = await axiosInstance.post("/save-cart", { cart });
+        if (response.data.warnings) {
+          console.log(response.data.warnings);
+          return;
+        }
         if (response.status === 200) {
           fetchUserCart();
           /*  showToast(response.data.message, "success"); */
@@ -148,11 +156,14 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
     setSubtotal(calculatedTotal);
   }, [cartIDs, cartInfo, discountedByCode.fixed, discountedByCode.percentage]); */
   const calcSubTotal = useMemo(() => {
-    return cartInfo.reduce(
-      (acc, item) =>
-        acc + (item.saleId?.salePrice ?? item.price) * item.quantity,
-      0,
-    );
+    return cartInfo.reduce((acc, item) => {
+      const effectivePrice =
+        item.variantStocks <= 0
+          ? 0
+          : (item.discountedPrice ?? item.saleId?.salePrice ?? item.price);
+
+      return acc + effectivePrice * item.quantity;
+    }, 0);
   }, [cartInfo]);
 
   const total = useMemo(() => {
@@ -163,15 +174,18 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
     }
 
     if (discountedByCode.percentage.length > 0) {
-      total = cartInfo.reduce(
-        (acc, item) =>
-          acc +
-          (item.discountedPrice ?? item.saleId?.salePrice ?? item.price) *
-            item.quantity,
-        0,
-      );
-    }
+      total = cartInfo.reduce((acc, item) => {
+        const effectivePrice =
+          item.variantStocks <= 0
+            ? 0
+            : (item.discountedPrice ?? item.saleId?.salePrice ?? item.price);
 
+        return acc + effectivePrice * item.quantity;
+      }, 0);
+    }
+    if (total < 0) {
+      total = 0;
+    }
     return total;
   }, [subtotal, cartInfo, discountedByCode.fixed, discountedByCode.percentage]);
 
@@ -187,6 +201,11 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
         { cartItem },
         { headers: { Authorization: `Bearer ${token}` } },
       );
+      if (response.data.warning) {
+        fetchUserCart();
+        showToast(`${response.data.warning}`, "warning");
+        return true;
+      }
       if (response.data.success) {
         fetchUserCart();
         showToast("Successfully added to Cart", "success");
@@ -203,7 +222,31 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
           item.variantId === cartItem.variantId,
       );
       if (existingItemIndex >= 0) {
-        storedCart[existingItemIndex].quantity += 1;
+        const checkItem = await checkItemStock(
+          storedCart[existingItemIndex].productId,
+          storedCart[existingItemIndex].variantId,
+          storedCart[existingItemIndex].quantity,
+        );
+        if (checkItem === null) {
+          showToast("Error checking item stock", "error");
+          return false;
+        }
+        if (checkItem === true) {
+          if (storedCart[existingItemIndex].quantity >= 10) {
+            showToast(
+              "You've reached the maximum quantity for this item",
+              "warning",
+            );
+            return false;
+          }
+          storedCart[existingItemIndex].quantity += 1;
+        } else {
+          showToast(
+            "You've reached the maximum quantity for this item",
+            "warning",
+          );
+          return false;
+        }
       } else {
         storedCart.push(cartItem);
       }
@@ -219,6 +262,10 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
     variantId: string,
     quantity: number,
   ) => {
+    if (quantity >= 10) {
+      showToast("You've reached the maximum quantity for this item", "warning");
+      return;
+    }
     const updatedCart = cartIDs.reduce((acc, item) => {
       if (item.productId === productId && item.variantId === variantId) {
         if (quantity > 0) {
@@ -335,6 +382,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
         saveLocalCart,
         applyCode,
         clearAppliedCode,
+        availableItems,
       }}
     >
       {children}

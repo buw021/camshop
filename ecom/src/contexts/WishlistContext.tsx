@@ -11,7 +11,7 @@ import { CartID, CartInterface } from "../interfaces/cart";
 import { showToast } from "../func/showToast";
 import { useAuth } from "./useAuth";
 
-interface WishlistContext {
+interface WishlistContextProps {
   favsInfo: CartInterface[];
   favsIDs: CartID[];
   fetchUserWishlist: () => void;
@@ -24,7 +24,7 @@ interface WishlistContext {
   removeFromWishlist: (productId: string, variantId: string) => void;
 }
 
-export const WishlistContext = createContext<WishlistContext | undefined>(
+export const WishlistContext = createContext<WishlistContextProps | undefined>(
   undefined,
 );
 
@@ -41,6 +41,7 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({
       const response = await axiosInstance.get(`/user-wishlist`);
       if (!response.data.favs) return;
       setFavsInfo(response.data.favs);
+      console.log(response.data.favs);
       setFavsIDs(
         response.data.favs.map((item: CartID) => ({
           productId: item.productId,

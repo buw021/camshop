@@ -46,13 +46,19 @@ const Wishlist: React.FC = () => {
                       delete
                     </span>
                   </button>
-                  <button
-                    className="roboto-medium rounded-md bg-zinc-900 px-2 py-1 text-xs text-white transition-all duration-200 hover:bg-zinc-700 md:max-w-[300px]"
-                    type="button"
-                    onClick={() => handleAddToCart(item)}
-                  >
-                    Add to cart
-                  </button>
+                  {item.variantStocks > 0 ? (
+                    <button
+                      className="roboto-medium rounded-md bg-zinc-900 px-2 py-1 text-xs text-white transition-all duration-200 hover:bg-zinc-700 md:max-w-[300px]"
+                      type="button"
+                      onClick={() => handleAddToCart(item)}
+                    >
+                      Add to cart
+                    </button>
+                  ) : (
+                    <p className="roboto-medium rounded-md bg-zinc-500 px-2 py-1 text-xs text-white md:max-w-[300px]">
+                      Unavailable
+                    </p>
+                  )}
                 </div>
               </div>
             </div>

@@ -40,6 +40,11 @@ const applyPromoCode = async (req, res) => {
         select: "salePrice saleStartDate saleExpiryDate",
       })
       .lean();
+    products.forEach((product) => {
+      product.variants = product.variants.filter(
+        (variant) => variant.variantStocks > 0
+      );
+    });
 
     // Create a map of productId to product details
     const productMap = products.reduce((acc, product) => {
@@ -153,6 +158,16 @@ const applyPromoCode = async (req, res) => {
     } */
 
     // Return the discounted items
+
+    if (totalPrice <= 0) {
+      totalPrice = 0;
+    }
+    console.log({
+      discountedItems,
+      fixedDiscount: discountAmount,
+      totalPrice,
+      code: promoCodeInput,
+    });
     res.json({
       discountedItems,
       fixedDiscount: discountAmount,
@@ -166,4 +181,3 @@ const applyPromoCode = async (req, res) => {
 };
 
 module.exports = { applyPromoCode };
-

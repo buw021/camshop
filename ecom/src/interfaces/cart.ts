@@ -15,4 +15,5 @@ export interface CartInterface {
     quantity: number;
     saleId: {salePrice: number | null} | null;
     discountedPrice?: number;
+    variantStocks: number;
 }

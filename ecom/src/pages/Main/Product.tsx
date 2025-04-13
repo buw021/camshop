@@ -178,7 +178,21 @@ const ProductDisplay: React.FC = () => {
                   <p
                     className={`roboto-medium text-sm ${variantStocks > 0 ? "" : "text-zinc-500"}`}
                   >
-                    {variantStocks > 0 ? "In Stock" : "Not Available"}
+                    {variantStocks > 0 ? (
+                      variantStocks <= 10 ? (
+                        <span className="text-red-700 underline">
+                          Only{" "}
+                          <span className="font-extrabold">
+                            {variant?.variantStocks}
+                          </span>{" "}
+                          left in stock!
+                        </span>
+                      ) : (
+                        "In Stock"
+                      )
+                    ) : (
+                      "Not Available"
+                    )}
                   </p>
                 }
               </div>

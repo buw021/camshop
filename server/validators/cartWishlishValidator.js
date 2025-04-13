@@ -32,3 +32,15 @@ exports.validatetoWishlist = [
     .isMongoId()
     .withMessage("Product ID must be a valid MongoDB ObjectId"),
 ];
+
+exports.validateCheckItem = [
+  query("productId")
+    .isMongoId()
+    .withMessage("Product ID must be a valid MongoDB ObjectId"),
+  query("variantId")
+    .isMongoId()
+    .withMessage("Variant ID must be a valid MongoDB ObjectId"),
+  query("quantity")
+    .isInt({ gt: 0 })
+    .withMessage("Quantity must be a positive integer"),
+];

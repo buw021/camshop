@@ -18,6 +18,7 @@ interface UserData {
   address: AddressInterface[];
   phoneNo: string;
   cart: CartID[];
+  availableItems: number;
 }
 
 interface ShippingOptionProps {
@@ -39,6 +40,13 @@ const getUserData = async () => {
 
 const Checkout = () => {
   const { token, email } = useAuth();
+  const {
+    totalPrice,
+    subtotal,
+    clearAppliedCode,
+    discountedByCode,
+    availableItems,
+  } = useCart();
   if (!token) {
     window.location.href = "/";
   }
@@ -48,9 +56,9 @@ const Checkout = () => {
     address: [],
     phoneNo: "",
     cart: [],
+    availableItems: 0,
   });
-  const { totalPrice, subtotal, clearAppliedCode, discountedByCode } =
-    useCart();
+
   const [selectedSFOption, setSelectedSFOption] = useState<ShippingOptionProps>(
     { shippingType: "", shippingCost: 0, shippingLabel: "", shippingTime: "" },
   );
@@ -176,14 +184,21 @@ const Checkout = () => {
     };
   }, [clearAppliedCode]);
 
-  if (userData?.cart.length === 0) {
+  if (
+    userData?.cart.length === 0 ||
+    userData.availableItems === 0 ||
+    availableItems === 0
+  ) {
     return (
       <>
         <div className="flex h-full w-full flex-col items-center justify-end text-center"></div>
         <div className="fixed bottom-0 left-0 flex h-16 w-screen items-center justify-between border-t-[1px] border-zinc-100 bg-white px-6 py-2.5">
-          <p>No Item in your cart</p>
-          <a href="/" className="text-xs text-blue-500 hover:underline">
-            Go to Store
+          <p>No Item available in your cart</p>
+          <a
+            href="/"
+            className="roboto-medium rounded-md bg-zinc-900 px-2 py-1 text-xs text-white transition-all duration-200 hover:bg-zinc-700"
+          >
+            Go Back Home
           </a>
         </div>
       </>
