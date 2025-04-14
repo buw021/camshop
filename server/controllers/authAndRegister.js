@@ -1,5 +1,6 @@
 const User = require("../models/user");
 const Admin = require("../models/admin");
+const Product = require("../models/products");
 const { hashPassword, comparePassword, decodeJWT } = require("../helpers/auth");
 const jwt = require("jsonwebtoken");
 
@@ -126,15 +127,33 @@ const loginUser = async (req, res) => {
             maxAge: rememberMe ? 7 * 24 * 60 * 60 * 1000 : undefined,
           });
           // Set cookie expiration to 7 days if "Remember Me" is checked
-
+          const localCart = req.cookies.cart
+            ? JSON.parse(req.cookies.cart)
+            : [];
+          const localFavs = req.cookies.wishlist
+            ? JSON.parse(req.cookies.wishlist)
+            : [];
           try {
-            const localCart = req.cookies.cart
-              ? JSON.parse(req.cookies.cart)
-              : [];
-            const mergedCart = mergeCarts(localCart, user.cart || []);
-            user.cart = mergedCart;
-            await user.save();
-            res.cookie("cart", "", { maxAge: 0 });
+            if (localCart.length > 0) {
+              const mergedCart = await mergeCarts(localCart, user.cart || []);
+              if (mergedCart.length > 0) {
+                user.cart = mergedCart;
+                await user.save();
+              }
+              res.clearCookie("cart");
+            }
+            if (localFavs.length > 0) {
+              const mergedWishlist = await mergeWishlists(
+                localFavs,
+                user.wishlist
+              );
+              if (mergedWishlist.length > 0) {
+                user.wishlist = mergedWishlist;
+                await user.save();
+              }
+
+              res.clearCookie("wishlist");
+            }
           } catch (innerError) {
             console.error("Error merging carts:", innerError);
           }
@@ -149,7 +168,7 @@ const loginUser = async (req, res) => {
   }
 };
 
-const mergeCarts = (localCart, userCart) => {
+const mergeCarts = async (localCart, userCart) => {
   try {
     const cartMap = new Map();
     localCart.forEach((item) => {
@@ -168,11 +187,46 @@ const mergeCarts = (localCart, userCart) => {
         cartMap.set(key, { ...item });
       }
     });
-    return Array.from(cartMap.values());
+    const adjustedCart = [];
+
+    for (const item of cartMap.values()) {
+      const product = await Product.findById(item.productId);
+      if (!product) continue;
+
+      const variant = product.variants.find(
+        (v) => v._id.toString() === item.variantId.toString()
+      );
+
+      if (!variant) continue;
+
+      const maxAllowed = Math.min(10, variant.variantStocks);
+      adjustedCart.push({
+        ...item,
+        quantity: Math.min(item.quantity, maxAllowed),
+      });
+    }
+    console.log("Adjusted Cart:", adjustedCart);
+    return adjustedCart;
   } catch (error) {
     console.error("Error merging carts:", error);
     throw new Error("Failed to merge carts");
   }
+};
+
+const mergeWishlists = async (localWishlist, userWishlist) => {
+  const wishlistMap = new Map();
+
+  [...localWishlist, ...userWishlist].forEach((item) => {
+    if (!item.productId || !item.variantId) return;
+
+    const key = `${item.productId.toString()}-${item.variantId.toString()}`;
+    wishlistMap.set(key, {
+      productId: item.productId.toString(),
+      variantId: item.variantId.toString(),
+    });
+  });
+
+  return Array.from(wishlistMap.values());
 };
 
 const getUser = async (req, res) => {

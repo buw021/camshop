@@ -4,7 +4,18 @@ const { decodeJWT } = require("../helpers/auth");
 const MAX_CART_QUANTITY = 10; // Maximum number of items allowed in the cart
 const getUserCart = async (req, res) => {
   const { usertoken } = req.cookies;
-  const localCart = req.cookies.cart ? JSON.parse(req.cookies.cart) : [];
+  let localCart = [];
+  if (req.cookies.cart) {
+    try {
+      localCart = JSON.parse(req.cookies.cart);
+      if (!Array.isArray(localCart)) {
+        localCart = []; // Fallback to empty array if not an array
+      }
+    } catch (error) {
+      console.error("Error parsing cart cookie:", error);
+      localCart = []; // Fallback to empty array if JSON parsing fails
+    }
+  }
   let cart = [];
   let productIds = [];
 
@@ -149,6 +160,7 @@ const addToCart = async (req, res) => {
     await user.save();
     return res.status(200).json({ success: "Product added to cart" });
   } catch (error) {
+    console.error("Error in addToCart:", error);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -328,8 +340,6 @@ const addToFavs = async (req, res) => {
   }
 };
 
-/* 
-Not being used
 const saveUserFavs = async (req, res) => {
   const { favs } = req.body;
   const { usertoken } = req.cookies;
@@ -347,7 +357,7 @@ const saveUserFavs = async (req, res) => {
   } else {
     res.status(400).json({ error: "User ID and cart are required" });
   }
-}; */
+};
 
 const addAllToCart = async (req, res) => {
   const { usertoken } = req.cookies;
@@ -361,38 +371,81 @@ const addAllToCart = async (req, res) => {
 
     const wishlist = user.wishlist.map((item) => ({
       ...item.toObject(),
-      quantity: item.quantity || 1,
+      quantity: 1, // Default to 1 if quantity is undefined
     }));
-    wishlist.forEach((item) => {
+
+    // Process wishlist items and apply stock checks
+    for (const item of wishlist) {
       if (!item.productId || !item.variantId) {
-        return res
-          .status(400)
-          .json({ error: "Wishlist item missing required fields" });
+        return res.status(400).json({
+          error: "Wishlist item missing required fields",
+        });
       }
+
+      const product = await Product.findById(item.productId);
+      if (!product) {
+        return res.status(404).json({
+          error: `Product not found for ID: ${item.productId}`,
+        });
+      }
+
+      const variant = product.variants.find(
+        (v) => v._id.toString() === item.variantId.toString()
+      );
+
+      if (!variant) {
+        return res.status(404).json({
+          error: `Variant not found for ID: ${item.variantId}`,
+        });
+      }
+
       const existingItemIndex = user.cart.findIndex(
         (cartItem) =>
           cartItem.productId.toString() === item.productId.toString() &&
           cartItem.variantId.toString() === item.variantId.toString()
       );
-      if (existingItemIndex >= 0) {
-        if (existingItemIndex.quantity <= 10) {
-          user.cart[existingItemIndex].quantity += item.quantity;
-        }
-      } else {
-        user.cart.push(item);
+
+      const existingQuantity =
+        existingItemIndex >= 0 ? user.cart[existingItemIndex].quantity : 0;
+
+      // Check available stock
+      const maxQuantity = Math.min(
+        variant.variantStocks,
+        item.quantity + existingQuantity
+      );
+
+      if (maxQuantity <= existingQuantity) {
+        // If no additional stock is available, skip adding
+        return res.status(200).json({
+          warning: `Maximum quantity reached for ${product.name}.`,
+        });
       }
-    });
+
+      if (existingItemIndex >= 0) {
+        // Update quantity for existing cart item
+        user.cart[existingItemIndex].quantity = maxQuantity;
+      } else {
+        // Add new item to cart
+        user.cart.push({
+          ...item,
+          quantity: maxQuantity, // Adjust quantity based on stock
+        });
+      }
+    }
+
+    // Clear wishlist after moving items to cart
     user.wishlist = [];
     await user.save();
-    return res.status(200).json({ success: "Wishlist items added to cart" });
+
+    return res.status(200).json({ success: "Wishlist items added to cart." });
   } catch (error) {
-    return res.status(500).json({ error: "Internal server error" });
+    console.error("Error adding wishlist items to cart:", error);
+    return res.status(500).json({ error: "Internal server error." });
   }
 };
 
 const checkItem = async (req, res) => {
   const { productId, variantId, quantity } = req.query;
-  console.log(productId, variantId, quantity);
   try {
     const product = await Product.findById(productId);
     if (!product) {
@@ -420,6 +473,73 @@ const checkItem = async (req, res) => {
   }
 };
 
+const addAllToCartLocal = async (req, res) => {
+  try {
+    // Extract wishlist and cart directly from the request body
+    const wishlist = req.body.wishlist || [];
+    const cart = req.body.cart || [];
+
+    const updatedWishlist = []; // To retain items that couldn't be added
+    const updatedCart = [...cart]; // Start with a copy of the existing cart
+
+    for (const item of wishlist) {
+      if (!item.productId || !item.variantId) {
+        updatedWishlist.push(item); // Retain invalid items in the wishlist
+        continue; // Skip to the next item
+      }
+
+      // Simulating product and variant retrieval for stock checks
+      const product = await Product.findById(item.productId);
+      if (!product) {
+        updatedWishlist.push(item); // Retain items without a valid product
+        continue; // Skip to the next item
+      }
+
+      const variant = product.variants.find(
+        (v) => v._id.toString() === item.variantId.toString()
+      );
+      if (!variant || variant.variantStocks <= 0) {
+        updatedWishlist.push(item); // Retain items without stock in the wishlist
+        continue; // Skip to the next item
+      }
+
+      const existingItemIndex = updatedCart.findIndex(
+        (cartItem) =>
+          cartItem.productId === item.productId &&
+          cartItem.variantId === item.variantId
+      );
+
+      const existingQuantity =
+        existingItemIndex >= 0 ? updatedCart[existingItemIndex].quantity : 0;
+
+      // Calculate the maximum quantity considering available stock
+      const maxQuantity = Math.min(
+        variant.variantStocks,
+        item.quantity + existingQuantity
+      );
+
+      if (existingItemIndex >= 0) {
+        updatedCart[existingItemIndex].quantity = maxQuantity; // Update existing cart item
+      } else {
+        updatedCart.push({
+          ...item,
+          quantity: maxQuantity, // Add new item to cart with adjusted quantity
+        });
+      }
+    }
+
+    // Return the updated wishlist and cart
+    return res.status(200).json({
+      success: "Wishlist items processed successfully.",
+
+      updatedWishlist,
+      updatedCart,
+    });
+  } catch (error) {
+    console.error("Error processing wishlist:", error);
+    return res.status(500).json({ error: "Internal server error." });
+  }
+};
 module.exports = {
   getUserCart,
   saveUserCart,
@@ -428,4 +548,6 @@ module.exports = {
   addToFavs,
   addAllToCart,
   checkItem,
+  addAllToCartLocal,
+  saveUserFavs,
 };

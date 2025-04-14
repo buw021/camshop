@@ -2,7 +2,7 @@ const { body, query } = require("express-validator");
 
 exports.validateCart = [
   body("cart")
-    .isArray({ min: 1 })
+    .isArray({ min: 0 })
     .withMessage("Cart must be a non-empty array"),
   body("cart.*.productId")
     .isMongoId()
@@ -13,6 +13,18 @@ exports.validateCart = [
   body("cart.*.quantity")
     .isInt({ gt: 0 })
     .withMessage("Quantity must be a positive integer"),
+];
+
+exports.validateWishlist = [
+  body("favs")
+    .isArray({ min: 0 })
+    .withMessage("Cart must be a non-empty array"),
+  body("favs.*.productId")
+    .isMongoId()
+    .withMessage("Product ID must be a valid MongoDB ObjectId"),
+  body("favs.*.variantId")
+    .isMongoId()
+    .withMessage("Product ID must be a valid MongoDB ObjectId"),
 ];
 
 exports.validateAddtoCart = [
@@ -41,6 +53,6 @@ exports.validateCheckItem = [
     .isMongoId()
     .withMessage("Variant ID must be a valid MongoDB ObjectId"),
   query("quantity")
-    .isInt({ gt: 0 })
+    .isInt({ gte: 0 })
     .withMessage("Quantity must be a positive integer"),
 ];

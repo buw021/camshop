@@ -4,10 +4,12 @@ const {
   getUserCart,
   saveUserCart,
   getUserFavs,
-  saveUserFavs,
   addToFavs,
   addToCart,
   addAllToCart,
+  checkItem,
+  addAllToCartLocal,
+  saveUserFavs,
 } = require("../controllers/userCartWishlist");
 const {
   addProduct,
@@ -29,6 +31,8 @@ const {
   validateCart,
   validateAddtoCart,
   validatetoWishlist,
+  validateCheckItem,
+  validateWishlist,
 } = require("../validators/cartWishlishValidator");
 const { validateRequest } = require("../middleware/validateRequest");
 const {
@@ -91,8 +95,13 @@ router.post(
   validateRequest,
   addToCart
 );
-/* Not being used
-post("/save-wishlist", verifyUserToken, validateRequest, saveUserFavs); */
+router.post(
+  "/save-favs",
+  verifyUserToken,
+  validateWishlist,
+  validateRequest,
+  saveUserFavs
+);
 router.post(
   "/add-to-wishlist",
   verifyUserToken,
@@ -102,7 +111,7 @@ router.post(
 );
 
 router.post("/add-all-to-cart", verifyUserToken, addAllToCart);
-
+router.post("/add-all-to-cart-local", addAllToCartLocal);
 //Store
 router.get("/product/:details", getProduct);
 router.get("/get-variants", getVariants);
@@ -110,5 +119,6 @@ router.get("/get-variants", getVariants);
 //User
 router.get("/user-cart", getUserCart);
 router.get("/user-wishlist", getUserFavs);
+router.get("/checkItemStocks", validateCheckItem, validateRequest, checkItem);
 
 module.exports = router;

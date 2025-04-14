@@ -204,7 +204,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
       if (response.data.warning) {
         fetchUserCart();
         showToast(`${response.data.warning}`, "warning");
-        return true;
+        return false;
       }
       if (response.data.success) {
         fetchUserCart();
@@ -257,29 +257,42 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
     return false;
   };
 
-  const updateCartItemQuantity = (
+  const updateCartItemQuantity = async (
     productId: string,
     variantId: string,
     quantity: number,
   ) => {
-    if (quantity >= 10) {
-      showToast("You've reached the maximum quantity for this item", "warning");
+    const checkItem = await checkItemStock(productId, variantId, quantity - 1);
+    if (checkItem === null) {
+      showToast("Error checking item stock", "error");
       return;
     }
-    const updatedCart = cartIDs.reduce((acc, item) => {
-      if (item.productId === productId && item.variantId === variantId) {
-        if (quantity > 0) {
-          acc.push({ ...item, quantity });
-        }
-      } else {
-        acc.push(item);
+    if (checkItem === true) {
+      if (quantity >= 10) {
+        showToast(
+          "You've reached the maximum quantity for this item",
+          "warning",
+        );
+        return;
       }
-      return acc;
-    }, [] as CartID[]);
-    if (token) {
-      saveUserCart(updatedCart);
+      const updatedCart = cartIDs.reduce((acc, item) => {
+        if (item.productId === productId && item.variantId === variantId) {
+          if (quantity > 0) {
+            acc.push({ ...item, quantity });
+          }
+        } else {
+          acc.push(item);
+        }
+        return acc;
+      }, [] as CartID[]);
+      if (token) {
+        saveUserCart(updatedCart);
+      } else {
+        saveLocalCart(updatedCart);
+      }
     } else {
-      saveLocalCart(updatedCart);
+      showToast("You've reached the maximum quantity for this item", "warning");
+      return;
     }
   };
 

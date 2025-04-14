@@ -41,7 +41,7 @@ const cartItemSchema = new Schema({
     ref: "Product.variants",
     required: true,
   },
-  quantity: { type: Number, required: true, min: 1 },
+  quantity: { type: Number, required: true, min: 1, max: 10 },
 });
 
 const userAddress = new Schema({
@@ -111,7 +111,7 @@ const userSchema = new Schema(
     },
 
     //for password reset
-    
+
     otp: { type: String, default: null },
     otpExpires: { type: Date, default: null },
 

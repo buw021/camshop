@@ -32,7 +32,7 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const { token } = useAuth();
-  const { addToCart, saveLocalCart } = useCart();
+  const { addToCart, cartIDs, saveLocalCart } = useCart();
   const [favsInfo, setFavsInfo] = useState<CartInterface[]>([]);
   const [favsIDs, setFavsIDs] = useState<CartID[]>([]);
 
@@ -41,7 +41,6 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({
       const response = await axiosInstance.get(`/user-wishlist`);
       if (!response.data.favs) return;
       setFavsInfo(response.data.favs);
-      console.log(response.data.favs);
       setFavsIDs(
         response.data.favs.map((item: CartID) => ({
           productId: item.productId,
@@ -119,6 +118,11 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const handleAddToCart = async (cartItem: CartID) => {
+    const item = {
+      productId: cartItem.productId,
+      variantId: cartItem.variantId,
+      quantity: 1,
+    };
     const updatedWishlist = favsIDs.filter(
       (item) =>
         !(
@@ -126,16 +130,13 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({
           item.variantId === cartItem.variantId
         ),
     );
-    if (token) {
-      const response = await addToCart(cartItem);
-      if (response) {
+    const response = await addToCart(item);
+    if (response) {
+      if (token) {
         saveUserWishlist(updatedWishlist);
       } else {
-        showToast("Failed to add item to cart", "error");
+        saveLocalFavs(updatedWishlist);
       }
-    } else {
-      saveLocalFavs(updatedWishlist);
-      showToast("Item added to cart", "success");
     }
   };
 
@@ -147,11 +148,18 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({
         showToast(response.data.success, "success");
       }
     } else {
-      const localCart = JSON.parse(localStorage.getItem("cart") || "[]");
-      const updatedCart = [...localCart, ...favsIDs];
-      saveLocalCart(updatedCart);
-      saveLocalFavs([]);
-      showToast("Items added to local cart from wishlist", "success");
+      console.log(favsIDs);
+      const response = await axiosInstance.post("/add-all-to-cart-local", {
+        wishlist: favsIDs,
+        cart: cartIDs,
+      });
+      if (response.status === 200) {
+        saveLocalFavs(response.data.updatedWishlist);
+        saveLocalCart(response.data.updatedCart);
+        showToast(`${response.data.success}`, "success");
+      } else {
+        showToast(`${response.data.error}`, "error");
+      }
     }
   };
 
