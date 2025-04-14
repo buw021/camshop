@@ -12,6 +12,8 @@ import axiosInstance from "../../services/axiosInstance";
 import { useWishlist } from "../../contexts/useWishlist";
 import { showToast } from "../../func/showToast";
 
+import axios from "axios";
+
 const reviewData = [
   {
     reviewId: 0,
@@ -81,6 +83,9 @@ const ProductDisplay: React.FC = () => {
         setVariant(response.data.variant);
       } catch (error) {
         console.error("Error fetching product:", error);
+        if (axios.isAxiosError(error) && error.response?.status === 404) {
+          window.location.href = "/404";
+        }
       }
     };
     fetchProduct();

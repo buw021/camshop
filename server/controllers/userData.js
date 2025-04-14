@@ -1,4 +1,4 @@
-const User = require("../models/user");
+const Product = require("../models/products");
 const jwt = require("jsonwebtoken");
 const { hashPassword, comparePassword, decodeJWT } = require("../helpers/auth");
 const { getUser } = require("../helpers/getUser");
@@ -8,10 +8,52 @@ const getUserData = async (req, res) => {
   try {
     const user = await getUser(usertoken);
     const { firstName, lastName, phoneNo, address, cart } = user;
+
     const userData = { firstName, lastName, phoneNo, address, cart };
-    return res.json(userData);
+
+    const productIds = user.cart.map((item) => item.productId);
+
+    // Find matching products
+    const products = await Product.find({ _id: { $in: productIds } }).lean();
+
+    const availableItems = cart.reduce((acc, item) => {
+      // Find the corresponding product
+      const product = products.find(
+        (p) => p._id.toString() === item.productId.toString()
+      );
+
+      if (!product) {
+        console.warn(`Product not found for productId: ${item.productId}`);
+        return acc; // Skip if product is not found
+      }
+
+      // Find the corresponding variant
+      const variant = product.variants.find(
+        (v) => v._id.toString() === item.variantId.toString()
+      );
+
+      if (!variant) {
+        console.warn(
+          `Variant not found for variantId: ${item.variantId} in productId: ${item.productId}`
+        );
+        return acc; // Skip if variant is not found
+      }
+
+      // Only add items where variantStocks > 0
+      if (variant.variantStocks > 0) {
+        acc.push({
+          ...item,
+          availableItems: variant.variantStocks, // Append availableItems
+        });
+      }
+
+      return acc; // Accumulate results
+    }, []);
+
+    return res.json({ ...userData, availableItems });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Error in getUserData:", error.message);
+    return res.status(500).json({ error: error.message });
   }
 };
 
@@ -33,7 +75,9 @@ const updateAddress = async (req, res) => {
   const addressId = updatedAddress._id;
 
   if (!updatedAddress || !addressId) {
-    return res.status(400).json({ error: "Missing updated address or address ID" });
+    return res
+      .status(400)
+      .json({ error: "Missing updated address or address ID" });
   }
 
   try {
@@ -43,18 +87,19 @@ const updateAddress = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const updatedAddresses = user.address.map((address) => 
+    const updatedAddresses = user.address.map((address) =>
       address._id.equals(addressId) ? updatedAddress : address
     );
     user.address = updatedAddresses;
     await user.save();
-    return res.status(200).json({ message: "Addresses updated successfully", user });
+    return res
+      .status(200)
+      .json({ message: "Addresses updated successfully", user });
   } catch (error) {
     console.error("Error updating address:", error);
     res.status(500).json({ error: error.message });
   }
 };
-
 
 const saveNewAddress = async (req, res) => {
   const { usertoken } = req.cookies;
@@ -103,7 +148,7 @@ const deleteAddress = async (req, res) => {
   } else {
     return res.status(400).json({ error: "Missing token or address ID" });
   }
-}
+};
 
 const updateProfile = async (req, res) => {
   const { usertoken } = req.cookies;
@@ -119,7 +164,6 @@ const updateProfile = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
 
 const setDefaultAddress = async (req, res) => {
   const { usertoken } = req.cookies;

@@ -105,7 +105,7 @@ const Product_List: React.FC<Category> = ({ category }) => {
     [category, navigate, location.search],
   );
 
-  const handlePageMovement = useCallback(() => {
+  /* const handlePageMovement = useCallback(() => {
     const numericVal = parseInt(page.toString(), 10);
     const searchParams = new URLSearchParams(location.search);
     searchParams.set("page", numericVal.toString());
@@ -114,7 +114,7 @@ const Product_List: React.FC<Category> = ({ category }) => {
     const updatedUrl = `${category === "all" ? `` : `/${category}`}/?${searchParams.toString()}`;
     setPage(numericVal);
     navigate(updatedUrl, { replace: true });
-  }, [page, category, navigate, location.search]);
+  }, [page, category, navigate, location.search]); */
 
   const handleFilter = useCallback(
     (filters: Filter) => {
@@ -170,36 +170,36 @@ const Product_List: React.FC<Category> = ({ category }) => {
   return (
     <div className="relative mb-4 mt-2 flex flex-col gap-2">
       <>
+        <div className="flex justify-between">
+          <div className="justify-self-end">
+            <Dropdown
+              label={"Sort by: "}
+              list={list}
+              onValueChange={handleDropdownValue}
+              selectedValue={sortCriteria} // Pass sort criteria as prop
+            ></Dropdown>
+          </div>
+          <div className="relative">
+            {category !== "all" && (
+              <>
+                <button
+                  className="roboto-medium relative flex text-sm text-zinc-700 underline underline-offset-4 group-hover:text-zinc-950"
+                  onClick={toggleFilter}
+                >
+                  Filter
+                </button>
+                <ProductFilter
+                  handleFilter={handleFilter}
+                  toggleFilter={toggleFilter}
+                  toggle={filter}
+                  category={category}
+                ></ProductFilter>
+              </>
+            )}
+          </div>
+        </div>
         {variants.length > 0 && (
           <>
-            <div className="flex justify-between">
-              <div className="justify-self-end">
-                <Dropdown
-                  label={"Sort by: "}
-                  list={list}
-                  onValueChange={handleDropdownValue}
-                  selectedValue={sortCriteria} // Pass sort criteria as prop
-                ></Dropdown>
-              </div>
-              <div className="relative">
-                {category !== "all" && (
-                  <>
-                    <button
-                      className="roboto-medium relative flex text-sm text-zinc-700 underline underline-offset-4 group-hover:text-zinc-950"
-                      onClick={toggleFilter}
-                    >
-                      Filter
-                    </button>
-                    <ProductFilter
-                      handleFilter={handleFilter}
-                      toggleFilter={toggleFilter}
-                      toggle={filter}
-                      category={category}
-                    ></ProductFilter>
-                  </>
-                )}
-              </div>
-            </div>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
               {loading
                 ? Array.from({ length: 10 }, (_, index) => (
@@ -249,17 +249,17 @@ const Product_List: React.FC<Category> = ({ category }) => {
                 <span>{`/`}</span>
                 {location.pathname === "/" ? (
                   <button
-                  onClick={() => window.location.reload()}
-                  className="text-blue-500 underline"
+                    onClick={() => window.location.reload()}
+                    className="text-blue-500 underline"
                   >
-                  Refresh
+                    Refresh
                   </button>
                 ) : (
                   <button
-                  onClick={() => navigate(-1)}
-                  className="text-blue-500 underline"
+                    onClick={() => navigate(-1)}
+                    className="text-blue-500 underline"
                   >
-                  Go back
+                    Go back
                   </button>
                 )}
               </div>

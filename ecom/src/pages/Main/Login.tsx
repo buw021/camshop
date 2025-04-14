@@ -26,6 +26,7 @@ const LogIn = () => {
       }
       if (response.data.error) {
         setInvalid(true);
+        console.log(response.data.error);
       } else {
         setInvalid(false);
         setEmail("");
@@ -41,6 +42,7 @@ const LogIn = () => {
     if (axios.isAxiosError(error)) {
       if (error.status === 400) {
         setInvalid(true);
+        console.log(error);
       } else if (error.status === 500) {
         showToast("No response received", "error");
       } else {

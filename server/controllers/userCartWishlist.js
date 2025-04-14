@@ -35,7 +35,10 @@ const getUserCart = async (req, res) => {
     cart = localCart;
   }
 
-  const products = await Product.find({ _id: { $in: productIds } })
+  const products = await Product.find({
+    _id: { $in: productIds },
+    isArchived: { $ne: true },
+  })
     .populate({
       path: "variants.saleId",
       model: "Sale",
@@ -50,6 +53,20 @@ const getUserCart = async (req, res) => {
     const product = products.find(
       (p) => p._id.toString() === cartItem.productId.toString()
     );
+    if (!product) {
+      return {
+        productId: cartItem.productId,
+        variantId: cartItem.variantId,
+        name: "Item not available",
+        variantName: "",
+        variantColor: "",
+        variantImg: "",
+        price: 0,
+        quantity: 0,
+        saleId: null,
+        variantStocks: 0,
+      };
+    }
     const variant = product.variants.find(
       (v) => v._id.toString() === cartItem.variantId.toString()
     );
@@ -275,7 +292,10 @@ const getUserFavs = async (req, res) => {
     wishlist = localWishlist;
   }
 
-  const products = await Product.find({ _id: { $in: productIds } })
+  const products = await Product.find({
+    _id: { $in: productIds },
+    isArchived: { $ne: true },
+  })
     .populate({
       path: "variants.saleId",
       model: "Sale",
@@ -290,6 +310,22 @@ const getUserFavs = async (req, res) => {
     const product = products.find(
       (p) => p._id.toString() === wishlistItem.productId.toString()
     );
+
+    if (!product) {
+      return {
+        productId: wishlistItem.productId,
+        variantId: wishlistItem.variantId,
+        name: "Item not available",
+        variantName: "",
+        variantColor: "",
+        variantImg: "",
+        price: 0,
+        quantity: 0,
+        saleId: null,
+        variantStocks: 0,
+      };
+    }
+
     const variant = product.variants.find(
       (v) => v._id.toString() === wishlistItem.variantId.toString()
     );

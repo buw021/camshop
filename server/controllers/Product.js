@@ -156,92 +156,159 @@ const getVariants = async (req, res) => {
 
   try {
     // Product level filters
-    let productQuery = {};
-    if (category && category !== "all") productQuery.category = category;
-    if (subCategory) productQuery.subCategory = subCategory;
-    if (brand) productQuery.brand = brand;
+    const filters = [];
+
+    if (category && category !== "all") filters.push({ category });
+    if (subCategory) filters.push({ subCategory });
+    if (brand) filters.push({ brand });
     if (specs) {
       const specifications = JSON.parse(specs);
       Object.keys(specifications).forEach((key) => {
-        productQuery[`specifications.${key}`] = specifications[key];
+        filters.push({ [`specifications.${key}`]: specifications[key] });
       });
     }
 
     // Variant level filters
-    let variantQuery = {};
-    if (onSale === "true") variantQuery.isOnSale = true;
-    if (minPrice)
-      variantQuery.variantPrice = {
-        ...variantQuery.variantPrice,
-        $gte: parseFloat(minPrice),
-      };
-    if (maxPrice)
-      variantQuery.variantPrice = {
-        ...variantQuery.variantPrice,
-        $lte: parseFloat(maxPrice),
-      };
-    if (colors) variantQuery.variantColor = { $in: colors.split(",") };
 
-    const products = await Product.find(productQuery)
-      .populate({
-        path: "variants.saleId",
-        model: "Sale",
-        match: {
-          $and: [{ isOnSale: true }, { saleExpiryDate: { $gte: new Date() } }],
+    const variants = await Product.aggregate([
+      ...(filters.length > 0 ? [{ $match: { $and: filters } }] : []), // Filter products
+      { $match: { isArchived: false } }, // Ensure only non-archived products are included
+      { $unwind: "$variants" }, // Unwind variants for individual processing
+      {
+        $lookup: {
+          from: "sales", // Join with Sale collection
+          localField: "variants.saleId",
+          foreignField: "_id",
+          as: "saleDetails",
         },
-        select: "salePrice saleStartDate saleExpiryDate",
-      })
-      .lean();
-    const variants = products.flatMap((product) =>
-      product.variants
-        .filter((variant) => {
-          const price =
-            variant.saleId &&
-            variant.saleId.isOnSale &&
-            variant.saleId.salePrice
-              ? variant.saleId.salePrice
-              : variant.variantPrice;
-          const meetsVariantCriteria =
-            (!variantQuery.isOnSale ||
-              (variant.saleId && variant.saleId.isOnSale) ===
-                variantQuery.isOnSale) &&
-            (!minPrice || price >= parseFloat(minPrice)) &&
-            (!maxPrice || price <= parseFloat(maxPrice)) &&
-            (!variantQuery.variantColor ||
-              variantQuery.variantColor.$in.includes(variant.variantColor));
-          return meetsVariantCriteria;
-        })
-        .map((variant) => ({
-          ...variant,
-          productName: product.name,
-          productId: product._id,
-          productBrand: product.brand,
-        }))
-    );
+      },
+      {
+        $addFields: {
+          variantPrice: {
+            $cond: [
+              {
+                $and: [
+                  { $arrayElemAt: ["$saleDetails.isOnSale", 0] },
+                  {
+                    $gte: [
+                      { $arrayElemAt: ["$saleDetails.saleExpiryDate", 0] },
+                      new Date(),
+                    ],
+                  },
+                ],
+              },
+              { $arrayElemAt: ["$saleDetails.salePrice", 0] },
+              "$variants.variantPrice",
+            ],
+          },
+        },
+      },
+      {
+        $match: {
+          ...(onSale === "true" && { "saleDetails.isOnSale": true }),
+          ...(minPrice && { variantPrice: { $gte: parseFloat(minPrice) } }),
+          ...(maxPrice && { variantPrice: { $lte: parseFloat(maxPrice) } }),
+          ...(colors && {
+            "variants.variantColor": { $in: colors.split(",") },
+          }),
+        },
+      },
+      {
+        $sort:
+          sort === "price-asc"
+            ? { variantPrice: 1 }
+            : sort === "price-desc"
+            ? { variantPrice: -1 }
+            : sort === "name-az"
+            ? { productName: 1, "variants.variantName": 1 }
+            : sort === "name-za"
+            ? { productName: -1, "variants.variantName": -1 }
+            : { createdAt: 1 },
+      },
+      { $skip: (page - 1) * parseInt(limit) },
+      { $limit: parseInt(limit) },
+      {
+        $project: {
+          variantName: "$variants.variantName",
+          variantColor: "$variants.variantColor",
+          variantPrice: 1,
+          variantStocks: "$variants.variantStocks",
+          variantImgs: "$variants.variantImgs",
+          variantContent: "$variants.variantContent",
+          saleId: {
+            $cond: [
+              { $arrayElemAt: ["$saleDetails.isOnSale", 0] },
+              {
+                _id: { $arrayElemAt: ["$saleDetails._id", 0] },
+                salePrice: { $arrayElemAt: ["$saleDetails.salePrice", 0] },
+                saleStartDate: {
+                  $arrayElemAt: ["$saleDetails.saleStartDate", 0],
+                },
+                saleExpiryDate: {
+                  $arrayElemAt: ["$saleDetails.saleExpiryDate", 0],
+                },
+              },
+              null,
+            ],
+          },
+          _id: "$variants._id",
+          createdAt: "$variants.createdAt",
+          updatedAt: "$variants.updatedAt",
+          productName: "$name",
+          productId: "$_id",
+          productBrand: "$brand",
+        },
+      },
+    ]);
+
+    const total = await Product.aggregate([
+      ...(filters.length > 0 ? [{ $match: { $and: filters } }] : []), // Filter products
+      { $unwind: "$variants" }, // Unwind variants for individual processing
+      {
+        $lookup: {
+          from: "sales", // Join with Sale collection
+          localField: "variants.saleId",
+          foreignField: "_id",
+          as: "saleDetails",
+        },
+      },
+      {
+        $addFields: {
+          variantPrice: {
+            $cond: [
+              {
+                $and: [
+                  { $arrayElemAt: ["$saleDetails.isOnSale", 0] },
+                  {
+                    $gte: [
+                      { $arrayElemAt: ["$saleDetails.saleExpiryDate", 0] },
+                      new Date(),
+                    ],
+                  },
+                ],
+              },
+              { $arrayElemAt: ["$saleDetails.salePrice", 0] },
+              "$variants.variantPrice",
+            ],
+          },
+        },
+      },
+      {
+        $match: {
+          ...(onSale === "true" && { "saleDetails.isOnSale": true }),
+          ...(minPrice && { variantPrice: { $gte: parseFloat(minPrice) } }),
+          ...(maxPrice && { variantPrice: { $lte: parseFloat(maxPrice) } }),
+          ...(colors && {
+            "variants.variantColor": { $in: colors.split(",") },
+          }),
+        },
+      },
+      { $count: "totalVariants" },
+    ]);
 
     // Sorting logic
-    const sortedVariants = variants.sort((a, b) => {
-      switch (sort) {
-        case "price-asc":
-          return a.variantPrice - b.variantPrice;
-        case "price-desc":
-          return b.variantPrice - a.variantPrice;
-        case "name-az":
-          return a.productName.localeCompare(b.productName);
-        case "name-za":
-          return b.productName.localeCompare(a.productName);
-        default:
-          return 0; // No sorting for default
-      }
-    });
 
-    // Pagination logic
-    const startIndex = (page - 1) * limit;
-    const endIndex = page * limit;
-    const paginatedVariants = sortedVariants.slice(startIndex, endIndex);
-
-    const total = variants.length; // Total number of variants
-    res.json({ variants: paginatedVariants, total });
+    res.json({ variants, total });
   } catch (error) {
     console.error("Error fetching variants:", error);
     res.status(500).json({ error: error.message });
@@ -252,7 +319,7 @@ const getProduct = async (req, res) => {
   const [productName, productId, variantId] = req.params.details.split("_");
 
   try {
-    const product = await Product.findById(productId)
+    const product = await Product.findOne({ _id: productId, isArchived: false })
       .populate({
         path: "variants.saleId",
         model: "Sale",
@@ -263,14 +330,14 @@ const getProduct = async (req, res) => {
       })
       .lean();
     if (!product) {
-      return res.status(404).json({ error: "Product not found" });
+      return res.status(404).json({ error: "Product not found or archived" });
     }
 
     const variant = product.variants.find(
       (v) => v._id.toString() === variantId
     );
 
-    res.json({
+    res.status(200).json({
       product,
       variant: variant ? variant : null,
     });
