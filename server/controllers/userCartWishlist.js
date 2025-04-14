@@ -130,6 +130,12 @@ const addToCart = async (req, res) => {
       return res.status(404).json({ error: "Variant not found" });
     }
 
+    if (variant.variantStocks <= 0) {
+      return res.status(200).json({
+        warning: "Product is out of stock",
+      });
+    }
+
     const existingQuantity =
       existingItemIndex >= 0 ? user.cart[existingItemIndex].quantity : 0;
 
