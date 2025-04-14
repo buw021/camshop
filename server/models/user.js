@@ -14,6 +14,14 @@ const wishlistSchema = new Schema({
   },
 });
 
+const reviewsSchema = new Schema({
+  reviewId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Review",
+    required: true,
+  },
+});
+
 const orderItemSchema = new Schema({
   orderId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -106,7 +114,7 @@ const userSchema = new Schema(
       default: null,
     },
     reivews: {
-      type: [],
+      type: [reviewsSchema],
       default: [],
     },
 
