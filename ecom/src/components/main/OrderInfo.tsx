@@ -121,7 +121,12 @@ const OrderInfo: React.FC<OrderInfoProps> = ({
           <span className="text-xs">Discount: </span>{" "}
           {totalPrice && (
             <span className="text-right">
-              {"-"} {(originalAmount - totalPrice).toFixed(2)}
+              {"-"}{" "}
+              {(
+                originalAmount -
+                totalPrice +
+                (paymentStatus ? shippingCost : 0)
+              ).toFixed(2)}
             </span>
           )}
         </div>

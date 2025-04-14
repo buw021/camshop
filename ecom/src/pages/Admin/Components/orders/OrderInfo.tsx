@@ -9,6 +9,7 @@ interface OrderInfoProps {
   couponUsed?: string;
   paymentMethod: string;
   shippingOption: string;
+  paymentStatus: boolean;
 }
 const OrderInfo: React.FC<OrderInfoProps> = ({
   orderItems,
@@ -18,6 +19,7 @@ const OrderInfo: React.FC<OrderInfoProps> = ({
   couponUsed,
   paymentMethod,
   shippingOption,
+  paymentStatus,
 }) => {
   return (
     <div className="relative flex h-full w-full flex-col">
@@ -40,24 +42,30 @@ const OrderInfo: React.FC<OrderInfoProps> = ({
                   {item.name} {item.variantName} {item.variantColor}
                 </h1>
 
-                <span className="text-xs text-zinc-500 line-through">
+                <span
+                  className={`text-xs text-zinc-500 ${(item.salePrice || item.discountedPrice) && "line-through"}`}
+                >
                   € {item.price.toFixed(2)}
                 </span>
                 <p className="text-xs">
                   {item.quantity} x €{" "}
                   <span>
-                    {item.discountedPrice && item.discountedPrice > 0
-                      ? item.discountedPrice.toFixed(2)
-                      : item.salePrice.toFixed(2)}
+                    {item.salePrice || item.discountedPrice
+                      ? item.discountedPrice && item.discountedPrice > 0
+                        ? item.discountedPrice.toFixed(2)
+                        : item.salePrice.toFixed(2)
+                      : item.price.toFixed(2)}
                   </span>
                 </p>
                 <p className="text-xs text-zinc-800">
                   Total: €{" "}
                   {(
                     item.quantity *
-                    (item.discountedPrice && item.discountedPrice > 0
-                      ? item.discountedPrice
-                      : item.salePrice)
+                    (item.salePrice || item.discountedPrice
+                      ? item.discountedPrice && item.discountedPrice > 0
+                        ? item.discountedPrice
+                        : item.salePrice
+                      : item.price)
                   ).toFixed(2)}
                 </p>
               </div>
@@ -88,7 +96,12 @@ const OrderInfo: React.FC<OrderInfoProps> = ({
           <span className="text-xs">Discount: </span>{" "}
           {totalPrice && (
             <span className="text-right">
-              {"-"} {(originalAmount - totalPrice).toFixed(2)}
+              {"-"}{" "}
+              {(
+                originalAmount -
+                totalPrice +
+                (paymentStatus ? shippingCost : 0)
+              ).toFixed(2)}
             </span>
           )}
         </div>
@@ -104,7 +117,9 @@ const OrderInfo: React.FC<OrderInfoProps> = ({
 
         <div className="flex justify-between font-bold">
           <span className="">Total:</span>
-          <span className="text-right">€ {totalPrice.toFixed(2)}</span>
+          {paymentStatus
+            ? totalPrice.toFixed(2)
+            : (totalPrice + shippingCost).toFixed(2)}
         </div>
       </div>
     </div>

@@ -219,6 +219,17 @@ const orderCancelRefund = async (req, res) => {
       }
     } else {
       if (populatedOrder.status === "delivered") {
+        if (populatedOrder.deliveryDate) {
+          const currentDate = new Date(Date.now());
+          const deliveryDate = new Date(populatedOrder.deliveryDate);
+          const timeDiff = Math.abs(currentDate - deliveryDate);
+          const diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+          if (diffDays > 30) {
+            return res.status(400).json({
+              error: "Refund request period has expired.",
+            });
+          }
+        }
         populatedOrder.status = "refund requested";
         await populatedOrder.save();
         return res.json({
@@ -268,7 +279,7 @@ const orderReceived = async (req, res) => {
     if (populatedOrder.status !== "shipped") {
       return res.status(400).json({ error: "order is not shipped yet." });
     }
-
+    populatedOrder.deliveryDate = new Date(Date.now());
     populatedOrder.status = "delivered";
     await populatedOrder.save();
 

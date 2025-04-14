@@ -50,6 +50,10 @@ const orderItemSchema = new Schema(
       required: true,
       min: 1,
     },
+    deliveryDate: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );

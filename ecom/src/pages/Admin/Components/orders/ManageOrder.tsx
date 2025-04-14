@@ -156,6 +156,7 @@ const ManageOrder: React.FC<ManageOrderProps> = ({
                     couponUsed={currentOrder.promoCode || ""}
                     paymentMethod={currentOrder.paymentMethod}
                     shippingOption={currentOrder.shippingOption}
+                    paymentStatus={currentOrder.paymentStatus}
                   />
                 </div>
               </div>

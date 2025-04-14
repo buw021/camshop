@@ -55,7 +55,7 @@ exports.validateCancelRefundOrder = [
   body("action")
     .trim()
     .escape()
-    .isIn(["cancel", "confirm", "refund"])
+    .isIn(["cancel", "confirm", "refund", "return"])
     .withMessage("Invalid action value"),
 ];
 

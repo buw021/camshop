@@ -59,7 +59,6 @@ const Admin_Orders = () => {
     setFilters(filter);
   };
 
-
   const closeManageOrder = () => {
     setCurrentOrder(null);
   };
@@ -77,7 +76,6 @@ const Admin_Orders = () => {
           currentOrderIndex: response.data.currentOrderIndex,
           totalOrders: response.data.totalOrders,
         });
-        console.log(response.data);
       }
     } catch (error) {
       console.error("Failed to fetch order data:", error);

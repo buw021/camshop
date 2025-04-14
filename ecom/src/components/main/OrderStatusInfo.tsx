@@ -28,6 +28,7 @@ interface OrderProps {
   trackingNo: string | null;
   receiptLink: string | null;
   _id: string;
+  deliveryDate: Date | null;
 }
 
 const OrderStatusInfo = () => {
@@ -366,8 +367,12 @@ const OrderStatusInfo = () => {
             <button
               id="return-refund"
               name="return-refund"
+              title={`${order?.deliveryDate ? order.deliveryDate > new Date() && "Refund request period has expired." : "Return/Refund"}`}
               className="roboto-medium max-w-40 self-end rounded-md bg-zinc-900 px-3 py-2 leading-3 text-white transition-all duration-200 hover:bg-zinc-700"
               type="button"
+              disabled={
+                order?.deliveryDate ? order.deliveryDate > new Date() : false
+              }
               onClick={(e) => {
                 e.preventDefault();
                 if (!order) return;

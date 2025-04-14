@@ -64,6 +64,7 @@ const updateOrderStatus = async (req, res) => {
         }
         if (order.fulfilled) {
           order.status = "refund requested";
+          order.deliveryDate = new Date(Date.now());
           message = "Refund requested";
         } else {
           order.status = "cancelled";
@@ -89,6 +90,7 @@ const updateOrderStatus = async (req, res) => {
 
       case "updateTracking":
         message = "Tracking number updated.";
+        break;
       default:
         return res.status(400).json({ error: "Invalid action." });
     }

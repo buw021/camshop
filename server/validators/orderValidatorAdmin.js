@@ -75,6 +75,11 @@ exports.validateUpdateOrderStatusAdmin = [
       "refund requested",
       "refund on process",
       "payment failed",
+      "fulfill",
+      "cancel",
+      "updateTracking",
+      "refunding",
+      "",
     ])
     .withMessage("Invalid order status"),
   body("trackingNo").optional().trim().escape(),
