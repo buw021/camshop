@@ -50,7 +50,20 @@ const stripeWebhookHandler = async (req, res) => {
     return res.status(400).send(`Webhook error: ${error.message}`);
   }
 
-  if (event.type === "checkout.session.completed") {
+  switch (event.type) {
+    case "checkout.session.completed":
+      await handleCheckoutSessionCompleted(event.data.object);
+      break;
+
+    case "charge.succeeded":
+      await handleChargeSucceeded(event.data.object);
+      break;
+
+    default:
+      console.warn(`Unhandled event type: ${event.type}`);
+  }
+
+  /* if (event.type === "checkout.session.completed") {
     const session = event.data.object;
     const customOrderId = session.metadata?.customOrderId;
     const userId = session.metadata?.userId;
@@ -102,6 +115,19 @@ const stripeWebhookHandler = async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
+    // CHECK HERE SOON!
+
+    const orderItems = order.items;
+
+    await Promise.all(
+      orderItems.map((item) =>
+        Product.updateOne(
+          { _id: item.productId, "variants._id": item.variantId },
+          { $inc: { "variants.$.stock": -item.quantity } }
+        )
+      )
+    );
+
     order.totalAmount = session.amount_total / 100;
     order.status = "ordered";
     order.paymentStatus = true;
@@ -127,8 +153,94 @@ const stripeWebhookHandler = async (req, res) => {
     order.receiptLink = charge.receipt_url;
 
     await order.save();
-  }
+  } */
   res.status(200).send();
+};
+
+/**
+ * Handles the checkout session completion event.
+ */
+const handleCheckoutSessionCompleted = async (session) => {
+  const { customOrderId, userId, promoCode } = session.metadata || {};
+
+  if (!customOrderId) {
+    console.error("Order ID missing from metadata.");
+    return;
+  }
+
+  const order = await Order.findOne({ customOrderId });
+  if (!order) {
+    console.error(`Order not found for ID: ${customOrderId}`);
+    return;
+  }
+
+  await processPromoCode(userId, promoCode);
+  await updateStockLevels(order.items);
+
+  order.totalAmount = session.amount_total / 100;
+  order.status = "ordered";
+  order.paymentStatus = true;
+  order.paymentUrl = "";
+
+  await order.save();
+};
+
+/**
+ * Handles the charge succeeded event.
+ */
+const handleChargeSucceeded = async (charge) => {
+  const customOrderId = charge.metadata?.customOrderId;
+  if (!customOrderId) {
+    console.error("Order ID missing from metadata.");
+    return;
+  }
+
+  const order = await Order.findOne({ customOrderId });
+  if (!order) {
+    console.error(`Order not found for ID: ${customOrderId}`);
+    return;
+  }
+
+  order.receiptLink = charge.receipt_url;
+  await order.save();
+};
+
+const processPromoCode = async (userId, promoCode) => {
+  if (!promoCode) return;
+
+  let userPromoUsage = await PromoCodeUsed.findOne({ userId });
+
+  if (!userPromoUsage) {
+    userPromoUsage = new PromoCodeUsed({ userId, promoCodeUsed: [] });
+  }
+
+  const isUsed = userPromoUsage.promoCodeUsed.some(
+    (entry) => entry.code === promoCode
+  );
+  if (!isUsed) {
+    userPromoUsage.promoCodeUsed.push({ code: promoCode });
+    await userPromoUsage.save();
+
+    const promo = await PromoCode.findOne({ code: promoCode });
+    if (promo) {
+      promo.usageCount += 1;
+      await promo.save();
+    }
+  }
+};
+
+/**
+ * Updates stock levels for purchased items.
+ */
+const updateStockLevels = async (orderItems) => {
+  await Promise.all(
+    orderItems.map((item) =>
+      Product.updateOne(
+        { _id: item.productId, "variants._id": item.variantId },
+        { $inc: { "variants.$.stock": -item.quantity } }
+      )
+    )
+  );
 };
 
 /* Create Sessions */
@@ -230,7 +342,7 @@ const createNewCheckOutSession = async (req, res) => {
       populatedOrder.shippingCost,
       populatedOrder.userEmail,
       populatedOrder.promoCode,
-      populated.userId
+      user._id
     );
 
     if (!session.url) {
@@ -252,7 +364,7 @@ const createCheckoutSession = async (req, res) => {
   console.log(promoCodeInput);
   try {
     const user = await getUser(usertoken);
-    const shippingCost = await getShippingCost(shippingOption._id);
+    const shippingCost = await getShippingCost(shippingOption);
 
     let customOrderId;
     let isUnique = false;
@@ -288,58 +400,64 @@ const createCheckoutSession = async (req, res) => {
     }); */
 
     // Fetch product and variant details for each item in the cart
-    const orderItems = await Promise.all(
-      cart.map(async (item) => {
-        const product = await Product.findById(item.productId)
-          .populate({
-            path: "variants.saleId",
-            model: "Sale",
-            match: { isOnSale: true },
-            select: "salePrice saleStartDate saleExpiryDate",
-          })
-          .lean();
+    const orderItems = (
+      await Promise.all(
+        cart.map(async (item) => {
+          const product = await Product.findById(item.productId)
+            .populate({
+              path: "variants.saleId",
+              model: "Sale",
+              match: { isOnSale: true },
+              select: "salePrice saleStartDate saleExpiryDate",
+            })
+            .lean();
 
-        if (!product) {
-          throw new Error(`Product not found for ID: ${item.productId}`);
-        }
+          if (!product) {
+            throw new Error(`Product not found for ID: ${item.productId}`);
+          }
 
-        const variant = product.variants.find(
-          (variant) => variant._id.toString() === item.variantId
-        );
-
-        if (!variant) {
-          throw new Error(`Variant not found for ID: ${item.variantId}`);
-        }
-
-        const isOnSale = !!variant.saleId;
-
-        let discountedPrice = null;
-        if (promoCodeInput) {
-          const discountedItem = getItemFinalPrice.discountedItems.find(
-            (discountedItem) =>
-              discountedItem.productId === item.productId &&
-              discountedItem.variantId === item.variantId
+          const variant = product.variants.find(
+            (variant) => variant._id.toString() === item.variantId
           );
-          discountedPrice = discountedItem
-            ? discountedItem.discountedPrice
-            : null;
-        }
 
-        return {
-          productId: item.productId,
-          variantId: item.variantId,
-          name: product.name,
-          variantName: variant.variantName || null,
-          variantColor: variant.variantColor || null,
-          variantImg: variant.variantImgs[0] || null,
-          price: variant.variantPrice,
-          isOnSale: isOnSale,
-          salePrice: isOnSale ? variant.saleId.salePrice : null,
-          discountedPrice: discountedPrice,
-          quantity: item.quantity,
-        };
-      })
-    );
+          if (!variant) {
+            throw new Error(`Variant not found for ID: ${item.variantId}`);
+          }
+
+          if (variant.variantStocks <= 0) {
+            return null; // Return null for excluded items
+          }
+
+          const isOnSale = !!variant.saleId;
+
+          let discountedPrice = null;
+          if (promoCodeInput) {
+            const discountedItem = getItemFinalPrice.discountedItems.find(
+              (discountedItem) =>
+                discountedItem.productId === item.productId &&
+                discountedItem.variantId === item.variantId
+            );
+            discountedPrice = discountedItem
+              ? discountedItem.discountedPrice
+              : null;
+          }
+
+          return {
+            productId: item.productId,
+            variantId: item.variantId,
+            name: product.name,
+            variantName: variant.variantName || null,
+            variantColor: variant.variantColor || null,
+            variantImg: variant.variantImgs[0] || null,
+            price: variant.variantPrice,
+            isOnSale: isOnSale,
+            salePrice: isOnSale ? variant.saleId.salePrice : null,
+            discountedPrice: discountedPrice,
+            quantity: item.quantity,
+          };
+        })
+      )
+    ).filter((item) => item !== null); // Filter out null items
 
     // Calculate the total amount
     const totalAmount = orderItems.reduce(

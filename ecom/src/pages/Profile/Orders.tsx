@@ -15,7 +15,6 @@ const Orders = () => {
         `/get-my-orders?orderStatus=${orderStat}`,
       );
       if (response.data) {
-        console.log(response.data); // Log orders after fetching
         setOrders(response.data);
       }
     } catch (error) {
@@ -58,7 +57,7 @@ const Orders = () => {
           </button>
         </div>
       </div>
-      <div className={`flex h-full w-full flex-col gap-4`}>
+      <div className={`mb-4 flex h-full w-full flex-col gap-4`}>
         {orders.length > 0 ? (
           orders.map((order) => <OrderCard key={order._id} {...order} />)
         ) : (
