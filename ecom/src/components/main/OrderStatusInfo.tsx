@@ -8,6 +8,7 @@ import OrderInfo from "./OrderInfo";
 import { ItemsProps } from "../../interfaces/order";
 import ShippingInfo from "./ShippingInfo";
 import { AddressInterface } from "../../interfaces/user";
+import Review from "./Review";
 
 interface OrderProps {
   createdAt: string;
@@ -29,12 +30,14 @@ interface OrderProps {
   receiptLink: string | null;
   _id: string;
   deliveryDate: Date | null;
+  review: boolean;
 }
 
 const OrderStatusInfo = () => {
   const [order, setOrder] = useState<OrderProps | null>(null);
   const [loading, setLoading] = useState(true);
   const [noData, setNoData] = useState(false);
+  const [toggleReview, setToggleReview] = useState(false);
 
   const payNowButton = document.getElementById("pay-now");
   const refundButton = document.getElementById("return-refund");
@@ -89,6 +92,15 @@ const OrderStatusInfo = () => {
   useEffect(() => {
     getOrderStatus();
   }, [getOrderStatus]);
+
+  useEffect(() => {
+    if (toggleReview) {
+      document.body.classList.add("overflow-hidden");
+      window.scrollTo(0, 0);
+    } else {
+      document.body.classList.remove("overflow-hidden");
+    }
+  }, [toggleReview]);
 
   const handlePayNow = async (orderId: string) => {
     if (!orderId) return;
@@ -201,7 +213,15 @@ const OrderStatusInfo = () => {
   }
 
   return (
-    <div className="flex w-full flex-col items-center gap-2">
+    <div className="mb-8 flex w-full flex-col items-center gap-2">
+      {toggleReview && order && (
+        <Review
+          items={order.items}
+          close={() => setToggleReview(!toggleReview)}
+          orderNumber={order._id}
+          getOrderStatus={getOrderStatus}
+        />
+      )}
       <button
         id="my-orders"
         name="my-orders"
@@ -276,7 +296,7 @@ const OrderStatusInfo = () => {
           </>
         )}
         <div
-          className={`flex w-full ${order?.status === "pending" || order?.status === "shipped" ? "justify-between" : "justify-end"} gap-2`}
+          className={`flex w-full flex-wrap ${order?.status === "pending" || order?.status === "shipped" ? "justify-between" : "justify-end"} gap-2`}
         >
           {["ordered", "pending"].includes(order?.status || "") && (
             <button
@@ -364,40 +384,61 @@ const OrderStatusInfo = () => {
           )}
 
           {order?.status === "delivered" && (
-            <button
-              id="return-refund"
-              name="return-refund"
-              title={`${order?.deliveryDate ? order.deliveryDate > new Date() && "Refund request period has expired." : "Return/Refund"}`}
-              className="roboto-medium max-w-40 self-end rounded-md bg-zinc-900 px-3 py-2 leading-3 text-white transition-all duration-200 hover:bg-zinc-700"
-              type="button"
-              disabled={
-                order?.deliveryDate ? order.deliveryDate > new Date() : false
-              }
-              onClick={(e) => {
-                e.preventDefault();
-                if (!order) return;
-                if (order.status === "delivered") {
-                  if (
-                    window.confirm(
-                      "Are you sure you want to return/refund this order?",
-                    )
-                  ) {
-                    if (refundButton) {
-                      Processing(refundButton);
-                    }
-                    handleCancelOrder(order.customOrderId, "return");
-                  }
+            <>
+              <button
+                id="return-refund"
+                name="return-refund"
+                title={`${order?.deliveryDate ? order.deliveryDate > new Date() && "Refund request period has expired." : "Return/Refund"}`}
+                className="roboto-medium max-w-40 self-end text-nowrap rounded-md bg-zinc-900 px-3 py-2 leading-3 text-white transition-all duration-200 hover:bg-zinc-700"
+                type="button"
+                disabled={
+                  order?.deliveryDate ? order.deliveryDate > new Date() : false
                 }
-              }}
-            >
-              Return/Refund
-            </button>
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (!order) return;
+                  if (order.status === "delivered") {
+                    if (
+                      window.confirm(
+                        "Are you sure you want to return/refund this order?",
+                      )
+                    ) {
+                      if (refundButton) {
+                        Processing(refundButton);
+                      }
+                      handleCancelOrder(order.customOrderId, "return");
+                    }
+                  }
+                }}
+              >
+                Return/Refund
+              </button>
+              <button
+                id="review-product  "
+                name="review-product"
+                className="roboto-medium max-w-40 self-end text-nowrap rounded-md bg-zinc-900 px-3 py-2 leading-3 text-white transition-all duration-200 hover:bg-zinc-700"
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (order.review) {
+                    showToast(
+                      "You have already reviewed this product",
+                      "warning",
+                    );
+                    return;
+                  }
+                  setToggleReview(!toggleReview);
+                }}
+              >
+                Review Product
+              </button>
+            </>
           )}
           {order?.paymentStatus && (
             <a
               href={`${order.receiptLink}`}
               target="_blank"
-              className="roboto-medium max-w-40 self-end rounded-md bg-zinc-900 px-3 py-2 leading-3 text-white transition-all duration-200 hover:cursor-pointer hover:bg-zinc-700"
+              className="roboto-medium max-w-40 self-end text-nowrap rounded-md bg-zinc-900 px-3 py-2 leading-3 text-white transition-all duration-200 hover:cursor-pointer hover:bg-zinc-700"
             >
               View Receipt
             </a>

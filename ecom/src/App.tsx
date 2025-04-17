@@ -5,6 +5,7 @@ import ProtectedRoute from "./pages/Main/ProtectedRoute";
 import { Loading } from "./components/main/Loading";
 import { AuthProvider } from "./contexts/AuthContext"; // Import the AuthProvider
 import Home from "./pages/Main/Home";
+import UserReviews from "./pages/Profile/UserReviews";
 const Orders = React.lazy(() => import("./pages/Profile/Orders"));
 const OrderStatus = React.lazy(() => import("./pages/Main/OrderStatus"));
 const NotFound = React.lazy(() => import("./pages/Main/NotFound"));
@@ -98,6 +99,16 @@ const App: React.FC = () => {
                       <ProtectedRoute>
                         <Layout>
                           <Orders />
+                        </Layout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/my-reviews"
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <UserReviews />
                         </Layout>
                       </ProtectedRoute>
                     }

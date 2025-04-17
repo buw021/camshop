@@ -257,7 +257,7 @@ const Navbar = () => {
           {expandProfile && (
             <>
               {token ? (
-                <section className="bottom-0 flex flex-col gap-2 self-end text-right">
+                <section className="bottom-0 flex flex-col gap-2 self-end text-right pb-1">
                   <p>
                     <span className="roboto-medium text-lg underline"></span>
                   </p>
@@ -278,6 +278,18 @@ const Navbar = () => {
                       <Link to={`/my-profile`} onClick={toggleClose}>
                         <span className="flex-transition-all roboto-medium relative text-zinc-700 duration-200 group-hover:text-zinc-900">
                           Profile
+                          <div className="absolute -bottom-1 left-0 w-full">
+                            <div className="overflow-hidden">
+                              <div className="h-[1px] w-full translate-x-20 bg-zinc-300 transition-all duration-300 ease-in group-hover:translate-x-0"></div>
+                            </div>
+                          </div>
+                        </span>
+                      </Link>
+                    </li>
+                    <li className="group relative cursor-pointer items-center justify-between">
+                      <Link to={`/my-reviews`} onClick={toggleClose}>
+                        <span className="flex-transition-all roboto-medium relative text-zinc-700 duration-200 group-hover:text-zinc-900">
+                          Reviews
                           <div className="absolute -bottom-1 left-0 w-full">
                             <div className="overflow-hidden">
                               <div className="h-[1px] w-full translate-x-20 bg-zinc-300 transition-all duration-300 ease-in group-hover:translate-x-0"></div>

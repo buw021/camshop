@@ -165,6 +165,10 @@ const orderSchema = new Schema(
       type: String,
       default: null,
     },
+    review: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

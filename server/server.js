@@ -44,6 +44,7 @@ app.use("/", require("./routes/saleRoutes"));
 app.use("/", require("./routes/searchRoutes"));
 app.use("/", require("./routes/customerRoutesAdmin"));
 app.use("/", require("./routes/shippingRoutes"));
+app.use("/", require("./routes/reviewRoutes"));
 app.use("/", require("./routes/uploadRoutes"));
 app.use("/uploads", express.static("uploads"));
 
