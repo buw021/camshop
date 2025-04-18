@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import ImagePreview from "../../components/products/ImagePreview";
-import Rating, { reviewStats } from "../../components/reviews/Rating";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import Rating from "../../components/reviews/Rating";
 import { Link, useParams } from "react-router-dom";
 import Navigation from "../../components/main/Navigation";
 import { Product, Variant } from "../../interfaces/products";
@@ -13,40 +12,7 @@ import { useWishlist } from "../../contexts/useWishlist";
 import { showToast } from "../../func/showToast";
 
 import axios from "axios";
-
-const reviewData = [
-  {
-    reviewId: 0,
-    userId: 1,
-    productId: 0,
-    reviewDate: "July 5, 2024",
-    reviewNumber: 5,
-    reviewTitle: "Lorem ipsum dolor sit amet.",
-    reviewText:
-      "Lorem ipsum dolor sit, amet consectetur adipisicing elit. Dolores nulla quibusdam tenetur fugiat optio odit quae animi cupiditate vero praesentium.",
-  },
-  {
-    reviewId: 1,
-    userId: 1,
-    productId: 1,
-    reviewDate: "",
-    reviewNumber: 5,
-    reviewTitle: "",
-    reviewText: "",
-  },
-  {
-    reviewId: 2,
-    userId: 1,
-    productId: 0,
-    reviewDate: "January 05, 2024",
-    reviewNumber: 5,
-    reviewTitle: "Lorem ipsum dolor sit amet.",
-    reviewText:
-      "Lorem ipsum dolor sit, amet consectetur adipisicing elit. Dolores nulla quibusdam tenetur fugiat optio odit quae animi cupiditate vero praesentium.",
-  },
-];
-
-//ADD USER DATA
+import ProductReviews from "../../components/main/ProductReviews";
 
 const ProductDisplay: React.FC = () => {
   const { details } = useParams();
@@ -54,6 +20,27 @@ const ProductDisplay: React.FC = () => {
   const { addToFavs } = useWishlist();
   const [product, setProduct] = useState<Product | null>(null);
   const [variant, setVariant] = useState<Variant | null>(null);
+  const [stats, setStats] = useState({
+    totalAverage: 0,
+    totalReview: 0,
+  });
+
+  const handleReviewDataChange = useCallback(
+    (totalReviews: number, averageRating: number) => {
+      setStats({
+        totalReview: totalReviews,
+        totalAverage: averageRating,
+      });
+    },
+    [],
+  );
+  const targetRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = () => {
+    if (targetRef.current) {
+      targetRef.current.scrollIntoView({ behavior: "smooth" }); // Smooth scrolling effect
+    }
+  };
 
   const prodId = product?._id || "";
   const name = product?.name || "";
@@ -115,17 +102,8 @@ const ProductDisplay: React.FC = () => {
     addToCart(cartItem);
   };
 
-  const filteredRating = reviewData
-    .filter((review) => review.productId === 1)
-    .map((review) => ({
-      productID: review.productId,
-      review: review.reviewNumber,
-    }));
-
-  const stats = reviewStats(filteredRating, 1);
-
   return (
-    <div className="roboto-regular flex flex-col items-center justify-center overflow-auto text-zinc-700">
+    <div className="roboto-regular flex flex-col items-center justify-center overflow-auto pb-10 text-zinc-700">
       <Navigation category={category} subCategory={subCategory}></Navigation>
       <div></div>
       {product ? (
@@ -173,6 +151,10 @@ const ProductDisplay: React.FC = () => {
                     <span className="mx-1.5 h-1 w-1 rounded-full bg-gray-500"></span>
                     <a
                       href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleScroll();
+                      }}
                       className="text-[14px] font-medium leading-[14px] text-gray-500 underline hover:no-underline"
                     >
                       {stats.totalReview} reviews
@@ -340,44 +322,13 @@ const ProductDisplay: React.FC = () => {
             </tbody>
           </table>
         </div>
-        {/*REviews*/}
-        <div className="flex flex-col gap-4">
-          <span className="roboto-bold mb-2 border-b-[1px] border-zinc-200 px-4 py-1 text-center text-2xl uppercase tracking-tighter">
-            Reviews
-          </span>
-
-          <div className="flex flex-col items-center justify-center gap-2">
-            <div className="mb-4 flex gap-4 border-b-[1px] border-zinc-200 pb-4">
-              <ul className="flex flex-row flex-wrap items-center justify-center gap-2">
-                {/*["All", 5, 4, 3, 2, 1].map((num) => (
-                  <li
-                    key={num}
-                    className="flex items-center justify-center gap-1 rounded-full border-[1px] px-3 py-1 hover:cursor-pointer"
-                  >
-                    <span className="roboto-medium text-xs">{num}</span>
-                    <Rating filledStars={1} starSize={"xl"} starLength={1} />
-
-                    <p className="flex items-center gap-1">
-                      <span className="text-xs">(12)</span>
-                    </p>
-                  </li>
-                ))*/}
-              </ul>
-            </div>
-
-            <div className="flex flex-col gap-4 md:gap-10">
-              {/*reviews.map((review) => (
-                <Reviews
-                  firstName=""
-                  lastName=""
-                  reviewNum={review.reviewNumber}
-                  reviewDate={review.reviewDate}
-                  reviewTitle={review.reviewTitle}
-                  reviewText={review.reviewText}
-                />
-              ))*/}
-            </div>
-          </div>
+        <div ref={targetRef}>
+          {prodId && (
+            <ProductReviews
+              productId={prodId}
+              onReviewDataChange={handleReviewDataChange}
+            />
+          )}
         </div>
       </div>
     </div>

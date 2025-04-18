@@ -5,6 +5,7 @@ const {
   reviewProduct,
   updateReview,
   getUserReview,
+  getProductReviews,
 } = require("../controllers/Review");
 const { verifyUserToken } = require("../middleware/authMiddleware");
 const { validateRequest } = require("../middleware/validateRequest");
@@ -30,5 +31,7 @@ router.post(
   validateRequest,
   updateReview
 );
+
+router.get("/get-product-reviews", getProductReviews);
 
 module.exports = router;

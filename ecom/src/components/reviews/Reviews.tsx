@@ -5,7 +5,7 @@ interface Reviews {
   reviewNum: number;
   reviewTitle?: string;
   reviewDate: string;
-  reviewText?: string;
+  reviewMessage?: string;
 }
 const Reviews: React.FC<Reviews> = ({
   firstName,
@@ -13,7 +13,7 @@ const Reviews: React.FC<Reviews> = ({
   reviewNum,
   reviewTitle,
   reviewDate,
-  reviewText,
+  reviewMessage,
 }) => {
   return (
     <div>
@@ -45,7 +45,7 @@ const Reviews: React.FC<Reviews> = ({
             </div>
             <div className="bg-zinc-200 w-[1px] h-full"></div>
             <div className="flex-1 mt-1">
-              <p className="text-pretty text-xs">{reviewText}</p>
+              <p className="text-pretty text-xs">{reviewMessage}</p>
             </div>
           </div>
         </div>

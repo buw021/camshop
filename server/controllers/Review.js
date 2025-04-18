@@ -2,6 +2,7 @@ const Review = require("../models/reviews");
 const Order = require("../models/orders");
 const { getUser } = require("../helpers/getUser");
 const { ObjectId } = require("mongodb");
+
 const reviewProduct = async (req, res) => {
   const { usertoken } = req.cookies;
   const { reviews, orderId } = req.body;
@@ -146,8 +147,142 @@ const getUserReview = async (req, res) => {
   }
 };
 
+const getProductReviews = async (req, res) => {
+  const { productId, filter, sort, currentPage, limit } = req.query;
+  try {
+    const reviews = await Review.aggregate([
+      {
+        $match: {
+          productId: ObjectId.createFromHexString(productId),
+          ...(filter &&
+            filter !== "all" && {
+              rating: { $eq: parseInt(filter) },
+            }),
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "userId",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      { $unwind: "$user" },
+      {
+        $lookup: {
+          from: "orders",
+          localField: "orderId",
+          foreignField: "_id",
+          as: "order",
+        },
+      },
+      { $unwind: "$order" },
+      {
+        $addFields: {
+          matchingItem: {
+            $filter: {
+              input: "$order.items",
+              as: "item",
+              cond: {
+                $and: [
+                  { $eq: ["$$item.productId", "$productId"] },
+                  { $eq: ["$$item.variantId", "$variantId"] },
+                ],
+              },
+            },
+          },
+        },
+      },
+      { $unwind: "$matchingItem" },
+      {
+        $project: {
+          rating: 1,
+          title: 1,
+          message: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          "user.firstName": 1,
+          "user.lastName": 1,
+          name: "$matchingItem.name",
+          variantName: "$matchingItem.variantName",
+          variantColor: "$matchingItem.variantColor",
+          variantImg: "$matchingItem.variantImg",
+        },
+      },
+      { $sort: { createdAt: -1 } },
+      { $skip: (parseInt(currentPage) - 1) * parseInt(limit) },
+      { $limit: parseInt(limit) },
+    ]);
+
+    const totalReviews = await Review.countDocuments({
+      productId: ObjectId.createFromHexString(productId),
+    });
+
+    const totalRating = await Review.aggregate([
+      {
+        $match: {
+          productId: ObjectId.createFromHexString(productId),
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalRating: { $sum: "$rating" },
+        },
+      },
+    ]);
+
+    const ratingCounts = await Review.aggregate([
+      {
+        $match: {
+          productId: ObjectId.createFromHexString(productId),
+        },
+      },
+      {
+        $group: {
+          _id: "$rating",
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $sort: { _id: -1 }, // Sort by rating in descending order
+      },
+    ]);
+
+    // Ensure all ratings from 5 to 1 are present, default to 0 if not available
+    const ratingCountsMap = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    ratingCounts.forEach((rating) => {
+      ratingCountsMap[rating._id] = rating.count;
+    });
+
+    const ratingCountsArray = Object.entries(ratingCountsMap).map(
+      ([rating, count]) => ({
+        rating: parseInt(rating),
+        count,
+      })
+    );
+
+    const averageRating =
+      totalReviews > 0 ? totalRating[0]?.totalRating / totalReviews : 0;
+
+    return res.status(200).json({
+      reviews,
+      currentPage,
+      limit,
+      totalReviews,
+      averageRating,
+      ratingCountsArray,
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "An error occurred", error: error.message });
+  }
+};
 module.exports = {
   reviewProduct,
   updateReview,
   getUserReview,
+  getProductReviews,
 };
