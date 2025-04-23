@@ -4,6 +4,7 @@ const multer = require("multer");
 const sanitize = require("sanitize-filename");
 const fs = require("fs");
 const { type } = require("os");
+const sharp = require("sharp");
 
 const storage = multer.diskStorage({
   destination: "./uploads/",
@@ -29,17 +30,32 @@ const upload = multer({
 
 const uploadImg = async (req, res) => {
   try {
-    const fileGroups = req.files.reduce((groups, file) => {
+    const fileGroups = {};
+    for (const file of req.files) {
       const sanitizedFilename = sanitize(file.filename);
       const idx = file.fieldname.replace("variant", "");
-      if (!groups[idx]) {
-        groups[idx] = [];
+
+      if (!fileGroups[idx]) {
+        fileGroups[idx] = [];
       }
-      groups[idx].push(sanitizedFilename);
-      return groups;
-    }, {});
+
+      const inputPath = path.join(__dirname, "..", "uploads", sanitizedFilename);
+      const tempOutputPath = path.join(__dirname, "..", "uploads", `temp-${sanitizedFilename}`);
+
+      // Resize image using Sharp and save it as a temporary file
+      await sharp(inputPath)
+        .resize({ width: 800 }) // Adjust width as needed
+        .toFile(tempOutputPath);
+
+      // Replace the original file with the resized one
+      fs.renameSync(tempOutputPath, inputPath);
+
+      fileGroups[idx].push(sanitizedFilename);
+    }
+
     res.json({ filePaths: fileGroups, success: true });
   } catch (error) {
+    console.error("Error processing images:", error);
     res.status(500).json({ error: "File upload failed." });
   }
 };
@@ -47,7 +63,7 @@ const uploadImg = async (req, res) => {
 const deleteUpImg = async (req, res) => {
   const { filePaths } = req.body;
   console.log(filePaths);
-    try {
+  try {
     // Iterate over each key in the filePaths object
     Object.keys(filePaths).forEach((key) => {
       const files = filePaths[key];
@@ -63,7 +79,7 @@ const deleteUpImg = async (req, res) => {
   } catch (error) {
     console.error("Error deleting files:", error);
     res.status(500).json({ success: false, error: "Failed to delete files." });
-  } 
+  }
 };
 
 const deleteOldImg = async (req, res) => {

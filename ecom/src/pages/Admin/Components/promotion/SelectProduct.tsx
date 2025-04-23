@@ -7,6 +7,7 @@ interface SelectedProducts {
   productId: string;
   name: string;
   category: string;
+  brand: string;
   variantId: string;
   variantName: string;
   variantColor: string;
@@ -135,6 +136,7 @@ const SelectProduct: React.FC<{
       productId: selected.productId,
       name: selected.name,
       category: selected.category,
+      brand: selected.brand,
       variantId: selected.variantId,
       variantName: selected.variantName,
       variantColor: selected.variantColor,
@@ -323,7 +325,10 @@ const SelectProduct: React.FC<{
                 }
                 if (
                   sale.discountType === "fixed" &&
-                  value > Math.min(...sale.selectedProducts.map((p) => p.variantPrice))
+                  value >
+                    Math.min(
+                      ...sale.selectedProducts.map((p) => p.variantPrice),
+                    )
                 ) {
                   value = 1;
                 }

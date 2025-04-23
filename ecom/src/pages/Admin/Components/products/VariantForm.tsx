@@ -35,8 +35,7 @@ interface VariantFormProps {
     index: number,
   ) => void;
   handleDeleteImage: (index: number, formIndex: number) => void;
-  handleDeleteOldImage: (index: number, formIndex: number, url: string) => void;
-  moveOldImage: (
+  moveImage: (
     index: number,
     direction: "up" | "down",
     formIndex: number,
@@ -53,9 +52,8 @@ const VariantForm: React.FC<VariantFormProps> = ({
   removeThis,
   handleFileSelection,
   handleDeleteImage,
-  handleDeleteOldImage,
   errMsg,
-  moveOldImage,
+  moveImage,
   contentList,
 }) => {
   const [content, setContent] = useState<string>("");
@@ -175,6 +173,13 @@ const VariantForm: React.FC<VariantFormProps> = ({
                   onChange={(e) => {
                     setContent(e.target.value);
                   }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault;
+                      insertContent(formIndex, content);
+                      setContent("");
+                    }
+                  }}
                   errMsg=""
                 ></InputBox>
                 <button
@@ -234,78 +239,47 @@ const VariantForm: React.FC<VariantFormProps> = ({
             ></input>
 
             <div
-              className={`flex h-full min-h-40 flex-col flex-wrap justify-center gap-2 overflow-auto rounded-md bg-zinc-100 p-2.5 ${errMsg.images && "ring-2 ring-red-200"}`}
+              className={`flex h-full min-h-40 flex-wrap justify-center gap-2 overflow-auto rounded-md bg-zinc-100 p-2.5 ${errMsg.images && "ring-2 ring-red-200"}`}
             >
-              Old images
-              <div className="flex flex-wrap gap-2 border-b-2 pb-2">
-                {variant.variantImgs.map((url, index) => (
-                  <div
-                    key={index}
-                    className="relative max-h-14 max-w-14 rounded bg-white p-1"
+              {variant.previewUrl.map((url, index) => (
+                <div
+                  key={index}
+                  className="relative max-h-14 max-w-14 rounded bg-white p-1"
+                >
+                  <img
+                    src={url}
+                    alt={`Preview ${index}`}
+                    className="h-auto w-full"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteImage(index, formIndex)}
+                    className="absolute right-0 top-0 rounded-full bg-zinc-600/70 px-1 text-white hover:bg-red-600"
                   >
-                    <img
-                      src={`http://localhost:3000/uploads/${url}`}
-                      alt={`Preview ${index}`}
-                      className="h-auto w-full"
-                    />
+                    &times;
+                  </button>
+                  <div className="absolute bottom-0 right-0 flex">
                     <button
                       type="button"
-                      onClick={() =>
-                        handleDeleteOldImage(index, formIndex, url)
-                      }
-                      className="absolute right-0 top-0 rounded-full bg-zinc-600/70 px-1 text-white hover:bg-red-600"
+                      onClick={() => moveImage(index, "up", formIndex)}
+                      className="flex rounded-full bg-gray-200 px-1 text-gray-700 hover:bg-gray-300"
                     >
-                      &times;
+                      <span className="material-symbols-outlined text-[12px]">
+                        arrow_back
+                      </span>
                     </button>
-                    <div className="absolute bottom-0 right-0 flex">
-                      <button
-                        type="button"
-                        onClick={() => moveOldImage(index, "up", formIndex)}
-                        className="flex rounded-full bg-gray-200 px-1 text-gray-700 hover:bg-gray-300"
-                      >
-                        <span className="material-symbols-outlined text-[12px]">
-                          arrow_back
-                        </span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => moveOldImage(index, "down", formIndex)}
-                        className="flex rounded-full bg-gray-200 px-1 text-gray-700 hover:bg-gray-300"
-                      >
-                        <span className="material-symbols-outlined text-[12px]">
-                          arrow_forward
-                        </span>
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => moveImage(index, "down", formIndex)}
+                      className="flex rounded-full bg-gray-200 px-1 text-gray-700 hover:bg-gray-300"
+                    >
+                      <span className="material-symbols-outlined text-[12px]">
+                        arrow_forward
+                      </span>
+                    </button>
                   </div>
-                ))}
-              </div>
-              {variant.previewUrl.length > 0 && (
-                <>
-                  To be Added:
-                  <div className="flex flex-wrap gap-2 border-b-2 pb-2">
-                    {variant.previewUrl.map((url, index) => (
-                      <div
-                        key={index}
-                        className="relative max-h-14 max-w-14 rounded bg-white p-1"
-                      >
-                        <img
-                          src={url}
-                          alt={`Preview ${index}`}
-                          className="h-auto w-full"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteImage(index, formIndex)}
-                          className="absolute right-0 top-0 rounded-full bg-zinc-600/70 px-1 text-white hover:bg-red-600"
-                        >
-                          &times;
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
+                </div>
+              ))}
             </div>
             {errMsg.images && (
               <span className="text-[11px] font-normal text-red-600">

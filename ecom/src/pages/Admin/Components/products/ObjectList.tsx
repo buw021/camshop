@@ -14,21 +14,19 @@ const formatValue = (value: unknown) => {
   return String(value);
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const ObjectList: React.FC<{
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  objectList: any;
+  objectList: { [key: string]: any };
 
   deleteList: (index: number) => void;
 }> = ({ objectList, deleteList }) => {
   return (
-    <ul className="divide-y-2">
+    <ul className="divide-y-2 overflow-auto">
       {Object.entries(objectList).map(([key, value], index) => (
         <li
           key={key}
-          className="flex justify-between gap-2 px-2 py-0.5 hover:bg-zinc-200"
+          className="flex justify-start gap-1 text-nowrap px-2 py-0.5 hover:bg-zinc-200"
         >
-          <span>{formatValue(value)}</span>{" "}
           <button
             className="flex items-center"
             type="button"
@@ -38,6 +36,9 @@ export const ObjectList: React.FC<{
               delete
             </span>
           </button>
+          <span>|</span>
+          <span className="font-medium">{key}:</span>
+          <span>{formatValue(value)}</span>{" "}
         </li>
       ))}
     </ul>

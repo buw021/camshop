@@ -235,7 +235,7 @@ const ProductDisplay: React.FC = () => {
                 {variants.length > 1 && (
                   <>
                     <p className="roboto-medium text-lg">Select Variation :</p>
-                    <div className="flex flex-row justify-start gap-1">
+                    <div className="flex max-w-[500px] flex-row justify-start gap-1 overflow-x-auto p-3">
                       {variants.map((variant, index) => (
                         <Link
                           key={index}
@@ -293,7 +293,9 @@ const ProductDisplay: React.FC = () => {
           <span className="roboto-bold border-b-[1px] border-zinc-200 px-4 py-1 text-center text-2xl uppercase tracking-tighter">
             Description
           </span>
-          <p className="roboto text-pretty text-sm">{description}</p>
+          <p className="roboto whitespace-pre-line text-pretty text-sm">
+            {description}
+          </p>
           <span className="roboto-bold -mb-2 self-center">In the box</span>
           <ul className="self-center text-sm">
             {inTheBox.map((item, index) => (

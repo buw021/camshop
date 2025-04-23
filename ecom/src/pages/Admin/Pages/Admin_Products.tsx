@@ -51,6 +51,7 @@ const Admin_Products: React.FC<{ setIsDirty: (dirty: boolean) => void }> = ({
   const fetchProducToEdit = async (id: string) => {
     try {
       const response = await axiosInstance.get(`/getFullProduct?id=${id}`);
+
       setEditProd(response.data);
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -100,24 +101,6 @@ const Admin_Products: React.FC<{ setIsDirty: (dirty: boolean) => void }> = ({
     }
   };
 
-  /* Search from database
-  const handleSearch = async (search: string) => {
-    const command = archive ? true : false;
-    if (search === "") {
-      fetchProducts();
-      return;
-    }
-    try {
-      const response = await axiosInstance.get(
-        `/search-products?search=${search}&command=${command}`,
-      );
-
-      setProducts(response.data);
-    } catch (error) {
-      console.error("Error fetching products:", error);
-    }
-  }; */
-
   return (
     <>
       <div className="relative flex h-full w-full flex-col rounded-xl bg-white p-4 ring-2 ring-zinc-300/70 sm:p-10">
@@ -160,7 +143,7 @@ const Admin_Products: React.FC<{ setIsDirty: (dirty: boolean) => void }> = ({
           {archive ? "Archive" : "Product"} List{" "}
         </h1>
         <div className="roboto-medium flex flex-wrap items-center justify-between gap-2 uppercase text-zinc-500">
-          <div className="flex items-center gap-4 flex-wrap">
+          <div className="flex flex-wrap items-center gap-4">
             <button
               className="rounded-md bg-zinc-800 px-2 py-[7px] pl-3 pr-3 text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-700"
               onClick={() => fetchProducts(search)}

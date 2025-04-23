@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ObjectList } from "./ObjectList";
-import VariantForm from "./VariantForm2";
+import VariantForm from "./VariantForm";
 import axiosInstance from "../../Services/axiosInstance";
 import PreviewForm from "./ProductFormPreview";
 import { Variant } from "../interface/interfaces";
@@ -8,6 +8,8 @@ import { subCats } from "./categories";
 import { InputBox } from "./InputBox";
 import { useProduct } from "../../hooks/products";
 import { showToast } from "../showToast";
+import SpecificationConverter from "./SpecificationConverter";
+import AutoAddContent from "./AutoAddContent";
 
 const renderOptions = (category: string): React.ReactNode => {
   const options = subCats[category] || [];
@@ -82,36 +84,70 @@ const ProductForm: React.FC<{
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [showingVariant, setShowingVariant] = useState<number>(2);
   const [preview, setPreview] = useState<boolean>(false);
-
   const [content, setContent] = useState<string>("");
+  const [contentList, setContentList] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [displayProgress, setDisplayProgress] = useState(0); // Gradual progress display
 
   const handleFileUpload = async () => {
     try {
       const formData = new FormData();
 
+      // Append files to FormData
       product.variants.forEach((variant, idx) => {
         (variant.selectedImgFiles as File[]).forEach((file) => {
-          formData.append(`variant${idx}`, file);
+          if (file) {
+            formData.append(`variant${idx}`, file);
+          }
         });
       });
 
-      // Upload files
-      const response = await axiosInstance.post("/upload", formData);
+      setPreview(true); // Show loading indicator
+
+      // Perform the Axios POST request with onUploadProgress
+      const response = await axiosInstance.post("/upload", formData, {
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round(
+            progressEvent.total
+              ? (progressEvent.loaded * 100) / progressEvent.total
+              : 0,
+          );
+
+          animateProgress(percentCompleted);
+        },
+      });
+
       const data = response.data;
 
       if (data.success) {
+        animateProgress(100);
         const filePaths: string[] = data.filePaths;
         return filePaths;
       } else {
-        console.log("File upload failed");
-        showToast("An Error has occured: Error on uploading Image", "error");
+        showToast("An error occurred during the upload.", "error");
+        setDisplayProgress(0);
         return false;
       }
     } catch (error) {
       console.error("File upload error:", error);
+      setDisplayProgress(0);
+      showToast("An error occurred: Unable to upload the images.", "error");
       return false;
     }
+  };
+
+  const animateProgress = (target: number) => {
+    const step = 1; // Increment by 1% per step
+    const interval = 20; // Interval in milliseconds (adjust for smoothness)
+    const intervalId = setInterval(() => {
+      setDisplayProgress((prev) => {
+        if (prev >= target) {
+          clearInterval(intervalId); // Stop when target is reached
+          return target;
+        }
+        return prev + step; // Increment the display progress
+      });
+    }, interval);
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -189,10 +225,10 @@ const ProductForm: React.FC<{
     if (specTitle && specVal) {
       setProduct((prevProduct) => ({
         ...prevProduct,
-        specifications: [
+        specifications: {
           ...prevProduct.specifications,
-          { [specTitle]: specVal },
-        ],
+          [specTitle]: specVal,
+        },
       }));
       setSpecTitle("");
       setSpecVal("");
@@ -269,8 +305,10 @@ const ProductForm: React.FC<{
 
   const deleteList = (itemIndex: number) => {
     setProduct((prevProduct) => {
-      const updatedSpecifications = prevProduct.specifications.filter(
-        (_, iIdx) => iIdx !== itemIndex,
+      const updatedSpecifications = Object.fromEntries(
+        Object.entries(prevProduct.specifications).filter(
+          (_, iIdx) => iIdx !== itemIndex,
+        ),
       );
 
       return {
@@ -458,7 +496,7 @@ const ProductForm: React.FC<{
       subCategory: "",
       brand: "",
       description: "",
-      specifications: [],
+      specifications: {},
       variants: [
         {
           variantName: "",
@@ -519,6 +557,22 @@ const ProductForm: React.FC<{
     }
   };
 
+  const getAllVariantContent = React.useCallback(() => {
+    const contentSet = new Set<string>();
+
+    product.variants.forEach((variant: Variant) => {
+      variant.variantContent.forEach((content: string) => {
+        contentSet.add(content);
+      });
+    });
+
+    setContentList(Array.from(contentSet)); // Convert Set to an array
+  }, [product.variants]);
+
+  useEffect(() => {
+    getAllVariantContent();
+  }, [getAllVariantContent]);
+
   return (
     <form className="relative flex h-full w-full flex-col gap-2 overflow-hidden rounded-lg bg-white px-6 py-4 text-xs">
       {preview && (
@@ -528,6 +582,7 @@ const ProductForm: React.FC<{
             togglePreview={togglePreview}
             confirm={confirm}
             processing={false}
+            uploadProgress={displayProgress}
           ></PreviewForm>
         </>
       )}
@@ -889,6 +944,17 @@ const ProductForm: React.FC<{
           >
             Insert
           </button>
+          <SpecificationConverter
+            insert={(params) => {
+              setProduct((prevProduct) => ({
+                ...prevProduct,
+                specifications: {
+                  ...prevProduct.specifications,
+                  ...params,
+                },
+              }));
+            }}
+          ></SpecificationConverter>
           <div className="h-full min-h-40 overflow-auto rounded-md bg-zinc-100 p-2.5">
             <ObjectList
               objectList={product.specifications}
@@ -995,6 +1061,17 @@ const ProductForm: React.FC<{
                 >
                   Insert
                 </button>
+                {contentList.length > 0 && (
+                  <AutoAddContent
+                    array={contentList}
+                    add={(array) => {
+                      array.forEach((val) => {
+                        insertContent(0, val);
+                        setContent("");
+                      });
+                    }}
+                  ></AutoAddContent>
+                )}
                 <div className="h-28 overflow-auto rounded-md bg-zinc-100 p-2.5">
                   {product.variants[0].variantContent.length === 0 && (
                     <>
@@ -1135,6 +1212,7 @@ const ProductForm: React.FC<{
                 handleDeleteImage={handleDeleteImage}
                 errMsg={getVariantErrors(index)}
                 moveImage={moveImage}
+                contentList={contentList}
               />
             </div>
           );

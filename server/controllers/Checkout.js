@@ -361,7 +361,7 @@ const createNewCheckOutSession = async (req, res) => {
 const createCheckoutSession = async (req, res) => {
   const { usertoken } = req.cookies;
   const { cart, address, shippingOption, promoCodeInput, userEmail } = req.body;
-  console.log(promoCodeInput);
+
   try {
     const user = await getUser(usertoken);
     const shippingCost = await getShippingCost(shippingOption);

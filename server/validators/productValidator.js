@@ -2,30 +2,21 @@ const { body, query } = require("express-validator");
 const { validatePageAndLimit } = require("./pageAndLimit");
 
 const validateSpecifications = [
-  // Validate that `specifications` is an array
+  // Validate that `specifications` is an object
   body("product.specifications")
-    .isArray({ min: 1 })
-    .withMessage("Specifications must be a non-empty array"),
+    .isObject()
+    .withMessage("Specifications must be an object"),
 
-  // Validate each element in the `specifications` array
-  body("product.specifications.*").custom((spec) => {
-    // Ensure each element is an object with one key-value pair
-    if (
-      typeof spec !== "object" ||
-      spec === null ||
-      Array.isArray(spec) ||
-      Object.keys(spec).length !== 1
-    ) {
-      throw new Error(
-        "Each specification must be an object with exactly one key-value pair"
-      );
-    }
-    // Ensure the key and value are both valid
-    const key = Object.keys(spec)[0];
-    const value = spec[key];
-    if (!key || typeof key !== "string" || !value) {
-      throw new Error("Each key-value pair must have a valid key and value");
-    }
+  // Validate each key-value pair in the `specifications` object
+  body("product.specifications").custom((specifications) => {
+    Object.entries(specifications).forEach(([key, value]) => {
+      if (typeof key !== "string" || !key.trim()) {
+        throw new Error("Each specification key must be a non-empty string");
+      }
+      if (typeof value !== "string" || !value.trim()) {
+        throw new Error("Each specification value must be a non-empty string");
+      }
+    });
     return true; // Validation passed
   }),
 ];
@@ -38,8 +29,7 @@ const validateProduct = [
   body("product.name")
     .exists({ checkFalsy: true })
     .withMessage("Product name is required")
-    .trim()
-    .escape(),
+    .trim(),
 
   // Validate and sanitize `category`
   body("product.category")
@@ -88,20 +78,19 @@ const validateProduct = [
     .withMessage("Variants must be an array")
     .custom((variants) => {
       variants.forEach((variant) => {
-        if (!variant.variantName || typeof variant.variantName !== "string") {
+        if (variant.variantName && typeof variant.variantName !== "string") {
           throw new Error("Variant name must be a valid string");
         }
         if (variant.variantColor && typeof variant.variantColor !== "string") {
           throw new Error("Variant color must be a valid string");
         }
-        if (!variant.variantPrice || typeof variant.variantPrice !== "number") {
-          throw new Error("Variant price must be a number");
+        const price = Number(variant.variantPrice);
+        if (isNaN(price) || price <= 0) {
+          throw new Error("Variant price must be a valid positive number");
         }
-        if (
-          !variant.variantStocks ||
-          typeof variant.variantStocks !== "number"
-        ) {
-          throw new Error("Variant stocks must be a number");
+        const stocks = Number(variant.variantStocks);
+        if (isNaN(stocks) || stocks <= 0) {
+          throw new Error("Variant stocks must be a valid positive number");
         }
         if (variant.variantImgs && !Array.isArray(variant.variantImgs)) {
           throw new Error("Variant images must be an array of strings");
@@ -110,19 +99,38 @@ const validateProduct = [
       return true;
     }),
 ];
-
 const validateImgs = (fieldName) => {
   return [
     body(fieldName) // Use the dynamic field name here
-      .isArray()
-      .withMessage(`${fieldName} must be an array of strings`)
+      .optional()
       .custom((images) => {
-        images.forEach((image) => {
-          if (typeof image !== "string") {
+        if (!images || typeof images !== "object") {
+          throw new Error(
+            `${fieldName} must be an object with numeric keys or an empty array`
+          );
+        }
+        if (Array.isArray(images) && images.length === 0) {
+          return true; // Allow an empty array
+        }
+        Object.keys(images).forEach((key) => {
+          if (!/^\d+$/.test(key)) {
             throw new Error(
-              `Each item in the ${fieldName} array must be a string`
+              `Each key in ${fieldName} must be a numeric string`
             );
           }
+          const imageArray = images[key];
+          if (!Array.isArray(imageArray)) {
+            throw new Error(
+              `Each value in ${fieldName} must be an array of strings`
+            );
+          }
+          imageArray.forEach((image) => {
+            if (typeof image !== "string") {
+              throw new Error(
+                `Each item in the ${fieldName}[${key}] array must be a string`
+              );
+            }
+          });
         });
         return true; // Validation passed
       }),
@@ -145,19 +153,11 @@ exports.validateArchiveProducts = [
 ];
 
 exports.validateGetProducts = [
-  query("filters").optional().isArray().withMessage("Filters must be an array"),
-  query("filters.*")
-    .isIn([
-      "category",
-      "subCategory",
-      "brand",
-      "tags",
-      "specifications",
-      "variants",
-    ])
-    .withMessage(
-      "Each filter must be one of: category, subCategory, brand, tags, specifications, variants"
-    ),
+  query("filters.category")
+    .optional()
+    .isArray()
+    .withMessage("Filters must be an array"),
+
   query("archive").isBoolean().withMessage("Command must be a boolean"),
   query("search")
     .optional()
@@ -169,5 +169,5 @@ exports.validateGetProducts = [
 ];
 
 exports.validateProductId = [
-  body("id").isMongoId().withMessage("Invalid product ID format"),
+  query("id").isMongoId().withMessage("Invalid product ID format"),
 ];

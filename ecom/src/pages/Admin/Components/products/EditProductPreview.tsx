@@ -1,7 +1,4 @@
 import React, { ReactNode, useState } from "react";
-interface Attributes {
-  [key: string]: string;
-}
 
 interface Variant {
   variantName: string;
@@ -21,7 +18,7 @@ interface Product {
   subCategory: string;
   brand: string;
   description: string;
-  specifications: Attributes[];
+  specifications: { [key: string]: string };
   variants: Variant[];
   tags: string[];
   _id?: string;
@@ -29,8 +26,9 @@ interface Product {
 const AccordionSection: React.FC<{
   title: string;
   children: ReactNode;
-}> = ({ title, children }) => {
-  const [isOpen, setIsOpen] = useState(true);
+  open: boolean;
+}> = ({ title, children, open }) => {
+  const [isOpen, setIsOpen] = useState(open);
   return (
     <div className="accordion-section mb-2">
       <div
@@ -65,9 +63,26 @@ const PreviewForm: React.FC<{
   togglePreview: () => void;
   confirm: () => void;
   processing: boolean;
-}> = ({ product, togglePreview, confirm, processing }) => {
+  uploadProgress: number;
+}> = ({ product, togglePreview, confirm, processing, uploadProgress }) => {
   return (
     <div className="absolute left-0 top-0 z-30 flex h-full w-full justify-center rounded bg-zinc-600/50 p-2.5 text-sm tracking-wide backdrop-blur-sm lg:p-10">
+      {uploadProgress > 0 && (
+        <div className="absolute left-0 top-0 z-40 flex h-full w-full flex-col items-center justify-center bg-zinc-500/30 backdrop-blur-sm">
+          <p className="tracking wide w-full text-center text-sm font-medium leading-3 text-gray-700">
+            Uploading Images
+          </p>
+          <div className="relative mt-2 flex h-5 w-40 overflow-hidden rounded-full border-[1px] border-zinc-400 bg-zinc-200">
+            <div
+              className="h-full bg-blue-600 transition-all"
+              style={{ width: `${uploadProgress}%` }}
+            ></div>
+            <p className="tracking wide absolute w-full text-center text-sm font-medium text-gray-700">
+              {uploadProgress}%
+            </p>
+          </div>
+        </div>
+      )}
       <div className="container relative flex h-full w-full flex-col gap-4 overflow-scroll rounded-md bg-zinc-100 p-2.5 px-10">
         <span
           className={`material-symbols-outlined absolute right-2 top-2 z-20 h-8 w-8 select-none self-end rounded-full bg-zinc-900/10 text-center text-xl leading-8 text-zinc-800 backdrop-blur-sm transition-all duration-100 ease-linear hover:cursor-pointer hover:text-zinc-500`}
@@ -81,7 +96,7 @@ const PreviewForm: React.FC<{
         <div>
           <div className="product-accordion rounded-md bg-white p-4 shadow-md">
             <h2 className="mb-4 text-2xl font-bold">{product.name}</h2>
-            <AccordionSection title="General Information">
+            <AccordionSection title="General Information" open={true}>
               <p>
                 <strong>Category:</strong>{" "}
                 <span className="capitalize">{product.category}</span>
@@ -113,19 +128,19 @@ const PreviewForm: React.FC<{
                 </>
               )}
             </AccordionSection>
-            <AccordionSection title="Specifications">
-              {product.specifications.map((spec, idx) => (
-                <div key={idx}>
-                  {Object.entries(spec).map(([key, value]) => (
-                    <p key={key}>
+            <AccordionSection title="Specifications" open={true}>
+              {Object.entries(product.specifications).map(
+                ([key, value], idx) => (
+                  <div key={idx}>
+                    <p>
                       <strong>{key}:</strong> {value}
                     </p>
-                  ))}
-                </div>
-              ))}
+                  </div>
+                ),
+              )}
             </AccordionSection>
             {product.variants.length > 1 && (
-              <AccordionSection title="Variants">
+              <AccordionSection title="Variants" open={true}>
                 <div className="flex flex-col divide-y-2 divide-zinc-200">
                   {product.variants.map((variant, idx) => (
                     <div key={idx}>
@@ -187,7 +202,7 @@ const PreviewForm: React.FC<{
               </AccordionSection>
             )}
             {product.variants.length === 1 && (
-              <AccordionSection title="Images">
+              <AccordionSection title="Images" open={false}>
                 <div className="flex flex-col gap-2">
                   Old Images
                   <div className="flex gap-2">
@@ -223,7 +238,7 @@ const PreviewForm: React.FC<{
               </AccordionSection>
             )}
             {product.tags.length > 0 && (
-              <AccordionSection title="Tags">
+              <AccordionSection title="Tags" open={true}>
                 <p>{product.tags.join(", ")}</p>
               </AccordionSection>
             )}

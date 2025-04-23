@@ -1,9 +1,4 @@
 import React, { ReactNode, useState } from "react";
-
-interface Attributes {
-  [key: string]: string;
-}
-
 interface Variant {
   variantName: string;
   variantColor?: string;
@@ -22,7 +17,7 @@ interface Product {
   subCategory: string;
   brand: string;
   description: string;
-  specifications: Attributes[];
+  specifications: { [key: string]: string };
   variants: Variant[];
   tags: string[];
   _id?: string;
@@ -125,19 +120,17 @@ const PreviewForm: React.FC<{
               )}
             </AccordionSection>
             <AccordionSection title="Specifications">
-              {Array.isArray(product.specifications) &&
-              product.specifications.length > 0 ? (
-                product.specifications.map((spec, idx) => (
-                  <div key={idx}>
-                    {Object.entries(spec).map(([key, value]) => (
-                      <p key={key}>
-                        <strong>{key}:</strong> {value}
-                      </p>
-                    ))}
-                  </div>
+              {product.specifications &&
+              Object.keys(product.specifications).length > 0 ? (
+                Object.entries(product.specifications).map(([key, value]) => (
+                  <p key={key} className="text-sm">
+                    <strong>{key}:</strong> {String(value)}
+                  </p>
                 ))
               ) : (
-                <p>No specifications available.</p>
+                <p className="text-sm text-gray-500">
+                  No specifications available.
+                </p>
               )}
             </AccordionSection>
             {product.variants.length > 1 && (

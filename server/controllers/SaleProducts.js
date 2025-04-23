@@ -3,9 +3,22 @@ const Sale = require("../models/sale");
 const agenda = require("../jobs/agenda");
 
 const browseProducts = async (req, res) => {
+  const { search, currentPage, limit } = req.query;
   try {
     const products = await Product.aggregate([
-      { $match: { isArchived: false } },
+      {
+        $match: {
+          isArchived: false,
+          $or: [
+            { name: { $regex: search, $options: "i" } },
+            { category: { $regex: search, $options: "i" } },
+            { brand: { $regex: search, $options: "i" } },
+            {
+              "variants.variantName": { $regex: search, $options: "i" },
+            },
+          ],
+        },
+      },
       {
         $lookup: {
           from: "sales",
@@ -41,31 +54,77 @@ const browseProducts = async (req, res) => {
         },
       },
       {
-        $group: {
-          _id: "$_id",
-          name: { $first: "$name" },
-          category: { $first: "$category" },
-          variants: {
-            $push: {
-              _id: "$variants._id",
-              variantName: "$variants.variantName",
-              variantColor: "$variants.variantColor",
-              variantPrice: "$variants.variantPrice",
-            },
-          },
+        $project: {
+          productId: "$_id",
+          name: "$name",
+          category: "$category",
+          variantId: "$variants._id",
+          brand: "$brand",
+          variantName: "$variants.variantName",
+          variantColor: "$variants.variantColor",
+          variantPrice: "$variants.variantPrice",
         },
       },
       {
-        $project: {
-          _id: 1,
-          name: 1,
-          category: 1,
-          variants: 1,
+        $skip: (parseInt(currentPage) - 1) * parseInt(limit),
+      },
+      {
+        $limit: parseInt(limit),
+      },
+    ]);
+
+    const totalProducts = await Product.aggregate([
+      {
+        $match: {
+          isArchived: false,
+          $or: [
+            { name: { $regex: search, $options: "i" } },
+            { category: { $regex: search, $options: "i" } },
+            { brand: { $regex: search, $options: "i" } },
+            {
+              "variants.variantName": { $regex: search, $options: "i" },
+            },
+          ],
+        },
+      },
+      { $unwind: "$variants" },
+      {
+        $lookup: {
+          from: "sales",
+          localField: "variants.saleId",
+          foreignField: "_id",
+          as: "saleInfo",
+        },
+      },
+      {
+        $lookup: {
+          from: "sales",
+          localField: "variants.saleId",
+          foreignField: "_id",
+          as: "variantSaleInfo",
+        },
+      },
+      {
+        $unwind: { path: "$variantSaleInfo", preserveNullAndEmptyArrays: true },
+      },
+      {
+        $match: {
+          $or: [
+            { variantSaleInfo: { $eq: null } },
+            { "variantSaleInfo.saleExpiryDate": { $lt: new Date() } },
+            {
+              $and: [
+                { "variantSaleInfo.isOnSale": false },
+                { "variantSaleInfo.saleExpiryDate": { $lt: new Date() } },
+              ],
+            },
+          ],
         },
       },
     ]);
 
-    res.json(products);
+    const totalPages = Math.ceil(totalProducts.length / limit);
+    res.json({ products, totalPages: totalPages });
   } catch (error) {
     console.error("Error fetching product variants:", error);
     res.status(500).json({ error: "Failed to fetch product variants." });

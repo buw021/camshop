@@ -13,7 +13,7 @@ export const useProduct = (data: Product) => {
     subCategory: data.subCategory,
     brand: data.brand,
     description: data.description,
-    specifications: Array.isArray(data.specifications) ? data.specifications : [],
+    specifications: data.specifications,
     variants: data.variants.map((variant) => ({
       ...variant,
       selectedImgFiles: [],
@@ -28,7 +28,7 @@ export const useProduct = (data: Product) => {
     subCategory: data.subCategory,
     brand: data.brand,
     description: data.description,
-    specifications: Array.isArray(data.specifications) ? data.specifications : [],
+    specifications: data.specifications,
     variants: data.variants.map((variant) => ({
       ...variant,
       selectedImgFiles: [],
@@ -129,7 +129,7 @@ export const useProduct = (data: Product) => {
               product.category === "" &&
               product.subCategory === "" &&
               product.description === "" &&
-              product.specifications.length === 0 &&
+              Object.keys(product.specifications).length === 0 &&
               product.tags.length === 0 &&
               isVariantEmpty(product.variants[0])
             );

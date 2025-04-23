@@ -126,6 +126,12 @@ const loginUser = async (req, res) => {
             secure: false, // set this to true in production
             maxAge: rememberMe ? 7 * 24 * 60 * 60 * 1000 : undefined,
           });
+         /*  res.cookie("usertoken", token, {
+            httpOnly: true,
+            secure: true, // 🔐 Only sends over HTTPS (required for production)
+            sameSite: "lax", // 🛡 Helps prevent CSRF
+            maxAge: rememberMe ? 7 * 24 * 60 * 60 * 1000 : undefined,
+          }); */
           // Set cookie expiration to 7 days if "Remember Me" is checked
           const localCart = req.cookies.cart
             ? JSON.parse(req.cookies.cart)

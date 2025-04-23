@@ -7,6 +7,7 @@ import axiosInstance from "../../services/axiosInstance";
 import { Filter } from "../../interfaces/filter";
 import ProductFilter from "../../components/main/Filter";
 
+
 interface Category {
   category: "camera" | "lens" | "accessories" | "other" | "all";
 }
@@ -40,7 +41,7 @@ const Product_List: React.FC<Category> = ({ category }) => {
   const [variants, setVariants] = useState<ProductList[]>([]);
   const [page, setPage] = useState(pageParam);
   const [total, setTotal] = useState(0);
-  const [limit] = useState(20);
+  const [limit] = useState(10);
   const [sortCriteria, setSortCriteria] = useState(sortParam);
   const [filter, setFilter] = useState(false);
 
@@ -65,7 +66,7 @@ const Product_List: React.FC<Category> = ({ category }) => {
           searchParams.set("page", "1");
         }
         if (!searchParams.has("limit")) {
-          searchParams.set("limit", "20");
+          searchParams.set("limit", "10");
         }
 
         const url = `/get-variants?${searchParams.toString()}`;
@@ -105,7 +106,7 @@ const Product_List: React.FC<Category> = ({ category }) => {
     [category, navigate, location.search],
   );
 
-  /* const handlePageMovement = useCallback(() => {
+  const handlePageMovement = useCallback(() => {
     const numericVal = parseInt(page.toString(), 10);
     const searchParams = new URLSearchParams(location.search);
     searchParams.set("page", numericVal.toString());
@@ -114,7 +115,7 @@ const Product_List: React.FC<Category> = ({ category }) => {
     const updatedUrl = `${category === "all" ? `` : `/${category}`}/?${searchParams.toString()}`;
     setPage(numericVal);
     navigate(updatedUrl, { replace: true });
-  }, [page, category, navigate, location.search]); */
+  }, [page, category, navigate, location.search]);
 
   const handleFilter = useCallback(
     (filters: Filter) => {
@@ -166,6 +167,10 @@ const Product_List: React.FC<Category> = ({ category }) => {
   useEffect(() => {
     setFilter(false); // Close filter when category changes
   }, [category]);
+
+  useEffect(() => {
+    handlePageMovement();
+  }, [page, handlePageMovement]);
 
   return (
     <div className="relative mb-4 mt-2 flex flex-col gap-2">

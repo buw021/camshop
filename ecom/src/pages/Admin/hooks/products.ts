@@ -9,7 +9,7 @@ export const useProduct = () => {
         subCategory: "",
         brand: "",
         description: "",
-        specifications: [],
+        specifications: {},
         variants: [
           {
             variantName: "",
@@ -117,7 +117,7 @@ export const useProduct = () => {
               product.category === "" &&
               product.subCategory === "" &&
               product.description === "" &&
-              product.specifications.length === 0 &&
+              Object.keys(product.specifications).length === 0 &&
               product.tags.length === 0 &&
               isVariantEmpty(product.variants[0])
             );

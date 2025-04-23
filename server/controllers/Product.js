@@ -65,7 +65,7 @@ const addProduct = async (req, res) => {
       specifications: specificationsMap, // Default to empty array if not provided
       variants: variants.map((variant, index) => ({
         variantName: variant.variantName || "",
-        varianColor: variant.variantColor || "",
+        variantColor: variant.variantColor || "",
         variantPrice: variant.variantPrice,
         variantStocks: variant.variantStocks,
         variantImgs: fileImgs[index],
@@ -114,7 +114,8 @@ const getProducts = async (req, res) => {
       .sort({ createdAt: -1 })
       .skip((currentPage - 1) * limit)
       .limit(limit);
-    res.json({ products, totalPages });
+
+    return res.status(200).json({ products, totalPages });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -167,7 +168,14 @@ const getVariants = async (req, res) => {
         filters.push({ [`specifications.${key}`]: specifications[key] });
       });
     }
-
+    console.log("Limit:", limit, "Page:", page);
+    const rawResults = await Product.aggregate([
+      ...(filters.length > 0 ? [{ $match: { $and: filters } }] : []),
+      { $match: { isArchived: false } },
+      { $unwind: "$variants" },
+      // ...other stages...
+    ]);
+    console.log("Raw Results Count:", rawResults.length);
     // Variant level filters
 
     const variants = await Product.aggregate([
@@ -225,8 +233,7 @@ const getVariants = async (req, res) => {
             ? { productName: -1, "variants.variantName": -1 }
             : { createdAt: 1 },
       },
-      { $skip: (page - 1) * parseInt(limit) },
-      { $limit: parseInt(limit) },
+
       {
         $project: {
           variantName: "$variants.variantName",
@@ -259,6 +266,8 @@ const getVariants = async (req, res) => {
           productBrand: "$brand",
         },
       },
+      { $skip: (page - 1) * parseInt(limit) },
+      { $limit: parseInt(limit) },
     ]);
 
     const total = await Product.aggregate([
@@ -307,8 +316,8 @@ const getVariants = async (req, res) => {
     ]);
 
     // Sorting logic
-
-    res.json({ variants, total });
+    console.log(total, variants.length);
+    res.json({ variants, total: total[0].totalVariants });
   } catch (error) {
     console.error("Error fetching variants:", error);
     res.status(500).json({ error: error.message });
