@@ -210,7 +210,7 @@ const getProductReviews = async (req, res) => {
           variantImg: "$matchingItem.variantImg",
         },
       },
-      { $sort: { createdAt: -1 } },
+      { $sort: { createdAt: sort === "asc" ? 1 : -1 } },
       { $skip: (parseInt(currentPage) - 1) * parseInt(limit) },
       { $limit: parseInt(limit) },
     ]);

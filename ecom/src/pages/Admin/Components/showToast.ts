@@ -1,6 +1,6 @@
 import { Bounce, toast } from "react-toastify";
 
-export const showToast = (message: string, type: "error" | "success" | "warning") => {
+export const showToast = (message: string, type: "error" | "success" | "warning" | "info") => {
     toast[type](message, {
       position: "bottom-right",
       autoClose: 5000,

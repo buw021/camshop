@@ -1,9 +1,5 @@
 
 
-interface Attributes {
-  [key: string]: string;
-}
-
 export interface Variant {
   variantName: string;
   variantColor: string;
@@ -22,7 +18,7 @@ export interface Product {
   subCategory: string;
   brand: string;
   description: string;
-  specifications: Attributes[];
+  specifications: { [key: string]: string };
   variants: Variant[];
   tags: string[];
   _id?: string;

@@ -1,4 +1,4 @@
-const { body } = require("express-validator");
+const { body, query } = require("express-validator");
 
 exports.validateReview = [
   body("reviews").isArray().withMessage("Reviews must be an array"),
@@ -47,4 +47,27 @@ exports.validateUpdateReview = [
     .withMessage("message must be a string")
     .isLength({ max: 5000 })
     .withMessage("message must be less than 5000 characters"),
+];
+/*  const { productId, filter, sort, currentPage, limit } = req.query; */
+
+exports.validateGetPoductReviews = [
+  query("productId")
+  .isMongoId()
+  .withMessage("Product ID must be a valid MongoDB ObjectId"),
+  query("filter")
+    .optional()
+    .isIn(["all", "1", "2", "3", "4", "5"])
+    .withMessage("Filter must be 'all' or a rating between 1 and 5"),
+query("sort")
+    .optional()
+    .isIn(["asc", "desc"])
+    .withMessage("Sort must be 'asc' or 'desc'"),
+  query("currentPage")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("Current page must be an integer greater than 0"),
+  query("limit")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("Limit must be an integer greater than 0"),
 ];

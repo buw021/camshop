@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect } from "react";
 import Rating from "../reviews/Rating";
 import Reviews from "../reviews/Reviews";
 import axiosInstance from "../../services/axiosInstance";
+import Dropdown from "./Dropdown";
 
 interface User {
   firstName: string;
@@ -35,6 +36,10 @@ interface ProductReviewProps {
   averageRating: number;
   ratingCountsArray: RatingCount[];
 }
+const SORT_CRITERIA = [
+  { value: "desc", placeholder: "Recent Reviews" },
+  { value: "asc", placeholder: "Older Reviews" },
+];
 
 const ProductReviews: React.FC<{
   productId: string;
@@ -42,6 +47,7 @@ const ProductReviews: React.FC<{
 }> = ({ productId, onReviewDataChange }) => {
   const [reviews, setReviews] = useState<ProductReviewProps>();
   const [rating, setRating] = useState<number | null>(null);
+  const [sortCriteria, setSortCriteria] = useState<string | number>("desc");
   const getProductReviews = useCallback(async () => {
     try {
       const response = await axiosInstance.get("/get-product-reviews", {
@@ -50,6 +56,7 @@ const ProductReviews: React.FC<{
           currentPage: 1,
           limit: 10,
           filter: rating,
+          sort: sortCriteria,
         },
       });
       setReviews(response.data);
@@ -60,7 +67,7 @@ const ProductReviews: React.FC<{
     } catch (error) {
       console.error("Error fetching product reviews:", error);
     }
-  }, [onReviewDataChange, productId, rating]);
+  }, [onReviewDataChange, productId, rating, sortCriteria]);
 
   useEffect(() => {
     getProductReviews();
@@ -111,6 +118,12 @@ const ProductReviews: React.FC<{
         </div>
       </div>
       <div className="flex flex-col items-center gap-4 md:gap-10">
+        <Dropdown
+          label={"Sort by: "}
+          list={SORT_CRITERIA}
+          onValueChange={(value) => setSortCriteria(value)}
+          selectedValue={sortCriteria} // Pass sort criteria as prop
+        ></Dropdown>
         {reviews && reviews.reviews.length > 0 ? (
           reviews.reviews.map((review) => (
             <Reviews

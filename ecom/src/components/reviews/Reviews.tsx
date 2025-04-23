@@ -1,5 +1,5 @@
 import Rating from "./Rating";
-interface Reviews {
+interface ReviewsProps {
   firstName?: string;
   lastName?: string;
   reviewNum: number;
@@ -7,7 +7,7 @@ interface Reviews {
   reviewDate: string;
   reviewMessage?: string;
 }
-const Reviews: React.FC<Reviews> = ({
+const Reviews: React.FC<ReviewsProps> = ({
   firstName,
   lastName,
   reviewNum,
@@ -18,9 +18,9 @@ const Reviews: React.FC<Reviews> = ({
   return (
     <div>
       <div className="flex flex-row flex-wrap gap-4">
-        <div className="flex flex-col justify-start gap-1 p-2 max-w-[800px]">
+        <div className="flex max-w-[800px] flex-col justify-start gap-1 p-2">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-zinc-300"></div>
+            <div className="h-8 w-8 rounded-full bg-zinc-300"></div>
             <h2 className="text-sm hover:underline">
               {firstName || lastName ? (
                 `${firstName} ${lastName?.[0]}`
@@ -35,16 +35,21 @@ const Reviews: React.FC<Reviews> = ({
               starSize="lg"
               starLength={reviewNum}
             ></Rating>
-            <h1 className="roboto-bold text-sm ">{reviewTitle}</h1>
+            <h1 className="roboto-bold text-sm">{reviewTitle}</h1>
           </div>
           <div className="flex flex-col">
-            <div className="flex flex-col flex-0">
-              <p className="text-xs">
-                Reviewed on <span className="">{reviewDate}</span>
+            <div className="flex-0 flex flex-col">
+              <p className="ml-0.5 mt-1 text-xs text-zinc-500">
+                Reviewed on{" "}
+                {new Date(reviewDate).toLocaleDateString("en-GB", {
+                  day: "2-digit",
+                  month: "long",
+                  year: "numeric",
+                })}
               </p>
             </div>
-            <div className="bg-zinc-200 w-[1px] h-full"></div>
-            <div className="flex-1 mt-1">
+            <div className="h-full w-[1px] bg-zinc-200"></div>
+            <div className="mt-1 flex-1">
               <p className="text-pretty text-xs">{reviewMessage}</p>
             </div>
           </div>

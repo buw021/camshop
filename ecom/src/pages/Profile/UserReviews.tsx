@@ -98,27 +98,42 @@ const UserReviews = () => {
                     </Link>
 
                     <div className="mb-2 flex h-full w-full flex-col justify-start border-y-[1px] text-zinc-700">
-                      <p className="max-h-[100px] overflow-hidden text-ellipsis text-pretty rounded-md p-1.5 text-xs overflow-y-auto whitespace-pre-line">
+                      <p className="max-h-[100px] overflow-hidden overflow-y-auto text-ellipsis whitespace-pre-line text-pretty rounded-md p-1.5 text-xs">
                         {review.message ? review.message : ""}
                       </p>
                     </div>
-                    <button
-                      type="button"
-                      className={`flex self-end rounded-full bg-zinc-700 px-2 py-1 text-xs font-medium text-white transition-all duration-200 hover:bg-zinc-600 disabled:bg-zinc-300`}
-                      disabled={review.edit}
-                      onClick={() => {
-                        if (review.edit) {
-                          showToast(
-                            "You can only edit review one time",
-                            "warning",
-                          );
-                          return;
-                        }
-                        setCurrentReview(review);
-                      }}
-                    >
-                      {review.edit ? "Updated" : "Update"}
-                    </button>
+                    <div className="flex w-full items-center justify-end gap-2">
+                      {review.updatedAt && (
+                        <p className="text-xs text-zinc-500">
+                          Updated on{" "}
+                          {new Date(review.updatedAt).toLocaleDateString(
+                            "en-GB",
+                            {
+                              day: "2-digit",
+                              month: "long",
+                              year: "numeric",
+                            },
+                          )}
+                        </p>
+                      )}
+                      <button
+                        type="button"
+                        className={`flex self-end rounded-full bg-zinc-700 px-2 py-1 text-xs font-medium text-white transition-all duration-200 hover:bg-zinc-600 disabled:bg-zinc-300`}
+                        disabled={review.edit}
+                        onClick={() => {
+                          if (review.edit) {
+                            showToast(
+                              "You can only edit review one time",
+                              "warning",
+                            );
+                            return;
+                          }
+                          setCurrentReview(review);
+                        }}
+                      >
+                        {review.edit ? "Updated" : "Update"}
+                      </button>
+                    </div>
                   </div>
                 );
               })}

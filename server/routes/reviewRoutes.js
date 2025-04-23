@@ -12,6 +12,9 @@ const { validateRequest } = require("../middleware/validateRequest");
 const {
   validateReview,
   validateUpdateReview,
+  validateGetPoductReviews,
+
+  
 } = require("../validators/reviewValidator");
 
 router.get("/get-user-reviews", verifyUserToken, getUserReview);
@@ -32,6 +35,11 @@ router.post(
   updateReview
 );
 
-router.get("/get-product-reviews", getProductReviews);
+router.get(
+  "/get-product-reviews",
+  validateGetPoductReviews,
+  validateRequest,
+  getProductReviews
+);
 
 module.exports = router;
