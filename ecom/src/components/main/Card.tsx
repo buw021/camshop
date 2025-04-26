@@ -25,8 +25,15 @@ export const ProductCard: React.FC<{
   const productSlug = slugify(name);
   return (
     <div className="flex flex-col gap-4">
-      <Link to={`/product/${productSlug}_${id}_${variantId}`}>
-        <div className="relative flex h-40 select-none flex-col justify-center overflow-hidden rounded-xl border-zinc-500 shadow-inner sm:h-80">
+      <Link
+        to={`/product/${productSlug}_${id}_${variantId}`}
+        onClick={(e) => {
+          e.preventDefault();
+
+          window.open(`/product/${productSlug}_${id}_${variantId}`, "_blank");
+        }}
+      >
+        <div className="relative flex h-44   select-none flex-col justify-center overflow-hidden rounded-xl border-zinc-500 shadow-inner sm:h-44 md:h-60">
           <div className="absolute z-10 h-full w-full hover:cursor-pointer hover:bg-black/10"></div>
           <div className="absolute h-full w-full bg-zinc-500/5"></div>
           <img
@@ -36,7 +43,14 @@ export const ProductCard: React.FC<{
         </div>
       </Link>
       <div className="flex flex-col gap-2">
-        <Link to={`/product/${productSlug}_${id}_${variantId}`}>
+        <Link
+          to={`/product/${productSlug}_${id}_${variantId}`}
+          onClick={(e) => {
+            e.preventDefault();
+
+            window.open(`/product/${productSlug}_${id}_${variantId}`, "_blank");
+          }}
+        >
           <h1 className="roboto-medium truncate text-sm hover:underline">
             {name} {variantName} {color}
           </h1>

@@ -19,6 +19,7 @@ const {
   updateProduct,
   archiveProducts,
   getFullProduct,
+  getRandomProducts,
 } = require("../controllers/Product");
 const {
   validateAddProduct,
@@ -115,6 +116,8 @@ router.post("/add-all-to-cart-local", addAllToCartLocal);
 //Store
 router.get("/product/:details", getProduct);
 router.get("/get-variants", getVariants);
+
+router.get("/home-products", getRandomProducts);
 
 //User
 router.get("/user-cart", getUserCart);

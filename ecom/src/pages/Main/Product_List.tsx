@@ -7,7 +7,6 @@ import axiosInstance from "../../services/axiosInstance";
 import { Filter } from "../../interfaces/filter";
 import ProductFilter from "../../components/main/Filter";
 
-
 interface Category {
   category: "camera" | "lens" | "accessories" | "other" | "all";
 }
@@ -66,7 +65,7 @@ const Product_List: React.FC<Category> = ({ category }) => {
           searchParams.set("page", "1");
         }
         if (!searchParams.has("limit")) {
-          searchParams.set("limit", "10");
+          searchParams.set("limit", limit.toString());
         }
 
         const url = `/get-variants?${searchParams.toString()}`;
@@ -90,8 +89,12 @@ const Product_List: React.FC<Category> = ({ category }) => {
         }
       }
     },
-    [category, location.search],
+    [category, limit, location.search],
   );
+
+  useEffect(() => {
+    setPage(1); // Reset page to 1 when category changes
+  }, [category]);
 
   const handleDropdownValue = useCallback(
     (val: string | number) => {
@@ -207,7 +210,7 @@ const Product_List: React.FC<Category> = ({ category }) => {
           <>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
               {loading
-                ? Array.from({ length: 10 }, (_, index) => (
+                ? Array.from({ length: limit }, (_, index) => (
                     <CardLoadingSkeleton key={index} />
                   ))
                 : variants.map((variant) => (

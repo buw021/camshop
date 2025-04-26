@@ -115,7 +115,7 @@ const Navbar = () => {
   return (
     <nav
       ref={navRef}
-      className={`transit</span>ion-all fixed z-50 flex w-full transform select-none flex-col bg-white shadow backdrop-blur-lg duration-700 ${expand ? "h-[100vh] md:h-[500px]" : "h-14"}`}
+      className={`fixed z-50 flex w-full transform select-none flex-col bg-white shadow backdrop-blur-lg transition-all duration-700 ${expand ? "h-[100vh] md:h-[500px]" : "h-14"}`}
     >
       <div className="flex h-auto w-full flex-col overflow-hidden px-5 py-3 md:px-[10vw]">
         <div className="flex flex-row items-center justify-between">
@@ -160,8 +160,12 @@ const Navbar = () => {
             </ul>
           </div>
           <div className="order-0 flex items-center justify-end gap-2 md:z-0 md:order-1 md:hidden md:gap-4">
-            <IconButton icon="menu" onClick={toggleMenu} />{" "}
             <IconButton icon="search" onClick={toggleSearch} />{" "}
+            <IconButton
+              icon="favorite"
+              onClick={toggleFav}
+              additionalClasses="filled"
+            />
           </div>
           <div className="order-2 flex items-center justify-end gap-2">
             <IconButton
@@ -169,13 +173,13 @@ const Navbar = () => {
               onClick={toggleSearch}
               additionalClasses="hidden md:block"
             />
+            <IconButton
+              icon="favorite"
+              onClick={toggleFav}
+              additionalClasses="hidden md:block filled"
+            />
             {currentPath !== "/checkout" && (
               <>
-                <IconButton
-                  icon="favorite"
-                  onClick={toggleFav}
-                  additionalClasses="filled"
-                />
                 <div className="group relative flex items-center">
                   {cartIDs.reduce((total, item) => total + item.quantity, 0) >
                     0 && (
@@ -257,7 +261,7 @@ const Navbar = () => {
           {expandProfile && (
             <>
               {token ? (
-                <section className="bottom-0 flex flex-col gap-2 self-end text-right pb-1">
+                <section className="bottom-0 flex flex-col gap-2 self-end pb-1 text-right">
                   <p>
                     <span className="roboto-medium text-lg underline"></span>
                   </p>

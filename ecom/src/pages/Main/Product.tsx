@@ -108,7 +108,7 @@ const ProductDisplay: React.FC = () => {
       <div></div>
       {product ? (
         <>
-          <div className="mt-1 flex w-full flex-col items-center justify-center gap-2 rounded-md bg-zinc-100 px-4 py-6 md:flex-row">
+          <div className="mt-1 flex w-full flex-col flex-wrap items-center justify-center gap-2 rounded-md bg-zinc-100 px-4 py-6 md:flex-row lg:flex-nowrap">
             {/*Image Prev*/}
             <div className="flex-2 max-w-lg self-center md:self-start">
               <div className="roboto-medium flex flex-col gap-3">
@@ -130,13 +130,60 @@ const ProductDisplay: React.FC = () => {
               </div>
             </div>
             <div className="flex max-w-[500px] flex-1 flex-col justify-center gap-2">
-              <div className="roboto-medium mt-1 flex w-full flex-wrap text-3xl">
-                <span>
-                  {name} {variantName}
-                </span>{" "}
-                <span>{variantColor}</span>
+              {isOnSale ? (
+                <>
+                  <p className="roboto-black flex-0 flex flex-wrap gap-2 text-4xl">
+                    <span>€ {salePrice?.toFixed(2) ?? "0.00"}</span>{" "}
+                    <span className="relative flex gap-2 text-sm">
+                      <s className="text-zinc-400">
+                        € {variantPrice?.toFixed(2) ?? "0.00"}
+                      </s>
+                      {salePrice && (
+                        <span className="flex h-4 bg-red-700 px-1.5 text-center text-xs text-white">
+                          -
+                          {Math.round(
+                            ((variantPrice - salePrice) / variantPrice) * 100,
+                          )}
+                          %
+                        </span>
+                      )}
+                    </span>
+                  </p>
+                </>
+              ) : (
+                <p className="roboto-black flex-0 text-4xl">
+                  € {variantPrice?.toFixed(2) ?? "0.00"}
+                </p>
+              )}
+
+              <div className="buttons flex w-full flex-col justify-center gap-4 md:flex-row md:items-center">
+                <div className="flex w-full flex-1 gap-4">
+                  <button
+                    className="roboto-medium w-full max-w-[250px] self-center rounded-full bg-zinc-900 py-2 text-lg text-white transition-all duration-100 hover:bg-zinc-700 focus:bg-zinc-950"
+                    onClick={handleAddToCart}
+                    disabled={variantStocks === 0}
+                  >
+                    {variantStocks > 0 ? "Add to cart" : "Not Available"}
+                  </button>
+                  <div className="group">
+                    <button
+                      className="w-[50px] self-center rounded-full bg-zinc-900 px-4 py-2 text-zinc-100 transition-all duration-300 ease-out focus:bg-zinc-300 focus:text-red-700 group-hover:bg-zinc-400 md:max-w-[300px]"
+                      onClick={handleAddToFavs}
+                    >
+                      <span className="material-symbols-outlined filled flex justify-center text-2xl">
+                        favorite
+                      </span>
+                    </button>
+                  </div>
+                </div>
               </div>
 
+              <div className="roboto-medium mt-1 flex w-full text-xl">
+                <span>
+                  {name} {variantName && `- ${variantName}`}{" "}
+                  {variantColor && `(${variantColor})`}
+                </span>
+              </div>
               <div className="flex flex-wrap gap-2">
                 <div className="flex items-center">
                   <Rating
@@ -183,58 +230,10 @@ const ProductDisplay: React.FC = () => {
                   </p>
                 }
               </div>
-
-              {isOnSale ? (
-                <>
-                  <p className="roboto-black flex-0 flex flex-wrap gap-2 text-4xl">
-                    <span>€ {salePrice?.toFixed(2) ?? "0.00"}</span>{" "}
-                    <span className="relative flex gap-2 text-sm">
-                      <s className="text-zinc-400">
-                        € {variantPrice?.toFixed(2) ?? "0.00"}
-                      </s>
-                      {salePrice && (
-                        <span className="flex h-4 bg-red-700 px-1.5 text-center text-xs text-white">
-                          -
-                          {Math.round(
-                            ((variantPrice - salePrice) / variantPrice) * 100,
-                          )}
-                          %
-                        </span>
-                      )}
-                    </span>
-                  </p>
-                </>
-              ) : (
-                <p className="roboto-black flex-0 text-4xl">
-                  € {variantPrice?.toFixed(2) ?? "0.00"}
-                </p>
-              )}
-              <div className="buttons mb-2 flex w-full flex-col justify-center gap-4 md:flex-row md:items-center">
-                <div className="flex w-full flex-1 gap-4">
-                  <button
-                    className="roboto-medium w-full max-w-[250px] self-center rounded-full bg-zinc-900 py-2 text-lg text-white transition-all duration-100 hover:bg-zinc-700 focus:bg-zinc-950"
-                    onClick={handleAddToCart}
-                    disabled={variantStocks === 0}
-                  >
-                    {variantStocks > 0 ? "Add to cart" : "Not Available"}
-                  </button>
-                  <div className="group">
-                    <button
-                      className="w-[50px] self-center rounded-full bg-zinc-900 px-4 py-2 text-zinc-100 transition-all duration-300 ease-out focus:bg-zinc-300 focus:text-red-700 group-hover:bg-zinc-400 md:max-w-[300px]"
-                      onClick={handleAddToFavs}
-                    >
-                      <span className="material-symbols-outlined filled flex justify-center text-2xl">
-                        favorite
-                      </span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="roboto-regular flex flex-col gap-1">
+              <div className="roboto-regular flex max-w-sm flex-col gap-1 sm:max-w-full">
                 {variants.length > 1 && (
                   <>
-                    <p className="roboto-medium text-lg">Select Variation :</p>
+                    <p className="text-sm">Select Variation :</p>
                     <div className="flex max-w-[500px] flex-row justify-start gap-1 overflow-x-auto p-3">
                       {variants.map((variant, index) => (
                         <Link

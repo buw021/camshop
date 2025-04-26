@@ -1,3 +1,4 @@
+import ProductCarousel from "../../components/main/ProductCarousel";
 import Product_List from "./Product_List";
 
 const Home = () => {
@@ -6,7 +7,8 @@ const Home = () => {
       <div className="flex flex-col items-center gap-2">
         <div className="big-banner h-72 w-full bg-zinc-500"></div>
       </div>
-      <Product_List category="all" />
+      {/* <Product_List category="all" /> */}
+      <ProductCarousel></ProductCarousel>
     </div>
   );
 };

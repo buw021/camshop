@@ -168,14 +168,14 @@ const getVariants = async (req, res) => {
         filters.push({ [`specifications.${key}`]: specifications[key] });
       });
     }
-    console.log("Limit:", limit, "Page:", page);
+
     const rawResults = await Product.aggregate([
       ...(filters.length > 0 ? [{ $match: { $and: filters } }] : []),
       { $match: { isArchived: false } },
       { $unwind: "$variants" },
       // ...other stages...
     ]);
-    console.log("Raw Results Count:", rawResults.length);
+
     // Variant level filters
 
     const variants = await Product.aggregate([
@@ -271,7 +271,8 @@ const getVariants = async (req, res) => {
     ]);
 
     const total = await Product.aggregate([
-      ...(filters.length > 0 ? [{ $match: { $and: filters } }] : []), // Filter products
+      ...(filters.length > 0 ? [{ $match: { $and: filters } }] : []),
+      { $match: { isArchived: false } }, // Filter products
       { $unwind: "$variants" }, // Unwind variants for individual processing
       {
         $lookup: {
@@ -316,8 +317,12 @@ const getVariants = async (req, res) => {
     ]);
 
     // Sorting logic
-    console.log(total, variants.length);
-    res.json({ variants, total: total[0].totalVariants });
+
+    res.json({
+      variants,
+      total:
+        total.length > 0 && total[0].totalVariants ? total[0].totalVariants : 0,
+    });
   } catch (error) {
     console.error("Error fetching variants:", error);
     res.status(500).json({ error: error.message });
@@ -462,6 +467,84 @@ const updateProduct = async (req, res) => {
   }
 };
 
+const getRandomProducts = async (req, res) => {
+  const { limit } = req.query;
+  try {
+    const variants = await Product.aggregate([
+      { $match: { isArchived: false } }, // Ensure only non-archived products are included
+      { $unwind: "$variants" }, // Unwind variants for individual processing
+      {
+        $lookup: {
+          from: "sales", // Join with Sale collection
+          localField: "variants.saleId",
+          foreignField: "_id",
+          as: "saleDetails",
+        },
+      },
+      {
+        $addFields: {
+          variantPrice: {
+            $cond: [
+              {
+                $and: [
+                  { $arrayElemAt: ["$saleDetails.isOnSale", 0] },
+                  {
+                    $gte: [
+                      { $arrayElemAt: ["$saleDetails.saleExpiryDate", 0] },
+                      new Date(),
+                    ],
+                  },
+                ],
+              },
+              { $arrayElemAt: ["$saleDetails.salePrice", 0] },
+              "$variants.variantPrice",
+            ],
+          },
+        },
+      },
+      { $sample: { size: parseInt(limit) } },
+      {
+        $project: {
+          variantName: "$variants.variantName",
+          variantColor: "$variants.variantColor",
+          variantPrice: 1,
+          variantStocks: "$variants.variantStocks",
+          variantImgs: "$variants.variantImgs",
+          variantContent: "$variants.variantContent",
+          saleId: {
+            $cond: [
+              { $arrayElemAt: ["$saleDetails.isOnSale", 0] },
+              {
+                _id: { $arrayElemAt: ["$saleDetails._id", 0] },
+                salePrice: { $arrayElemAt: ["$saleDetails.salePrice", 0] },
+                saleStartDate: {
+                  $arrayElemAt: ["$saleDetails.saleStartDate", 0],
+                },
+                saleExpiryDate: {
+                  $arrayElemAt: ["$saleDetails.saleExpiryDate", 0],
+                },
+              },
+              null,
+            ],
+          },
+          _id: "$variants._id",
+          createdAt: "$variants.createdAt",
+          updatedAt: "$variants.updatedAt",
+          productName: "$name",
+          productId: "$_id",
+          productBrand: "$brand",
+        },
+      },
+    ]);
+    res.json({
+      variants,
+    });
+  } catch (error) {
+    console.error("Error fetching variants:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   addProduct,
   getProducts,
@@ -470,4 +553,5 @@ module.exports = {
   updateProduct,
   archiveProducts,
   getFullProduct,
+  getRandomProducts,
 };
