@@ -1,13 +1,12 @@
 import ProductCarousel from "../../components/main/ProductCarousel";
-import Product_List from "./Product_List";
+import ImgCarousel from "../Admin/Components/PromoBanners/ImgCarousel";
 
 const Home = () => {
   return (
     <div>
       <div className="flex flex-col items-center gap-2">
-        <div className="big-banner h-72 w-full bg-zinc-500"></div>
+        <ImgCarousel imgs={[]}></ImgCarousel>
       </div>
-      {/* <Product_List category="all" /> */}
       <ProductCarousel></ProductCarousel>
     </div>
   );

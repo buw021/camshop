@@ -10,6 +10,7 @@ import { showToast } from "../../func/showToast";
 import { SearchBar } from "./SearchBar";
 import { useCart } from "../../contexts/useCart";
 import { useLocation } from "react-router-dom";
+import PromoBanner from "./PromoBanner";
 
 interface IconButtonProps {
   icon: string;
@@ -115,9 +116,9 @@ const Navbar = () => {
   return (
     <nav
       ref={navRef}
-      className={`fixed z-50 flex w-full transform select-none flex-col bg-white shadow backdrop-blur-lg transition-all duration-700 ${expand ? "h-[100vh] md:h-[500px]" : "h-14"}`}
+      className={`fixed z-50 flex w-full transform select-none flex-col bg-white shadow backdrop-blur-lg transition-all duration-700 ${expand ? "h-[100vh] md:h-[500px]" : "h-12"}`}
     >
-      <div className="flex h-auto w-full flex-col overflow-hidden px-5 py-3 md:px-[10vw]">
+      <div className="flex h-auto w-full flex-col overflow-hidden px-5 py-1.5 md:px-[10vw]">
         <div className="flex flex-row items-center justify-between">
           <div className="md:order-0 order-1 flex flex-row items-center gap-6">
             <Link to={`/`}>
@@ -327,6 +328,7 @@ const Navbar = () => {
           )}
         </div>
       </div>
+      <PromoBanner expand={expand} />
     </nav>
   );
 };

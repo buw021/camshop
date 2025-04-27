@@ -56,7 +56,7 @@ const OrderCard: React.FC<OrderProps> = ({
                     <div className="absolute h-full w-full bg-zinc-500/5"></div>
                     <img
                       className="h-full object-scale-down px-4 py-4"
-                      src={`http://localhost:3000/uploads/${item.variantImg}`}
+                      src={`http://localhost:3000/uploads/products/${item.variantImg}`}
                     ></img>
                   </div>
                 </Link>

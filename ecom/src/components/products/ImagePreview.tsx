@@ -62,7 +62,7 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({
         <div className="flex w-full flex-col items-center gap-2">
           <div className="flex w-full justify-center gap-1 rounded bg-white px-2">
             <img
-              src={`http://localhost:3000/uploads/${imgPrev}`}
+              src={`http://localhost:3000/uploads/products/${imgPrev}`}
               alt={`${altname}`}
               className="w-[550px] object-contain"
               loading="lazy"
@@ -89,7 +89,7 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({
                       </>
                     )}
                     <img
-                      src={`http://localhost:3000/uploads/${url}`}
+                      src={`http://localhost:3000/uploads/products/${url}`}
                       alt={`${altname}`}
                       className="z-50 w-24 object-cover p-2 text-[10px]"
                       loading="lazy"
@@ -116,7 +116,7 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({
                         close
                       </span>
                       <img
-                        src={`http://localhost:3000/uploads/${galleryImgPrev}`}
+                        src={`http://localhost:3000/uploads/products/${galleryImgPrev}`}
                         alt={`${altname}`}
                         className="object-fill px-4 md:w-[35%]"
                         loading="lazy"
@@ -133,7 +133,7 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({
                               <div className="w-[100px]">
                                 <div className="duration-400 absolute h-full w-full bg-none transition-all ease-in group-hover:bg-zinc-900/75"></div>
                                 <img
-                                  src={`http://localhost:3000/uploads/${url}`}
+                                  src={`http://localhost:3000/uploads/products/${url}`}
                                   alt={`${altname}`}
                                   className="z-50 object-cover p-2 text-[10px]"
                                   loading="lazy"

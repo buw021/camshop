@@ -7,7 +7,7 @@ const { type } = require("os");
 const sharp = require("sharp");
 
 const storage = multer.diskStorage({
-  destination: "./uploads/",
+  destination: "./uploads/products/",
   filename: (req, file, cb) => {
     cb(null, Date.now() + path.extname(file.originalname));
   },
@@ -39,8 +39,18 @@ const uploadImg = async (req, res) => {
         fileGroups[idx] = [];
       }
 
-      const inputPath = path.join(__dirname, "..", "uploads", sanitizedFilename);
-      const tempOutputPath = path.join(__dirname, "..", "uploads", `temp-${sanitizedFilename}`);
+      const inputPath = path.join(
+        __dirname,
+        "..",
+        "uploads",
+        sanitizedFilename
+      );
+      const tempOutputPath = path.join(
+        __dirname,
+        "..",
+        "uploads",
+        `temp-${sanitizedFilename}`
+      );
 
       // Resize image using Sharp and save it as a temporary file
       await sharp(inputPath)
@@ -62,7 +72,6 @@ const uploadImg = async (req, res) => {
 
 const deleteUpImg = async (req, res) => {
   const { filePaths } = req.body;
-  console.log(filePaths);
   try {
     // Iterate over each key in the filePaths object
     Object.keys(filePaths).forEach((key) => {

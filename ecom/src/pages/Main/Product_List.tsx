@@ -96,6 +96,10 @@ const Product_List: React.FC<Category> = ({ category }) => {
     setPage(1); // Reset page to 1 when category changes
   }, [category]);
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [page]);
+
   const handleDropdownValue = useCallback(
     (val: string | number) => {
       const searchParams = new URLSearchParams(location.search);
@@ -124,6 +128,7 @@ const Product_List: React.FC<Category> = ({ category }) => {
     (filters: Filter) => {
       const { subCategory, brand, minPrice, maxPrice, onSale, colors, specs } =
         filters;
+      setPage(1);
       const searchParams = new URLSearchParams(location.search);
       if (subCategory) {
         searchParams.set("subCategory", subCategory);
@@ -146,6 +151,7 @@ const Product_List: React.FC<Category> = ({ category }) => {
       if (specs && Object.keys(specs).length > 0) {
         searchParams.set("specs", JSON.stringify(specs));
       }
+
       const updatedUrl = `${category === "all" ? `` : `/${category}`}/?${searchParams.toString()}`;
 
       navigate(updatedUrl, { replace: true });

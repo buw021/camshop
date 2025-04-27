@@ -72,7 +72,7 @@ const ModifyReview: React.FC<{
                   <div className="relative flex h-16 w-16 flex-shrink-0 select-none flex-col justify-center overflow-hidden rounded-xl border-zinc-500 shadow-inner">
                     <img
                       className="h-full object-scale-down p-2"
-                      src={`http://localhost:3000/uploads/${review.variantImg}`}
+                      src={`http://localhost:3000/uploads/products/${review.variantImg}`}
                     ></img>
                   </div>
                 </Link>

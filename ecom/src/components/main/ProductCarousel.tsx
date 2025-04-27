@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import axiosInstance from "../../services/axiosInstance";
 import { CardLoadingSkeleton, ProductCard } from "./Card";
 import useEmblaCarousel from "embla-carousel-react";
@@ -48,7 +48,6 @@ const ProductCarousel = () => {
           params: { limit },
         });
         const fetchedVariants = response.data.variants;
-        console.log(fetchedVariants);
         setProducts(fetchedVariants);
         setLoading(false); // Set loading to false after fetching
       } catch (error) {

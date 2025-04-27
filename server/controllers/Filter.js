@@ -6,19 +6,19 @@ const getFilters = async (req, res) => {
     const [subcategories, colors, prices, brands] = await Promise.all([
       // Aggregation for unique subcategories
       Product.aggregate([
-        { $match: { category } },
+        { $match: { category, isArchived: true } },
         { $group: { _id: "$subCategory" } },
         { $project: { _id: 0, subCategory: "$_id" } },
       ]), // Aggregation for unique colors
       Product.aggregate([
-        { $match: { category } },
+        { $match: { category, isArchived: false } },
         { $unwind: "$variants" },
         { $match: { "variants.variantColor": { $ne: null } } },
         { $group: { _id: "$variants.variantColor" } },
         { $project: { _id: 0, color: "$_id" } },
       ]), // Aggregation for prices ordered from lowest to highest
       Product.aggregate([
-        { $match: { category } },
+        { $match: { category, isArchived: false } },
         { $unwind: "$variants" },
         {
           $group: {
@@ -32,11 +32,11 @@ const getFilters = async (req, res) => {
         { $project: { _id: 0, prices: 1 } },
       ]),
       Product.aggregate([
-        { $match: { category } },
+        { $match: { category, isArchived: false } },
         { $group: { _id: "$brand" } },
         { $project: { _id: 0, brand: "$_id" } },
       ]),
-    ]); // Combine all filters into a single object
+    ]);
     const filters = {
       subcategories,
       colors,

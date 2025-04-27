@@ -244,7 +244,7 @@ const VariantForm: React.FC<VariantFormProps> = ({
                     className="relative max-h-14 max-w-14 rounded bg-white p-1"
                   >
                     <img
-                      src={`http://localhost:3000/uploads/${url}`}
+                      src={`http://localhost:3000/uploads/products/${url}`}
                       alt={`Preview ${index}`}
                       className="h-auto w-full"
                     />

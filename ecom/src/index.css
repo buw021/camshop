@@ -305,3 +305,18 @@
 .price[type="number"] {
   -moz-appearance: textfield;
 }
+
+@keyframes scroll {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.promo-text {
+  white-space: nowrap;
+  animation: scroll 60s linear infinite;
+  /* font-medium */
+}

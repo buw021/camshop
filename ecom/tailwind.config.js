@@ -7,7 +7,7 @@ export default {
         "fade-in": "fadeIn 0.2s ease-in forwards",
         "fade-out": "fadeOut 0.2s ease-in forwards",
       },
-
+      
       keyframes: {
         fadeIn: {
           "0%": { opacity: "0" },

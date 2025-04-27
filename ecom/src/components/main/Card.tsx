@@ -33,12 +33,12 @@ export const ProductCard: React.FC<{
           window.open(`/product/${productSlug}_${id}_${variantId}`, "_blank");
         }}
       >
-        <div className="relative flex h-44   select-none flex-col justify-center overflow-hidden rounded-xl border-zinc-500 shadow-inner sm:h-44 md:h-60">
+        <div className="relative flex h-44 select-none flex-col justify-center overflow-hidden rounded-xl border-zinc-500 shadow-inner sm:h-44 md:h-60">
           <div className="absolute z-10 h-full w-full hover:cursor-pointer hover:bg-black/10"></div>
           <div className="absolute h-full w-full bg-zinc-500/5"></div>
           <img
             className="h-full object-scale-down px-4 py-4"
-            src={`http://localhost:3000/uploads/${thumbnail}`}
+            src={`http://localhost:3000/uploads/products/${thumbnail}`}
           ></img>
         </div>
       </Link>
