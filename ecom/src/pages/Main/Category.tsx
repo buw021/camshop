@@ -7,7 +7,6 @@ interface categories {
 const Category: React.FC<categories> = ({ category }) => {
   return (
     <>
-      <div className="flex flex-col">{category}</div>
       <Product_List category={category} />
     </>
   );

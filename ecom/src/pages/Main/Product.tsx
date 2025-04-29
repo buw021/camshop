@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import ImagePreview from "../../components/products/ImagePreview";
 import Rating from "../../components/reviews/Rating";
 import { Link, useParams } from "react-router-dom";
-import Navigation from "../../components/main/Navigation";
 import { Product, Variant } from "../../interfaces/products";
 import { slugify } from "../../func/slugify";
 import { useCart } from "../../contexts/useCart";
@@ -46,10 +45,10 @@ const ProductDisplay: React.FC = () => {
   const name = product?.name || "";
   const productSlug = slugify(name);
   const brand = product?.brand || "";
-  const category = product?.category || "";
+
   const description = product?.description || "";
   const specification = product?.specifications || [""];
-  const subCategory = product?.subCategory || "";
+
   const variants: Variant[] = product?.variants ?? [];
 
   const variantName = variant?.variantName || "";
@@ -104,8 +103,6 @@ const ProductDisplay: React.FC = () => {
 
   return (
     <div className="roboto-regular flex flex-col items-center justify-center overflow-auto pb-10 text-zinc-700">
-      <Navigation category={category} subCategory={subCategory}></Navigation>
-      <div></div>
       {product ? (
         <>
           <div className="mt-1 flex w-full flex-col flex-wrap items-center justify-center gap-2 rounded-md bg-zinc-100 px-4 py-6 md:flex-row lg:flex-nowrap">

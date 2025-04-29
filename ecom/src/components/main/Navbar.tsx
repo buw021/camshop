@@ -33,7 +33,8 @@ const Navbar = () => {
   const navRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const currentPath = location.pathname;
-
+  const categoryPath = location.pathname.split("/")[1];
+  console.log(categoryPath);
   const handleLogout = async () => {
     localStorage.removeItem("cart");
     localStorage.removeItem("wishlist");
@@ -65,7 +66,6 @@ const Navbar = () => {
     };
   };
 
-  const toggleMenu = handleToggle(setExpandMenu);
   const toggleClose = () => {
     setExpand(false);
     setExpandMenu(false);
@@ -116,7 +116,7 @@ const Navbar = () => {
   return (
     <nav
       ref={navRef}
-      className={`fixed z-50 flex w-full transform select-none flex-col bg-white shadow backdrop-blur-lg transition-all duration-700 ${expand ? "h-[100vh] md:h-[500px]" : "h-12"}`}
+      className={`fixed top-0 z-50 flex w-full transform select-none flex-col bg-white shadow backdrop-blur-lg transition-all duration-700 ${expand ? "h-[100vh] md:h-[500px]" : "h-12"}`}
     >
       <div className="flex h-auto w-full flex-col overflow-hidden px-5 py-1.5 md:px-[10vw]">
         <div className="flex flex-row items-center justify-between">
@@ -150,10 +150,14 @@ const Navbar = () => {
                   </span>
                   <div className="absolute bottom-0 flex w-full items-center justify-center">
                     <div className="w-[50%] overflow-hidden">
-                      <div className="h-[1px] w-full translate-x-20 bg-zinc-300 transition-all duration-300 ease-in group-hover:translate-x-0"></div>
+                      <div
+                        className={`h-[1px] w-full translate-x-20 bg-zinc-300 transition-all duration-300 ease-in group-hover:translate-x-0 ${categoryPath === category.toLowerCase() && "translate-x-0"}`}
+                      ></div>
                     </div>
                     <div className="w-[50%] overflow-hidden">
-                      <div className="h-[1px] w-full -translate-x-20 bg-zinc-300 transition-all duration-300 ease-in group-hover:translate-x-0"></div>
+                      <div
+                        className={`h-[1px] w-full -translate-x-20 bg-zinc-300 transition-all duration-300 ease-in group-hover:translate-x-0 ${categoryPath === category.toLowerCase() && "translate-x-0"}`}
+                      ></div>
                     </div>
                   </div>
                 </li>

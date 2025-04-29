@@ -1,8 +1,6 @@
-
-
 const Footer = () => {
   return (
-    <footer className="hidden h-10 w-full items-center justify-between border-t-[1px] bg-zinc-50 px-6 text-xs md:flex md:px-[10vw]">
+    <footer className="hidden h-10 w-full items-center justify-between self-end border-t-[1px] bg-zinc-50 px-6 text-xs md:flex md:px-[10vw]">
       <div className="card-icons flex justify-center space-x-4 md:justify-start">
         <div>
           <svg
