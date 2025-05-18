@@ -10,15 +10,16 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
+  const currentPath = location.pathname;
   return (
     <>
       <CartProvider>
         <WishlistProvider>
           <Navbar />
-          <main className="flex w-full flex-col gap-2 px-6 py-16 md:px-[10vw] flex-1">
+          <main className="flex w-full flex-1 flex-col gap-2 px-6 py-16 md:px-[10vw]">
             {children}
           </main>
-          <CategoryNav></CategoryNav>
+          {currentPath !== "/checkout" && <CategoryNav />}
           <Footer></Footer>
         </WishlistProvider>
       </CartProvider>

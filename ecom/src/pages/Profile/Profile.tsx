@@ -83,7 +83,7 @@ const Profile: React.FC = () => {
   return (
     <div className={`flex h-full w-full flex-col gap-2`}>
       <div>
-        <div className="relative mb-2 flex items-center justify-between border-b-[1px]">
+        <div className="relative mb-2 flex items-center justify-between border-b-[1px] mt-4">
           <div className="flex gap-2">
             <Link to={"/my-profile"}>
               <p

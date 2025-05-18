@@ -96,7 +96,7 @@ const Admin_Login = () => {
   );
 
   return (
-    <section className="relative flex h-screen w-screen select-none items-center justify-center bg-zinc-900/60 backdrop-blur-[2px]">
+    <section className="relative flex h-dvh w-dvw select-none items-center justify-center bg-zinc-900/60 backdrop-blur-[2px]">
       <div className="relative flex w-[80%] flex-col items-center justify-center gap-1 rounded-2xl bg-white px-10 py-10 md:h-[600px] md:w-[600px] md:flex-col">
         <div className="flex flex-col items-center gap-3">
           <div

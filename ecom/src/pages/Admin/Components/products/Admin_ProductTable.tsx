@@ -163,6 +163,7 @@ const Admin_ProductTable: React.FC<Table_Content> = ({
           className="ml-2 rounded-lg border-[1px] border-zinc-300 bg-white py-0.5 pl-7 pr-2 text-xs font-medium tracking-wide drop-shadow-sm hover:text-zinc-700 disabled:border-zinc-200 disabled:text-zinc-200 disabled:hover:cursor-not-allowed"
           onClick={async () => {
             handleArchive(selectedProducts);
+            setSelectedProducts([]);
           }}
           disabled={selectedProducts.length === 0}
         >
