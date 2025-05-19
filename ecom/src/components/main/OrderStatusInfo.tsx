@@ -213,7 +213,7 @@ const OrderStatusInfo = () => {
   }
 
   return (
-    <div className="mb-8 flex w-full flex-col items-center gap-2">
+    <div className="mb-8 mt-4 flex w-full flex-col items-center gap-2">
       {toggleReview && order && (
         <Review
           items={order.items}

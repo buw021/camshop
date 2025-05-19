@@ -6,6 +6,7 @@ import RatingSelector from "../../components/reviews/SelectRate";
 import axiosInstance from "../../services/axiosInstance";
 import { showToast } from "../../func/showToast";
 
+
 type RatingData = {
   rate: number;
   title?: string;
@@ -72,7 +73,7 @@ const ModifyReview: React.FC<{
                   <div className="relative flex h-16 w-16 flex-shrink-0 select-none flex-col justify-center overflow-hidden rounded-xl border-zinc-500 shadow-inner">
                     <img
                       className="h-full object-scale-down p-2"
-                      src={`http://localhost:3000/uploads/products/${review.variantImg}`}
+                      src={review.variantImg}
                     ></img>
                   </div>
                 </Link>

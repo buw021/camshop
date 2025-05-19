@@ -1,4 +1,5 @@
 import React, { ReactNode, useState } from "react";
+
 interface Variant {
   variantName: string;
   variantColor?: string;
@@ -166,7 +167,7 @@ const PreviewForm: React.FC<{
                             className="relative max-h-14 max-w-14 rounded bg-white p-1"
                           >
                             <img
-                              src={`http://localhost:3000/uploads/products/${img}`}
+                              src={img}
                               alt={`Preview ${img}`}
                               className="h-auto w-full"
                             />
@@ -187,7 +188,7 @@ const PreviewForm: React.FC<{
                       className="relative max-h-14 max-w-14 rounded bg-white p-1"
                     >
                       <img
-                        src={`http://localhost:3000/uploads/products/${img}`}
+                        src={img}
                         alt={`Preview ${img}`}
                         className="h-auto w-full"
                       />

@@ -6,6 +6,7 @@ import { useCart } from "../../contexts/useCart";
 import { useAuth } from "../../contexts/useAuth";
 import { showToast } from "../../func/showToast";
 
+
 interface CheckoutCart {
   checkout: boolean;
   toggleClose?: () => void;
@@ -81,7 +82,7 @@ const Cart: React.FC<CheckoutCart> = ({
                     <div className="relative flex h-28 w-28 select-none flex-col justify-center overflow-hidden rounded-xl border-zinc-500 shadow-inner">
                       <img
                         className={`h-full object-scale-down p-2 ${item.variantStocks > 0 ? "" : "opacity-50"}`}
-                        src={`http://localhost:3000/uploads/products/${item.variantImg}`}
+                        src={item.variantImg}
                       ></img>
                     </div>
                   </Link>

@@ -6,6 +6,7 @@ import { useState } from "react";
 import axiosInstance from "../../services/axiosInstance";
 import { showToast } from "../../func/showToast";
 
+
 type RatingData = {
   rate: number;
   subject?: string;
@@ -113,7 +114,7 @@ const Review: React.FC<{
                       <div className="relative flex h-28 w-28 select-none flex-col justify-center overflow-hidden rounded-xl border-zinc-500 shadow-inner">
                         <img
                           className="h-full object-scale-down p-2"
-                          src={`http://localhost:3000/uploads/products/${item.variantImg}`}
+                           src={item.variantImg}
                         ></img>
                       </div>
                     </Link>

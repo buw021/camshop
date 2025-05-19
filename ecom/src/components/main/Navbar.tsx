@@ -120,7 +120,7 @@ const Navbar = () => {
     >
       <div className="flex h-auto w-full flex-col overflow-hidden px-5 py-1.5 md:px-[10vw]">
         <div className="flex flex-row items-center justify-between">
-          <div className="md:order-0 order-1 flex flex-row items-center gap-6">
+          <div className="md:order-0 order-1 flex select-none flex-row items-center gap-6">
             <Link to={`/`}>
               <div
                 className={`roboto-medium relative transition-opacity duration-100 ease-linear ${
@@ -166,11 +166,13 @@ const Navbar = () => {
           </div>
           <div className="order-0 flex items-center justify-end gap-2 md:z-0 md:order-1 md:hidden md:gap-4">
             <IconButton icon="search" onClick={toggleSearch} />{" "}
-            <IconButton
-              icon="favorite"
-              onClick={toggleFav}
-              additionalClasses="filled"
-            />
+            {currentPath !== "/checkout" && (
+              <IconButton
+                icon="favorite"
+                onClick={toggleFav}
+                additionalClasses="filled"
+              />
+            )}
           </div>
           <div className="order-2 flex items-center justify-end gap-2">
             <IconButton

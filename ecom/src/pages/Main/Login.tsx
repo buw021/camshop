@@ -89,8 +89,8 @@ const LogIn = () => {
             <div className="relative flex w-full flex-row items-center gap-1">
               <InputField
                 id="email"
-                label="Username/Email"
-                type="text"
+                label="Email"
+                type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 addError={false}
@@ -150,7 +150,7 @@ const LogIn = () => {
             </div>
 
             <button
-              disabled={!email || !password || password.length <= 8}
+              disabled={!email || !password || password.length < 8}
               type="submit"
               className="text-md w-full rounded-md bg-zinc-500 px-8 py-2 font-medium text-white/90 transition duration-150 ease-in hover:bg-zinc-700 hover:shadow-lg focus:bg-zinc-900 focus:shadow-lg disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none"
             >

@@ -38,7 +38,7 @@ export const ProductCard: React.FC<{
           <div className="absolute h-full w-full bg-zinc-500/5"></div>
           <img
             className="h-full object-scale-down px-4 py-4"
-            src={`http://localhost:3000/uploads/products/${thumbnail}`}
+            src={thumbnail}
           ></img>
         </div>
       </Link>

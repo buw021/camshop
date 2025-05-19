@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { slugify } from "../../func/slugify";
 import { OrderProps } from "../../interfaces/order";
 
+
 const statusColor = {
   pending: "text-yellow-500",
   "payment failed": "text-red-500",
@@ -56,7 +57,7 @@ const OrderCard: React.FC<OrderProps> = ({
                     <div className="absolute h-full w-full bg-zinc-500/5"></div>
                     <img
                       className="h-full object-scale-down px-4 py-4"
-                      src={`http://localhost:3000/uploads/products/${item.variantImg}`}
+                       src={item.variantImg}
                     ></img>
                   </div>
                 </Link>

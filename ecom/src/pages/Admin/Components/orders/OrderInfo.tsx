@@ -1,6 +1,6 @@
 import React from "react";
 import { ItemsProps } from "../interface/interfaces";
-import { productImgPath } from "../../Services/imgUrlPath";
+
 
 interface OrderInfoProps {
   orderItems: ItemsProps[];
@@ -34,7 +34,7 @@ const OrderInfo: React.FC<OrderInfoProps> = ({
               <div className="relative flex h-28 w-28 select-none flex-col justify-center overflow-hidden rounded-xl border-zinc-500 shadow-inner">
                 <img
                   className="h-full object-scale-down p-2"
-                  src={productImgPath + item.variantImg}
+                  src={item.variantImg}
                 ></img>
               </div>
 

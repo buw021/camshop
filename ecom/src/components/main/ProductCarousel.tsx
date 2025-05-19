@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import axiosInstance from "../../services/axiosInstance";
 import { CardLoadingSkeleton, ProductCard } from "./Card";
 import useEmblaCarousel from "embla-carousel-react";
-import { Link } from "react-router-dom";
 interface saleId {
   salePrice: number | null;
 }
@@ -27,12 +26,41 @@ const ProductCarousel = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [products, setProducts] = useState<ProductList[]>([]);
   const [emblaRef, emblaApi] = useEmblaCarousel({
-    loop: false, // Enable infinite looping
+    loop: true, // Enable infinite looping
     align: "start", // Align slides to the start
     slidesToScroll: 1, // Scroll 1 slide at a time
   });
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
+  
+  const timerRef = useRef<number | null>(null);
+
+  const clearAndRestartTimer = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (emblaApi) {
+      timerRef.current = window.setInterval(() => {
+        emblaApi.scrollNext();
+      }, 5000);
+    }
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    clearAndRestartTimer();
+
+    const onUserScroll = () => {
+      clearAndRestartTimer();
+    };
+
+    emblaApi.on("pointerUp", onUserScroll);
+    emblaApi.on("select", onUserScroll);
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      emblaApi.off("pointerUp", onUserScroll);
+      emblaApi.off("select", onUserScroll);
+    };
+  }, [emblaApi, clearAndRestartTimer]);
 
   const scrollPrev = useCallback(() => {
     if (emblaApi) emblaApi.scrollPrev();
@@ -112,7 +140,9 @@ const ProductCarousel = () => {
               </div>
             ))}
       </div>
-      <div className="mt-2 flex items-center justify-between">
+      <div
+        className={`mt-2 flex items-center justify-between ${products ? "" : "hidden"}`}
+      >
         <div className="flex items-center gap-1 self-end">
           <button
             disabled={!canScrollPrev}
@@ -133,11 +163,6 @@ const ProductCarousel = () => {
             </span>
           </button>
         </div>
-        <Link to={"/"} className="mr-2 self-end">
-          <h1 className="roboto-medium relative flex text-base text-zinc-700 underline underline-offset-4 group-hover:text-zinc-950">
-            <span>View more products</span>
-          </h1>
-        </Link>
       </div>
     </div>
   );

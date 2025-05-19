@@ -32,7 +32,7 @@ const Orders = () => {
 
   return (
     <>
-      <div className="relative mb-2 flex items-center justify-between border-b-[1px]">
+      <div className="relative mb-2 mt-4 flex items-center justify-between border-b-[1px]">
         <div className="flex gap-2">
           <button type="button" onClick={() => handleOrderStat("current")}>
             <p
