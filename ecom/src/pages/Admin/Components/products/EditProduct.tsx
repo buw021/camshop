@@ -10,7 +10,16 @@ import { showToast } from "../showToast";
 import VariantForm from "./EditVariantForm";
 import SpecificationConverter from "./SpecificationConverter";
 import AutoAddContent from "./AutoAddContent";
-
+import {
+  DndContext,
+  closestCenter,
+  useSensor,
+  useSensors,
+  PointerSensor,
+  TouchSensor,
+} from "@dnd-kit/core";
+import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
+import { SortableImagePreview } from "./ImagePreviews";
 const renderOptions = (category: string): React.ReactNode => {
   const options = subCats[category] || [];
   return options.map((val, index) => (
@@ -65,6 +74,8 @@ const EditProduct: React.FC<{
     handleVariantChange,
     hasChanges,
     moveOldImage,
+    handleDragEndNew,
+    handleDragEndOld,
   } = useProduct(getData);
 
   const [activeMenu, setActiveMenu] = useState<"product" | "variant">(
@@ -102,7 +113,7 @@ const EditProduct: React.FC<{
       );
       if (!hasFilesToUpload) {
         console.log("No files to upload");
-        return;
+        return [];
       }
       const formData = new FormData();
 
@@ -542,6 +553,7 @@ const EditProduct: React.FC<{
       });
       if (response.data.success) {
         showToast("Product Successfully Updated", "success");
+        setIsDirty(false);
         onProductUpdated();
         handleCancel();
         return true;
@@ -568,7 +580,6 @@ const EditProduct: React.FC<{
         if (fileUploadSuccess) {
           await updateProduct(fileUploadSuccess, imageToDelete);
         }
-        console.log("has file");
       } else {
         await updateProduct([], imageToDelete);
       }
@@ -590,7 +601,21 @@ const EditProduct: React.FC<{
   useEffect(() => {
     getAllVariantContent();
   }, [getAllVariantContent]);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
 
+  useEffect(() => {
+    setIsTouchDevice("ontouchstart" in window || navigator.maxTouchPoints > 0);
+  }, []);
+
+  const pointerSensor = useSensor(PointerSensor);
+  const touchSensor = useSensor(TouchSensor, {
+    activationConstraint: {
+      delay: 250,
+      tolerance: 5,
+    },
+  });
+
+  const sensors = useSensors(isTouchDevice ? touchSensor : pointerSensor);
   return (
     <form className="relative flex h-full w-full flex-col gap-2 overflow-hidden rounded-lg bg-white px-6 py-4 text-xs">
       {preview && (
@@ -1124,71 +1149,59 @@ const EditProduct: React.FC<{
           <div
             className={`flex h-full min-h-40 flex-col flex-wrap justify-center gap-2 overflow-auto rounded-md bg-zinc-100 p-2.5 ${errors.images0 && "ring-2 ring-red-200"}`}
           >
-            Old images
+            Images
             <div className="flex flex-wrap gap-2 border-b-2 pb-2">
-              {product.variants[0].variantImgs.map((url, index) => (
-                <div
-                  key={index}
-                  className="relative max-h-14 max-w-14 rounded bg-white p-1"
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEndOld}
+              >
+                <SortableContext
+                  items={product.variants[0].variantImgs.map(
+                    (_, index) => `${0}-${index}`,
+                  )}
+                  strategy={rectSortingStrategy}
                 >
-                  <img
-                    src={`http://localhost:3000/uploads/products/${url}`}
-                    alt={`Preview ${index}`}
-                    className="h-auto w-full"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteOldImage(index, 0, url)}
-                    className="absolute right-0 top-0 rounded-full bg-zinc-600/70 px-1 text-white hover:bg-red-600"
-                  >
-                    &times;
-                  </button>
-                  <div className="absolute bottom-0 right-0 flex">
-                    <button
-                      type="button"
-                      onClick={() => moveOldImage(index, "up", 0)}
-                      className="flex rounded-full bg-gray-200 px-1 text-gray-700 hover:bg-gray-300"
-                    >
-                      <span className="material-symbols-outlined text-[12px]">
-                        arrow_back
-                      </span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => moveOldImage(index, "down", 0)}
-                      className="flex rounded-full bg-gray-200 px-1 text-gray-700 hover:bg-gray-300"
-                    >
-                      <span className="material-symbols-outlined text-[12px]">
-                        arrow_forward
-                      </span>
-                    </button>
+                  <div className="flex h-full min-h-40 flex-wrap justify-evenly gap-2 overflow-auto rounded-md bg-zinc-100 p-2.5">
+                    {product.variants[0].variantImgs.map((url, index) => (
+                      <SortableImagePreview
+                        key={`${0}-${index}`}
+                        id={`${0}-${index}`}
+                        url={url}
+                        onDelete={() => handleDeleteOldImage(index, 0, url)}
+                      />
+                    ))}
                   </div>
-                </div>
-              ))}
+                </SortableContext>
+              </DndContext>
             </div>
             {product.variants[0].previewUrl.length > 0 && (
               <>
                 To be Added:
                 <div className="flex flex-wrap gap-2 border-b-2 pb-2">
-                  {product.variants[0].previewUrl.map((url, index) => (
-                    <div
-                      key={index}
-                      className="relative max-h-14 max-w-14 rounded bg-white p-1"
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEndNew}
+                  >
+                    <SortableContext
+                      items={product.variants[0].previewUrl.map(
+                        (_, index) => `${0}-${index}`,
+                      )}
+                      strategy={rectSortingStrategy}
                     >
-                      <img
-                        src={url}
-                        alt={`Preview ${index}`}
-                        className="h-auto w-full"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteImage(index, 0)}
-                        className="absolute right-0 top-0 rounded-full bg-zinc-600/70 px-1 text-white hover:bg-red-600"
-                      >
-                        &times;
-                      </button>
-                    </div>
-                  ))}
+                      <div className="flex min-h-40 flex-wrap justify-center gap-2 overflow-auto rounded-md p-2.5">
+                        {product.variants[0].previewUrl.map((url, index) => (
+                          <SortableImagePreview
+                            key={`${0}-${index}`}
+                            id={`${0}-${index}`}
+                            url={url}
+                            onDelete={() => handleDeleteImage(index, 0)}
+                          />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
                 </div>
               </>
             )}
@@ -1257,6 +1270,9 @@ const EditProduct: React.FC<{
                 errMsg={getVariantErrors(index)}
                 moveOldImage={moveOldImage}
                 contentList={contentList}
+                handleDragEndNew={handleDragEndNew}
+                handleDragEndOld={handleDragEndOld}
+                sensors={sensors}
               />
             </div>
           );

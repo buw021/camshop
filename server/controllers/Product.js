@@ -2,6 +2,7 @@ const Product = require("../models/products");
 const Sale = require("../models/sale");
 const path = require("path");
 const fs = require("fs");
+const { deleteOldImg } = require("./uploadImg");
 /* const addProduct = async (req, res) => {
   try {
     const product = new Product(req.body);
@@ -62,7 +63,7 @@ const addProduct = async (req, res) => {
       subCategory,
       brand,
       description,
-      specifications: specificationsMap, // Default to empty array if not provided
+      specifications: specifications, // Default to empty array if not provided
       variants: variants.map((variant, index) => ({
         variantName: variant.variantName || "",
         variantColor: variant.variantColor || "",
@@ -363,9 +364,7 @@ const getProduct = async (req, res) => {
 
 const updateProduct = async (req, res) => {
   try {
-    const { product, fileImgs, oldImagetodelete } = req.body;
-
-    // Validate required fields
+    const { product, fileImgs, oldImagetodelete } = req.body; // Validate required fields
     const {
       _id,
       name,
@@ -383,19 +382,6 @@ const updateProduct = async (req, res) => {
     if (!existingProduct) {
       return res.status(404).json({ error: "Product not found." });
     }
-
-    // Validate and transform specifications
-    const specificationsMap =
-      specifications && Array.isArray(specifications)
-        ? specifications.reduce((acc, spec) => {
-            const key = Object.keys(spec)[0];
-            const value = spec[key];
-            if (key && value) {
-              acc[key] = value;
-            }
-            return acc;
-          }, {})
-        : {};
 
     // Update or add variants
     const updatedVariants = variants.map((variant, index) => {
@@ -445,20 +431,18 @@ const updateProduct = async (req, res) => {
     existingProduct.subCategory = subCategory;
     existingProduct.brand = brand;
     existingProduct.description = description;
-    existingProduct.specifications = specificationsMap;
+    existingProduct.specifications = specifications;
     existingProduct.variants = updatedVariants;
     existingProduct.tags = tags;
 
     // Handle image deletion if any
     if (oldImagetodelete && oldImagetodelete.length > 0) {
-      oldImagetodelete.forEach((file) => {
-        const fullPath = path.join(__dirname, "..", "uploads", file);
-        if (fs.existsSync(fullPath)) {
-          fs.unlinkSync(fullPath);
-        }
-      });
+      const deleteOldImages = await deleteOldImg(oldImagetodelete);
+      if (!deleteOldImages) {
+        // Assuming deleteOldImg is a function that deletes images from Cloudinary
+        return res.status(500).json({ error: "Failed to delete old images." });
+      }
     }
-
     await existingProduct.save();
     res.status(200).json({ success: true, product: existingProduct });
   } catch (error) {

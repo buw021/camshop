@@ -10,6 +10,16 @@ import { useProduct } from "../../hooks/products";
 import { showToast } from "../showToast";
 import SpecificationConverter from "./SpecificationConverter";
 import AutoAddContent from "./AutoAddContent";
+import {
+  DndContext,
+  closestCenter,
+  useSensor,
+  useSensors,
+  PointerSensor,
+  TouchSensor,
+} from "@dnd-kit/core";
+import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
+import { SortableImagePreview } from "./ImagePreviews";
 
 const renderOptions = (category: string): React.ReactNode => {
   const options = subCats[category] || [];
@@ -64,6 +74,7 @@ const ProductForm: React.FC<{
     handleVariantChange,
     isProductEmpty,
     moveImage,
+    handleDragEnd,
   } = useProduct();
 
   const [activeMenu, setActiveMenu] = useState<"product" | "variant">(
@@ -572,6 +583,22 @@ const ProductForm: React.FC<{
   useEffect(() => {
     getAllVariantContent();
   }, [getAllVariantContent]);
+
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+
+  useEffect(() => {
+    setIsTouchDevice("ontouchstart" in window || navigator.maxTouchPoints > 0);
+  }, []);
+
+  const pointerSensor = useSensor(PointerSensor);
+  const touchSensor = useSensor(TouchSensor, {
+    activationConstraint: {
+      delay: 250,
+      tolerance: 5,
+    },
+  });
+
+  const sensors = useSensors(isTouchDevice ? touchSensor : pointerSensor);
 
   return (
     <form className="relative flex h-full w-full flex-col gap-2 overflow-hidden rounded-lg bg-white px-6 py-4 text-xs">
@@ -1098,55 +1125,33 @@ const ProductForm: React.FC<{
             <input
               type="file"
               ref={fileInputRef}
-              className={`mr-1 w-full select-none rounded-md bg-zinc-100 p-2.5 text-sm text-zinc-700 outline-none hover:cursor-pointer focus:bg-white focus:ring-2 focus:ring-blue-400 ${errors.customSubCategory && "ring-2 ring-red-200"}`}
+              className={`mr-1 w-full select-none rounded-md bg-zinc-100 p-2.5 text-sm text-zinc-700 outline-none hover:cursor-pointer focus:bg-white focus:ring-2 focus:ring-blue-400`}
               multiple
               onChange={(e) => handleFileSelection(e, 0)}
             ></input>
           </div>
 
-          <div
-            className={`flex h-full min-h-40 flex-wrap justify-center gap-2 overflow-auto rounded-md bg-zinc-100 p-2.5 ${errors.images0 && "ring-2 ring-red-200"}`}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
           >
-            {product.variants[0].previewUrl.map((url, index) => (
-              <div
-                key={index}
-                className="relative max-h-14 max-w-14 rounded bg-white p-1"
-              >
-                <img
-                  src={url}
-                  alt={`Preview ${index}`}
-                  className="h-auto w-full"
-                />
-                <button
-                  type="button"
-                  onClick={() => handleDeleteImage(index, 0)}
-                  className="absolute right-0 top-0 rounded-full bg-zinc-600/70 px-1 text-white hover:bg-red-600"
-                >
-                  &times;
-                </button>
-                <div className="absolute bottom-0 right-0 flex">
-                  <button
-                    type="button"
-                    onClick={() => moveImage(index, "up", 0)}
-                    className="flex rounded-full bg-gray-200 px-1 text-gray-700 hover:bg-gray-300"
-                  >
-                    <span className="material-symbols-outlined text-[12px]">
-                      arrow_back
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => moveImage(index, "down", 0)}
-                    className="flex rounded-full bg-gray-200 px-1 text-gray-700 hover:bg-gray-300"
-                  >
-                    <span className="material-symbols-outlined text-[12px]">
-                      arrow_forward
-                    </span>
-                  </button>
-                </div>
+            <SortableContext
+              items={product.variants[0].previewUrl.map((url) => `${0}-${url}`)}
+              strategy={rectSortingStrategy}
+            >
+              <div className="flex min-h-40 justify-evenly gap-2 bg-zinc-100 overflow-auto rounded-md p-2.5">
+                {product.variants[0].previewUrl.map((url, index) => (
+                  <SortableImagePreview
+                    key={`${0}-${url}`}
+                    id={`${0}-${url}`}
+                    url={url}
+                    onDelete={() => handleDeleteImage(index, 0)}
+                  />
+                ))}
               </div>
-            ))}
-          </div>
+            </SortableContext>
+          </DndContext>
 
           {errors.images0 && (
             <span className="text-[11px] font-normal text-red-600">
@@ -1213,6 +1218,8 @@ const ProductForm: React.FC<{
                 errMsg={getVariantErrors(index)}
                 moveImage={moveImage}
                 contentList={contentList}
+                handleDragEnd={handleDragEnd}
+                sensors={sensors}
               />
             </div>
           );

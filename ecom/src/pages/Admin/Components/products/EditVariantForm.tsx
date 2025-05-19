@@ -2,6 +2,14 @@ import React, { useRef, useState } from "react";
 import { InputBox } from "./InputBox";
 import AutoAddContent from "./AutoAddContent";
 
+import {
+  DndContext,
+  SensorDescriptor,
+  SensorOptions,
+  closestCenter,
+} from "@dnd-kit/core";
+import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
+import { SortableImagePreview } from "./ImagePreviews";
 interface Variant {
   variantName: string;
   variantColor: string;
@@ -42,6 +50,9 @@ interface VariantFormProps {
     formIndex: number,
   ) => void;
   contentList: string[];
+  handleDragEndOld: (event: import("@dnd-kit/core").DragEndEvent) => void;
+  handleDragEndNew: (event: import("@dnd-kit/core").DragEndEvent) => void;
+  sensors: SensorDescriptor<SensorOptions>[];
 }
 
 const VariantForm: React.FC<VariantFormProps> = ({
@@ -55,8 +66,10 @@ const VariantForm: React.FC<VariantFormProps> = ({
   handleDeleteImage,
   handleDeleteOldImage,
   errMsg,
-  moveOldImage,
   contentList,
+  handleDragEndOld,
+  handleDragEndNew,
+  sensors,
 }) => {
   const [content, setContent] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -236,73 +249,63 @@ const VariantForm: React.FC<VariantFormProps> = ({
             <div
               className={`flex h-full min-h-40 flex-col flex-wrap justify-center gap-2 overflow-auto rounded-md bg-zinc-100 p-2.5 ${errMsg.images && "ring-2 ring-red-200"}`}
             >
-              Old images
+              Images
               <div className="flex flex-wrap gap-2 border-b-2 pb-2">
-                {variant.variantImgs.map((url, index) => (
-                  <div
-                    key={index}
-                    className="relative max-h-14 max-w-14 rounded bg-white p-1"
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEndOld}
+                >
+                  <SortableContext
+                    items={variant.variantImgs.map(
+                      (_, index) => `${formIndex}-${index}`,
+                    )}
+                    strategy={rectSortingStrategy}
                   >
-                    <img
-                      src={`http://localhost:3000/uploads/products/${url}`}
-                      alt={`Preview ${index}`}
-                      className="h-auto w-full"
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleDeleteOldImage(index, formIndex, url)
-                      }
-                      className="absolute right-0 top-0 rounded-full bg-zinc-600/70 px-1 text-white hover:bg-red-600"
-                    >
-                      &times;
-                    </button>
-                    <div className="absolute bottom-0 right-0 flex">
-                      <button
-                        type="button"
-                        onClick={() => moveOldImage(index, "up", formIndex)}
-                        className="flex rounded-full bg-gray-200 px-1 text-gray-700 hover:bg-gray-300"
-                      >
-                        <span className="material-symbols-outlined text-[12px]">
-                          arrow_back
-                        </span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => moveOldImage(index, "down", formIndex)}
-                        className="flex rounded-full bg-gray-200 px-1 text-gray-700 hover:bg-gray-300"
-                      >
-                        <span className="material-symbols-outlined text-[12px]">
-                          arrow_forward
-                        </span>
-                      </button>
+                    <div className="flex h-full min-h-40 flex-wrap justify-evenly gap-2 bg-zinc-100 overflow-auto rounded-md p-2.5">
+                      {variant.variantImgs.map((url, index) => (
+                        <SortableImagePreview
+                          key={`${formIndex}-${index}`}
+                          id={`${formIndex}-${index}`}
+                          url={url}
+                          onDelete={() =>
+                            handleDeleteOldImage(index, formIndex, url)
+                          }
+                        />
+                      ))}
                     </div>
-                  </div>
-                ))}
+                  </SortableContext>
+                </DndContext>
               </div>
               {variant.previewUrl.length > 0 && (
                 <>
                   To be Added:
                   <div className="flex flex-wrap gap-2 border-b-2 pb-2">
-                    {variant.previewUrl.map((url, index) => (
-                      <div
-                        key={index}
-                        className="relative max-h-14 max-w-14 rounded bg-white p-1"
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={handleDragEndNew}
+                    >
+                      <SortableContext
+                        items={variant.previewUrl.map(
+                          (_, index) => `${formIndex}-${index}`,
+                        )}
+                        strategy={rectSortingStrategy}
                       >
-                        <img
-                          src={url}
-                          alt={`Preview ${index}`}
-                          className="h-auto w-full"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteImage(index, formIndex)}
-                          className="absolute right-0 top-0 rounded-full bg-zinc-600/70 px-1 text-white hover:bg-red-600"
-                        >
-                          &times;
-                        </button>
-                      </div>
-                    ))}
+                        <div className="flex h-full min-h-40 flex-wrap justify-center gap-2 overflow-auto rounded-md p-2.5">
+                          {variant.previewUrl.map((url, index) => (
+                            <SortableImagePreview
+                              key={`${formIndex}-${index}`}
+                              id={`${formIndex}-${index}`}
+                              url={url}
+                              onDelete={() =>
+                                handleDeleteImage(index, formIndex)
+                              }
+                            />
+                          ))}
+                        </div>
+                      </SortableContext>
+                    </DndContext>
                   </div>
                 </>
               )}

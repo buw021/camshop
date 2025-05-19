@@ -1,7 +1,14 @@
 import React, { useRef, useState } from "react";
 import { InputBox } from "./InputBox";
 import AutoAddContent from "./AutoAddContent";
-
+import {
+  DndContext,
+  SensorDescriptor,
+  SensorOptions,
+  closestCenter,
+} from "@dnd-kit/core";
+import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
+import { SortableImagePreview } from "./ImagePreviews";
 interface Variant {
   variantName: string;
   variantColor: string;
@@ -41,6 +48,8 @@ interface VariantFormProps {
     formIndex: number,
   ) => void;
   contentList: string[];
+  handleDragEnd: (event: import("@dnd-kit/core").DragEndEvent) => void;
+  sensors: SensorDescriptor<SensorOptions>[];
 }
 
 const VariantForm: React.FC<VariantFormProps> = ({
@@ -53,8 +62,9 @@ const VariantForm: React.FC<VariantFormProps> = ({
   handleFileSelection,
   handleDeleteImage,
   errMsg,
-  moveImage,
   contentList,
+  handleDragEnd,
+  sensors,
 }) => {
   const [content, setContent] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -238,49 +248,27 @@ const VariantForm: React.FC<VariantFormProps> = ({
               }}
             ></input>
 
-            <div
-              className={`flex h-full min-h-40 flex-wrap justify-center gap-2 overflow-auto rounded-md bg-zinc-100 p-2.5 ${errMsg.images && "ring-2 ring-red-200"}`}
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
             >
-              {variant.previewUrl.map((url, index) => (
-                <div
-                  key={index}
-                  className="relative max-h-14 max-w-14 rounded bg-white p-1"
-                >
-                  <img
-                    src={url}
-                    alt={`Preview ${index}`}
-                    className="h-auto w-full"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteImage(index, formIndex)}
-                    className="absolute right-0 top-0 rounded-full bg-zinc-600/70 px-1 text-white hover:bg-red-600"
-                  >
-                    &times;
-                  </button>
-                  <div className="absolute bottom-0 right-0 flex">
-                    <button
-                      type="button"
-                      onClick={() => moveImage(index, "up", formIndex)}
-                      className="flex rounded-full bg-gray-200 px-1 text-gray-700 hover:bg-gray-300"
-                    >
-                      <span className="material-symbols-outlined text-[12px]">
-                        arrow_back
-                      </span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => moveImage(index, "down", formIndex)}
-                      className="flex rounded-full bg-gray-200 px-1 text-gray-700 hover:bg-gray-300"
-                    >
-                      <span className="material-symbols-outlined text-[12px]">
-                        arrow_forward
-                      </span>
-                    </button>
-                  </div>
+              <SortableContext
+                items={variant.previewUrl.map((url) => `${formIndex}-${url}`)}
+                strategy={rectSortingStrategy}
+              >
+                <div className="flex min-h-40 flex-wrap justify-evenly gap-2 overflow-auto bg-zinc-100 rounded-md p-2.5">
+                  {variant.previewUrl.map((url, index) => (
+                    <SortableImagePreview
+                      key={`${formIndex}-${url}`}
+                      id={`${formIndex}-${url}`}
+                      url={url}
+                      onDelete={() => handleDeleteImage(index, formIndex)}
+                    />
+                  ))}
                 </div>
-              ))}
-            </div>
+              </SortableContext>
+            </DndContext>
             {errMsg.images && (
               <span className="text-[11px] font-normal text-red-600">
                 {errMsg.images}
