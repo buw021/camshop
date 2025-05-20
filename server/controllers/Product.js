@@ -179,8 +179,33 @@ const getVariants = async (req, res) => {
 
     // Variant level filters
 
+    // Convert filters array to a single MongoDB query object
+    let productFilters = [];
+    if (filters && Array.isArray(filters)) {
+      filters.forEach((filter) => {
+        Object.entries(filter).forEach(([key, value]) => {
+          // Use $in for subCategory, brand, or any array-based filter
+          if (
+            (key === "subCategory" ||
+              key === "brand" ||
+              key === "colors" ||
+              Array.isArray(value)) &&
+            (Array.isArray(value) ||
+              (typeof value === "string" && value.includes(",")))
+          ) {
+            const arr = Array.isArray(value) ? value : value.split(",");
+            productFilters.push({ [key]: { $in: arr } });
+          } else {
+            productFilters.push({ [key]: value });
+          }
+        });
+      });
+    }
+
     const variants = await Product.aggregate([
-      ...(filters.length > 0 ? [{ $match: { $and: filters } }] : []), // Filter products
+      ...(productFilters.length > 0
+        ? [{ $match: { $and: productFilters } }]
+        : []), // Filter products
       { $match: { isArchived: false } }, // Ensure only non-archived products are included
       { $unwind: "$variants" }, // Unwind variants for individual processing
       {
@@ -271,8 +296,11 @@ const getVariants = async (req, res) => {
       { $limit: parseInt(limit) },
     ]);
 
+    // Use the same productFilters as in the main aggregation for consistency
     const total = await Product.aggregate([
-      ...(filters.length > 0 ? [{ $match: { $and: filters } }] : []),
+      ...(productFilters.length > 0
+        ? [{ $match: { $and: productFilters } }]
+        : []),
       { $match: { isArchived: false } }, // Filter products
       { $unwind: "$variants" }, // Unwind variants for individual processing
       {
@@ -318,7 +346,7 @@ const getVariants = async (req, res) => {
     ]);
 
     // Sorting logic
-
+    console.log(variants);
     res.json({
       variants,
       total:

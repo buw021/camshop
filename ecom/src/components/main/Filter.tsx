@@ -1,10 +1,11 @@
-import {  useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 // bug in pricerange change value
 import { Filter } from "../../interfaces/filter";
 import { AnimatePresence, motion } from "framer-motion";
 
 import axiosInstance from "../../services/axiosInstance";
 import PriceRangeSelector from "./PriceRangeSelector";
+import CheckBoxFilter from "./CheckBoxFilter";
 
 interface FilterList {
   subcategories: { subCategory: string }[];
@@ -18,7 +19,9 @@ const ProductFilter: React.FC<{
   toggle: boolean;
   toggleFilter: () => void;
   category: string;
-}> = ({ handleFilter, toggleFilter, toggle, category }) => {
+
+  selectedFilters: Filter;
+}> = ({ handleFilter, toggleFilter, toggle, category, selectedFilters }) => {
   const [filterList, setFilterList] = useState<FilterList>({
     subcategories: [],
     colors: [],
@@ -26,18 +29,17 @@ const ProductFilter: React.FC<{
     brands: [],
   });
 
- /*  const lowestPrice = Math.min(...filterList.prices); */
+  /*  const lowestPrice = Math.min(...filterList.prices); */
   const highestPrice = Math.max(...filterList.prices);
   const [filters, setFilters] = useState<Filter>({
-    subCategory: "",
-    brand: "",
-    minPrice: 0,
-    maxPrice: null,
-    onSale: false,
-    colors: [],
-    specs: [],
+    subCategory: selectedFilters.subCategory,
+    brand: selectedFilters.brand,
+    minPrice: selectedFilters.minPrice,
+    maxPrice: selectedFilters.maxPrice,
+    onSale: selectedFilters.onSale,
+    color: selectedFilters.color,
+    specs: selectedFilters.specs,
   });
-  
 
   useEffect(() => {
     const fetchFilters = async () => {
@@ -46,6 +48,7 @@ const ProductFilter: React.FC<{
           headers: { Category: category },
         });
         const data = response.data;
+
         if (data) {
           setFilterList(data);
           setFilters((prev) => ({
@@ -74,7 +77,13 @@ const ProductFilter: React.FC<{
     }));
   };
 
- /*  const handleColorChange = (color: string) => {
+  const handleSelected = (array: string[], key: string) => {
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      [key]: array,
+    }));
+  };
+  /*  const handleColorChange = (color: string) => {
     setFilters((prevFilters) => {
       const colors = [...prevFilters.colors];
       if (colors.includes(color as never)) {
@@ -93,7 +102,6 @@ const ProductFilter: React.FC<{
       minPrice: min,
       maxPrice: max,
     }));
-    console.log(filters);
   };
   const applyFilters = () => {
     handleFilter(filters);
@@ -104,7 +112,7 @@ const ProductFilter: React.FC<{
       <AnimatePresence>
         {toggle && (
           <motion.div
-            className={`absolute right-0 z-20 mt-8 flex w-[300px] flex-col gap-2.5 bg-white p-2.5 text-sm drop-shadow-lg`}
+            className={`absolute right-0 z-20 mt-8 flex w-[300px] flex-col gap-2.5 rounded-md border-[1px] border-zinc-700 bg-white p-2.5 text-sm`}
             initial={{ opacity: 0, y: -5 }}
             exit={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
@@ -113,53 +121,47 @@ const ProductFilter: React.FC<{
             <div className="flex items-center justify-end">
               <button
                 onClick={toggleFilter}
-                className="flex items-center rounded border-b-2 border-zinc-500 transition-all duration-100 hover:border-zinc-400"
+                className="flex items-center rounded border-zinc-500 transition-all duration-100 hover:border-zinc-400"
               >
                 <span
-                  className={`material-symbols-outlined $ text-zinc-800 transition-all duration-100 ease-linear hover:cursor-pointer hover:text-zinc-500`}
+                  className={`material-symbols-outlined text-zinc-800 transition-all duration-100 ease-linear hover:cursor-pointer hover:text-zinc-500`}
                 >
                   close
                 </span>
               </button>
             </div>
+            <div className="flex items-center gap-1 self-center">
+              <label className="flex items-center px-2 text-sm font-medium hover:cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-gray-300 bg-gray-100 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                  onChange={handleFilterChange}
+                />
+                <span className="ml-2 capitalize">On Sale</span>
+              </label>
+            </div>
             {/* Subcategory filter */}
-            <div className="flex gap-2">
-              <label htmlFor="subcategory">Type:</label>
-              <select
-                name="subCategory"
-                onChange={handleFilterChange}
-                className="w-full border-b-[2px] capitalize outline-none"
-              >
-                {/* Map your subcategories here */}
-                <option value={""}></option>
-                {filterList.subcategories.map((item, index) => (
-                  <option
-                    key={index}
-                    value={item.subCategory}
-                    className="capitalize"
-                  >
-                    {item.subCategory}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex gap-2">
-              <label htmlFor="brand">Brand:</label>
-              {/* Brand filter */}
-              <select
-                name="brand"
-                onChange={handleFilterChange}
-                className="w-full border-b-[2px] capitalize outline-none"
-              >
-                <option value={""}></option>
-                {filterList.brands.map((item, index) => (
-                  <option key={index} value={item.brand} className="capitalize">
-                    {item.brand}
-                  </option>
-                ))}
-              </select>
-            </div>
-
+            <CheckBoxFilter
+              list={filterList.subcategories}
+              labelKey="subCategory"
+              handleSelected={handleSelected}
+              buttonLabel="Type"
+              selectedFilters={filters.subCategory}
+            />
+            <CheckBoxFilter
+              list={filterList.brands}
+              labelKey="brand"
+              handleSelected={handleSelected}
+              buttonLabel="Brand"
+              selectedFilters={filters.brand}
+            />
+            <CheckBoxFilter
+              list={filterList.colors}
+              labelKey="color"
+              handleSelected={handleSelected}
+              buttonLabel="Color"
+              selectedFilters={filters.color}
+            />
             {/* Price range filter */}
 
             <PriceRangeSelector
@@ -169,18 +171,15 @@ const ProductFilter: React.FC<{
             ></PriceRangeSelector>
 
             {/* On sale filter */}
-            <div className="flex items-center gap-1">
-              <label>On Sale</label>
-              <input
-                type="checkbox"
-                name="onSale"
-                onChange={handleFilterChange}
-              />
-            </div>
 
             {/* Color filter */}
 
-            <button onClick={applyFilters}>Apply Filters</button>
+            <button
+              onClick={applyFilters}
+              className="relative mt-3 self-center rounded-full bg-zinc-700 px-4 py-[7px] text-xs font-medium uppercase leading-3 tracking-wide text-white drop-shadow-sm transition-all duration-100 hover:bg-zinc-600"
+            >
+              Apply Filters
+            </button>
           </motion.div>
         )}
       </AnimatePresence>

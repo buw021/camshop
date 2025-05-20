@@ -43,6 +43,47 @@ const Product_List: React.FC<Category> = ({ category }) => {
   const [limit] = useState(10);
   const [sortCriteria, setSortCriteria] = useState(sortParam);
   const [filter, setFilter] = useState(false);
+  // Helper to parse filters from URL
+  const getFiltersFromUrl = useCallback(() => {
+    const searchParams = new URLSearchParams(location.search);
+    return {
+      subCategory: searchParams.get("subCategory")
+        ? searchParams.get("subCategory")!.split(",")
+        : [],
+      brand: searchParams.get("brand")
+        ? searchParams.get("brand")!.split(",")
+        : [],
+      minPrice: searchParams.get("minPrice")
+        ? Number(searchParams.get("minPrice"))
+        : 0,
+      maxPrice: searchParams.get("maxPrice")
+        ? Number(searchParams.get("maxPrice"))
+        : null,
+      onSale: searchParams.get("onSale")
+        ? searchParams.get("onSale") === "true"
+        : false,
+      color: searchParams.get("colors")
+        ? searchParams.get("colors")!.split(",")
+        : [],
+      specs: searchParams.get("specs")
+        ? (() => {
+            try {
+              return JSON.parse(searchParams.get("specs")!);
+            } catch {
+              return {};
+            }
+          })()
+        : {},
+    };
+  }, [location.search]);
+
+  const [selectedFilters, setSelectedFilters] =
+    useState<Filter>(getFiltersFromUrl());
+
+  // Update selectedFilters when URL changes
+  useEffect(() => {
+    setSelectedFilters(getFiltersFromUrl());
+  }, [getFiltersFromUrl, location.search]);
 
   const list = [
     { value: "default", placeholder: "Default" },
@@ -126,15 +167,15 @@ const Product_List: React.FC<Category> = ({ category }) => {
 
   const handleFilter = useCallback(
     (filters: Filter) => {
-      const { subCategory, brand, minPrice, maxPrice, onSale, colors, specs } =
+      const { subCategory, brand, minPrice, maxPrice, onSale, color, specs } =
         filters;
       setPage(1);
       const searchParams = new URLSearchParams(location.search);
-      if (subCategory) {
-        searchParams.set("subCategory", subCategory);
+      if (subCategory && subCategory.length > 0) {
+        searchParams.set("subCategory", subCategory.join(","));
       }
-      if (brand) {
-        searchParams.set("brand", brand);
+      if (brand && brand.length > 0) {
+        searchParams.set("brand", brand.join(","));
       }
       if (minPrice !== null) {
         searchParams.set("minPrice", minPrice.toString());
@@ -145,8 +186,8 @@ const Product_List: React.FC<Category> = ({ category }) => {
       if (onSale !== null) {
         searchParams.set("onSale", onSale.toString());
       }
-      if (colors && colors.length > 0) {
-        searchParams.set("colors", colors.join(","));
+      if (color && color.length > 0) {
+        searchParams.set("colors", color.join(","));
       }
       if (specs && Object.keys(specs).length > 0) {
         searchParams.set("specs", JSON.stringify(specs));
@@ -193,20 +234,29 @@ const Product_List: React.FC<Category> = ({ category }) => {
               selectedValue={sortCriteria} // Pass sort criteria as prop
             ></Dropdown>
           </div>
-          <div className="relative">
+          <div className="relative flex gap-1">
             {category !== "all" && (
               <>
+                <span
+                  className={`material-symbols-outlined -mt-[3px] select-none text-lg transition-all duration-300 ${
+                    filter ? "opacity-100" : "rotate-180 opacity-0"
+                  }`}
+                >
+                  keyboard_arrow_down
+                </span>
                 <button
                   className="roboto-medium relative flex text-sm text-zinc-700 underline underline-offset-4 group-hover:text-zinc-950"
                   onClick={toggleFilter}
                 >
                   Filter
                 </button>
+
                 <ProductFilter
                   handleFilter={handleFilter}
                   toggleFilter={toggleFilter}
                   toggle={filter}
                   category={category}
+                  selectedFilters={selectedFilters}
                 ></ProductFilter>
               </>
             )}

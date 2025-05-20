@@ -128,14 +128,15 @@ const PromoCodeForm: React.FC<FormInterface> = ({
   };
 
   const handleClose = () => {
-    if (!promo) {
+    onClose();
+    /* if (!promo) {
       onClose();
     } else {
       const shouldClose = window.confirm("Are you sure you want to close?");
       if (shouldClose) {
         onClose();
       }
-    }
+    } */
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -346,7 +347,10 @@ const PromoCodeForm: React.FC<FormInterface> = ({
           </div>
           <div className="flex flex-col gap-1 sm:self-auto">
             <div className="flex flex-wrap gap-2">
-              <label htmlFor={"usage-limit"} className="pr-2 text-sm font-medium">
+              <label
+                htmlFor={"usage-limit"}
+                className="pr-2 text-sm font-medium"
+              >
                 Usage Limit:
               </label>
               <div className="flex flex-wrap gap-2">

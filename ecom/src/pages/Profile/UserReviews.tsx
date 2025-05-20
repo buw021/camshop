@@ -7,6 +7,7 @@ import ModifyReview from "./ModifyReview";
 import { UserReviewProps } from "../../interfaces/userReviews";
 import { showToast } from "../../func/showToast";
 
+
 const UserReviews = () => {
   const [reviews, setReviews] = useState<UserReviewProps[]>([]);
 
@@ -34,7 +35,7 @@ const UserReviews = () => {
           getUserReviews={getUserReviews}
         ></ModifyReview>
       )}
-      <div className="mb-2 flex h-full w-full flex-col gap-2">
+      <div className="mb-2 mt-4 flex h-full w-full flex-col gap-2">
         <p
           className={`roboto-medium flex self-start rounded-t border-zinc-300 bg-zinc-200 px-2 text-lg`}
         >
@@ -65,7 +66,7 @@ const UserReviews = () => {
                       <div className="relative flex h-16 w-16 flex-shrink-0 select-none flex-col justify-center overflow-hidden rounded-xl border-zinc-500 shadow-inner">
                         <img
                           className="h-full object-scale-down p-2"
-                          src={`http://localhost:3000/uploads/products/${review.variantImg}`}
+                          src={review.variantImg}
                         ></img>
                       </div>
                       <div className="flex w-full flex-col py-1">

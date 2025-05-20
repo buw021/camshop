@@ -1,14 +1,36 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 
 const PriceRangeSelector: React.FC<{
   min: number;
   max: number;
   priceRange: (min: number, max: number) => void;
 }> = ({ min, max, priceRange }) => {
-  const [minVal, setMinVal] = useState(min);
-  const [maxVal, setMaxVal] = useState(max);
-  const minValRef = useRef(min);
-  const maxValRef = useRef(max);
+  const location = useLocation();
+  const getFiltersFromUrl = useCallback(() => {
+    const searchParams = new URLSearchParams(location.search);
+    return {
+      minPrice: searchParams.get("minPrice")
+        ? Number(searchParams.get("minPrice"))
+        : 0,
+      maxPrice: searchParams.get("maxPrice")
+        ? Number(searchParams.get("maxPrice"))
+        : null,
+    };
+  }, [location.search]);
+
+  const { minPrice, maxPrice } = getFiltersFromUrl();
+
+ 
+
+  const initialMin = minPrice !== null && minPrice >= min && minPrice <= max ? minPrice : min;
+  const initialMax =
+    maxPrice !== null && maxPrice <= max && maxPrice >= initialMin ? maxPrice : max;
+
+  const [minVal, setMinVal] = useState(initialMin);
+  const [maxVal, setMaxVal] = useState(initialMax);
+  const minValRef = useRef(initialMin);
+  const maxValRef = useRef(initialMax);
   const range = useRef<HTMLDivElement>(null);
 
   // Convert to percentage
@@ -54,36 +76,38 @@ const PriceRangeSelector: React.FC<{
 
   return (
     <div className="flex flex-col items-center">
-      <div className="relative flex w-[200px] items-center">
-        <div>
-          <input
-            type="range"
-            min={min}
-            max={max - 10}
-            value={minVal}
-            onChange={(event) => {
-              minChange(event);
-            }}
-            className="thumb thumb--left cursor-pointer"
-            style={{ zIndex: minVal > max - 100 ? "5" : undefined }}
-          />
-          <input
-            type="range"
-            min={min + 10}
-            max={max}
-            value={maxVal}
-            onChange={(event) => {
-              maxChange(event);
-            }}
-            className="thumb thumb--right cursor-pointer"
-          />
-          <div className="mt-[1.75px]">
-            <div className="slider__track absolute" />
-            <div ref={range} className="slider__range absolute" />
+      <data className="rounded-full border-2 px-4 pb-4 pt-[14px]">
+        <div className="relative flex w-[200px] items-center">
+          <div>
+            <input
+              type="range"
+              min={min}
+              max={max - 10}
+              value={minVal}
+              onChange={(event) => {
+                minChange(event);
+              }}
+              className="thumb thumb--left cursor-pointer"
+              style={{ zIndex: minVal > max - 100 ? "5" : undefined }}
+            />
+            <input
+              type="range"
+              min={min + 10}
+              max={max}
+              value={maxVal}
+              onChange={(event) => {
+                maxChange(event);
+              }}
+              className="thumb thumb--right cursor-pointer"
+            />
+            <div className="mt-[1.75px]">
+              <div className="slider__track absolute" />
+              <div ref={range} className="slider__range absolute" />
+            </div>
           </div>
         </div>
-      </div>
-      <div className="relative flex w-[200px] justify-between pt-5">
+      </data>
+      <div className="relative flex w-[200px] justify-between pt-2">
         <div className="relative flex w-20 flex-col items-center gap-1">
           <label className="text-xs font-medium tracking-wide text-zinc-500">
             Min.

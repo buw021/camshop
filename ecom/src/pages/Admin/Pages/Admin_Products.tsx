@@ -29,6 +29,7 @@ const Admin_Products: React.FC<{ setIsDirty: (dirty: boolean) => void }> = ({
   });
   const toggleAddProduct = () => {
     setAddPopup(!addPopUp);
+    setIsDirty(false);
   };
 
   const fetchProducts = useCallback(

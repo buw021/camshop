@@ -639,6 +639,7 @@ const EditProduct: React.FC<{
             );
             if (!confirmLeave) return;
             handleCancel();
+            setIsDirty(false);
           } else {
             handleCancel();
           }

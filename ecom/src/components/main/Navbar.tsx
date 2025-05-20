@@ -34,7 +34,7 @@ const Navbar = () => {
   const location = useLocation();
   const currentPath = location.pathname;
   const categoryPath = location.pathname.split("/")[1];
-  console.log(categoryPath);
+
   const handleLogout = async () => {
     localStorage.removeItem("cart");
     localStorage.removeItem("wishlist");

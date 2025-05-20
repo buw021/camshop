@@ -36,31 +36,29 @@ const AdminRoutes = () => {
   }
 
   return (
-    <>
-      <Admin_Navbar
-        expanded={isExpanded}
-        setExpanded={setIsExpanded}
-        user={token}
-        isDirty={isDirty}
-        setIsDirty={setIsDirty}
-      >
-        <Admin_Layout expanded={isExpanded}>
-          <Routes>
-            <Route
-              path="/products"
-              element={<Admin_Products setIsDirty={setIsDirty} />}
-            />
-            <Route path="/promotions" element={<Admin_Promotion />} />
-            <Route path="/customers" element={<Admin_Customers />} />
-            <Route path="/orders" element={<Admin_Orders />} />
-            <Route path="/reports" element={<Admin_Reports />} />
-            <Route path="/admin" element={<Navigate to="/admin/dashboard" />} />
-            <Route path="*" element={<Navigate to="/admin/dashboard" />} />
-            <Route path="/dashboard" element={<Admin_Dashboard />} />
-          </Routes>
-        </Admin_Layout>
-      </Admin_Navbar>
-    </>
+    <Admin_Navbar
+      expanded={isExpanded}
+      setExpanded={setIsExpanded}
+      user={token}
+      isDirty={isDirty}
+      setIsDirty={setIsDirty}
+    >
+      <Admin_Layout expanded={isExpanded}>
+        <Routes>
+          <Route
+            path="/products"
+            element={<Admin_Products setIsDirty={setIsDirty} />}
+          />
+          <Route path="/promotions" element={<Admin_Promotion />} />
+          <Route path="/customers" element={<Admin_Customers />} />
+          <Route path="/orders" element={<Admin_Orders />} />
+          <Route path="/reports" element={<Admin_Reports />} />
+          <Route path="/admin" element={<Navigate to="/admin/dashboard" />} />
+          <Route path="*" element={<Navigate to="/admin/dashboard" />} />
+          <Route path="/dashboard" element={<Admin_Dashboard />} />
+        </Routes>
+      </Admin_Layout>
+    </Admin_Navbar>
   );
 };
 

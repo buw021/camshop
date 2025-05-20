@@ -6,7 +6,7 @@ const getFilters = async (req, res) => {
     const [subcategories, colors, prices, brands] = await Promise.all([
       // Aggregation for unique subcategories
       Product.aggregate([
-        { $match: { category, isArchived: true } },
+        { $match: { category, isArchived: false } },
         { $group: { _id: "$subCategory" } },
         { $project: { _id: 0, subCategory: "$_id" } },
       ]), // Aggregation for unique colors
