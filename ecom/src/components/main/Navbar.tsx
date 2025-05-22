@@ -146,7 +146,7 @@ const Navbar = () => {
                   }`}
                 >
                   <span className="roboto-regular group- flex text-base text-zinc-700 transition-all duration-200 hover:text-zinc-900">
-                    <Link to={`/${category.toLowerCase()}`}>{category}</Link>
+                    <Link to={`/${category.toLowerCase()}/`}>{category}</Link>
                   </span>
                   <div className="absolute bottom-0 flex w-full items-center justify-center">
                     <div className="w-[50%] overflow-hidden">

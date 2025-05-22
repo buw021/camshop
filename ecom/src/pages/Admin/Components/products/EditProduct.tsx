@@ -1159,15 +1159,15 @@ const EditProduct: React.FC<{
               >
                 <SortableContext
                   items={product.variants[0].variantImgs.map(
-                    (_, index) => `${0}-${index}`,
+                    (url) => `${0}-${url}`,
                   )}
                   strategy={rectSortingStrategy}
                 >
                   <div className="flex h-full min-h-40 flex-wrap justify-evenly gap-2 overflow-auto rounded-md bg-zinc-100 p-2.5">
                     {product.variants[0].variantImgs.map((url, index) => (
                       <SortableImagePreview
-                        key={`${0}-${index}`}
-                        id={`${0}-${index}`}
+                        key={`${0}-${url}`}
+                        id={`${0}-${url}`}
                         url={url}
                         onDelete={() => handleDeleteOldImage(index, 0, url)}
                       />
@@ -1187,15 +1187,15 @@ const EditProduct: React.FC<{
                   >
                     <SortableContext
                       items={product.variants[0].previewUrl.map(
-                        (_, index) => `${0}-${index}`,
+                        (url) => `${0}-${url}`,
                       )}
                       strategy={rectSortingStrategy}
                     >
                       <div className="flex min-h-40 flex-wrap justify-center gap-2 overflow-auto rounded-md p-2.5">
                         {product.variants[0].previewUrl.map((url, index) => (
                           <SortableImagePreview
-                            key={`${0}-${index}`}
-                            id={`${0}-${index}`}
+                            key={`${0}-${url}`}
+                            id={`${0}-${url}`}
                             url={url}
                             onDelete={() => handleDeleteImage(index, 0)}
                           />

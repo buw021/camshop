@@ -258,15 +258,15 @@ const VariantForm: React.FC<VariantFormProps> = ({
                 >
                   <SortableContext
                     items={variant.variantImgs.map(
-                      (_, index) => `${formIndex}-${index}`,
+                      (url) => `${formIndex}-${url}`,
                     )}
                     strategy={rectSortingStrategy}
                   >
-                    <div className="flex h-full min-h-40 flex-wrap justify-evenly gap-2 bg-zinc-100 overflow-auto rounded-md p-2.5">
+                    <div className="flex h-full min-h-40 flex-wrap justify-evenly gap-2 overflow-auto rounded-md bg-zinc-100 p-2.5">
                       {variant.variantImgs.map((url, index) => (
                         <SortableImagePreview
-                          key={`${formIndex}-${index}`}
-                          id={`${formIndex}-${index}`}
+                          key={`${formIndex}-${url}`}
+                          id={`${formIndex}-${url}`}
                           url={url}
                           onDelete={() =>
                             handleDeleteOldImage(index, formIndex, url)
@@ -288,15 +288,15 @@ const VariantForm: React.FC<VariantFormProps> = ({
                     >
                       <SortableContext
                         items={variant.previewUrl.map(
-                          (_, index) => `${formIndex}-${index}`,
+                          (url) => `${formIndex}-${url}`,
                         )}
                         strategy={rectSortingStrategy}
                       >
                         <div className="flex h-full min-h-40 flex-wrap justify-center gap-2 overflow-auto rounded-md p-2.5">
                           {variant.previewUrl.map((url, index) => (
                             <SortableImagePreview
-                              key={`${formIndex}-${index}`}
-                              id={`${formIndex}-${index}`}
+                              key={`${formIndex}-${url}`}
+                              id={`${formIndex}-${url}`}
                               url={url}
                               onDelete={() =>
                                 handleDeleteImage(index, formIndex)

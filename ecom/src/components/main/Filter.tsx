@@ -34,8 +34,8 @@ const ProductFilter: React.FC<{
   const [filters, setFilters] = useState<Filter>({
     subCategory: selectedFilters.subCategory,
     brand: selectedFilters.brand,
-    minPrice: selectedFilters.minPrice,
-    maxPrice: selectedFilters.maxPrice,
+    minPrice: null,
+    maxPrice: null,
     onSale: selectedFilters.onSale,
     color: selectedFilters.color,
     specs: selectedFilters.specs,
@@ -71,9 +71,10 @@ const ProductFilter: React.FC<{
   ) => {
     const { name, value, type } = e.target as HTMLInputElement;
     const checked = (e.target as HTMLInputElement).checked;
+
     setFilters((prevFilters) => ({
       ...prevFilters,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: type === "checkbox" ? (checked ? true : null) : value,
     }));
   };
 
@@ -104,7 +105,17 @@ const ProductFilter: React.FC<{
     }));
   };
   const applyFilters = () => {
-    handleFilter(filters);
+    const newFilters = { ...filters };
+
+    if (newFilters.minPrice === 0 || newFilters.minPrice === null) {
+      newFilters.minPrice = null;
+    }
+    if (newFilters.maxPrice == highestPrice) {
+      newFilters.maxPrice = null;
+    }
+
+    setFilters(newFilters);
+    handleFilter(newFilters);
   };
 
   return (
@@ -133,7 +144,10 @@ const ProductFilter: React.FC<{
             <div className="flex items-center gap-1 self-center">
               <label className="flex items-center px-2 text-sm font-medium hover:cursor-pointer">
                 <input
+                  id="onSale"
+                  name="onSale"
                   type="checkbox"
+                  checked={filters.onSale ? true : false}
                   className="h-4 w-4 rounded border-gray-300 bg-gray-100 text-blue-600 focus:ring-2 focus:ring-blue-500"
                   onChange={handleFilterChange}
                 />

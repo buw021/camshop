@@ -3,6 +3,7 @@ interface Params {
   limit: number;
   page: number;
   setPage: (number: number) => void;
+  handlePageMovement: (number: number) => void;
 }
 
 export const Pagination: React.FC<Params> = ({
@@ -10,6 +11,7 @@ export const Pagination: React.FC<Params> = ({
   limit,
   page,
   setPage,
+  handlePageMovement,
 }) => {
   const totalPages = Math.ceil(total / limit);
 
@@ -41,7 +43,10 @@ export const Pagination: React.FC<Params> = ({
         typeof pageNumber === "number" ? (
           <button
             key={index}
-            onClick={() => setPage(pageNumber)}
+            onClick={() => {
+              setPage(pageNumber);
+              handlePageMovement(pageNumber);
+            }}
             className={`px-4 py-2 ${pageNumber === page ? "bg-zinc-800 text-white hover:bg-zinc-700" : "bg-zinc-700 text-white hover:bg-zinc-800"} mx-1 rounded`}
           >
             {pageNumber}

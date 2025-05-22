@@ -55,7 +55,7 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({
 
   useEffect(() => {
     fetchUserWishlist();
-  }, [fetchUserWishlist, token]);
+  }, [fetchUserWishlist]);
 
   const saveUserWishlist = useCallback(
     async (favs: CartID[]) => {

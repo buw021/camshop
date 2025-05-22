@@ -169,7 +169,7 @@ const getVariants = async (req, res) => {
         filters.push({ [`specifications.${key}`]: specifications[key] });
       });
     }
-
+   
     const rawResults = await Product.aggregate([
       ...(filters.length > 0 ? [{ $match: { $and: filters } }] : []),
       { $match: { isArchived: false } },
@@ -346,7 +346,7 @@ const getVariants = async (req, res) => {
     ]);
 
     // Sorting logic
-    console.log(variants);
+
     res.json({
       variants,
       total:

@@ -60,7 +60,7 @@ const CategoryNav = () => {
   };
 
   return (
-    <nav className="fixed bottom-0 w-full bg-zinc-800 p-1.5 md:hidden z-20">
+    <nav className="fixed bottom-0 z-20 w-full bg-zinc-800 p-1.5 md:hidden">
       <ul className="flex w-full justify-around">
         {menuItems.map((item, index) => (
           <RenderMenuList

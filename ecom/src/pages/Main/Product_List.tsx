@@ -2,14 +2,10 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Dropdown from "../../components/main/Dropdown";
 import { ProductCard, CardLoadingSkeleton } from "../../components/main/Card";
-import { Pagination } from "../../components/products/Pagination";
+import { LoadMore } from "../../components/products/Loadmore";
 import axiosInstance from "../../services/axiosInstance";
 import { Filter } from "../../interfaces/filter";
 import ProductFilter from "../../components/main/Filter";
-
-interface Category {
-  category: "camera" | "lens" | "accessories" | "other" | "all";
-}
 
 interface saleId {
   salePrice: number | null;
@@ -29,7 +25,7 @@ interface ProductList {
   variantContent: string[];
 }
 
-const Product_List: React.FC<Category> = ({ category }) => {
+const Product_List: React.FC<{ category: string }> = ({ category }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const params = new URLSearchParams(location.search);
@@ -61,7 +57,9 @@ const Product_List: React.FC<Category> = ({ category }) => {
         : null,
       onSale: searchParams.get("onSale")
         ? searchParams.get("onSale") === "true"
-        : false,
+          ? true
+          : null
+        : null,
       color: searchParams.get("colors")
         ? searchParams.get("colors")!.split(",")
         : [],
@@ -89,57 +87,44 @@ const Product_List: React.FC<Category> = ({ category }) => {
     { value: "default", placeholder: "Default" },
     { value: "price-asc", placeholder: "Price-low to high" },
     { value: "price-desc", placeholder: "Price-high to low" },
-    { value: "rating", placeholder: "Average ratings" },
+    /* { value: "rating", placeholder: "Average ratings" },
     { value: "best-seller", placeholder: "Best seller" },
-    { value: "newest", placeholder: "Newest" },
+    { value: "newest", placeholder: "Newest" }, */
   ];
 
-  const fetchProducts = useCallback(
-    async (retryCount = 0) => {
-      try {
-        // Set loading to true before fetching
+  const fetchProducts = useCallback(async () => {
+    setLoading(true);
+
+    try {
+      let allVariants: ProductList[] = [];
+
+      for (let p = 1; p <= page; p++) {
         const searchParams = new URLSearchParams(location.search);
-        if (!searchParams.has("sort")) {
-          searchParams.set("sort", "default");
-        }
-        if (!searchParams.has("page")) {
-          searchParams.set("page", "1");
-        }
-        if (!searchParams.has("limit")) {
-          searchParams.set("limit", limit.toString());
-        }
+        searchParams.set("page", p.toString());
+        searchParams.set("limit", limit.toString());
 
         const url = `/get-variants?${searchParams.toString()}`;
-
         const response = await axiosInstance.get(url, {
           headers: { Category: category },
         });
-        const fetchedVariants = response.data.variants;
-        setTotal(response.data.total);
-        setVariants(fetchedVariants);
-        setLoading(false); // Set loading to false after fetching
-      } catch (error) {
-        console.error("Error fetching products:", error);
-        if (retryCount < 3) {
-          setTimeout(
-            () => fetchProducts(retryCount + 1),
-            Math.pow(2, retryCount) * 1000,
-          );
-        } else {
-          setLoading(false); // Ensure loading is set to false in case of error
+
+        allVariants = [...allVariants, ...response.data.variants];
+        if (p === page) {
+          setTotal(response.data.total);
         }
       }
-    },
-    [category, limit, location.search],
-  );
+
+      setVariants(allVariants);
+    } catch (error) {
+      console.error("Failed to fetch products", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, location.search, limit, category]);
 
   useEffect(() => {
-    setPage(1); // Reset page to 1 when category changes
+    setPage(0); // Reset page to 1 when category changes
   }, [category]);
-
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [page]);
 
   const handleDropdownValue = useCallback(
     (val: string | number) => {
@@ -154,23 +139,22 @@ const Product_List: React.FC<Category> = ({ category }) => {
     [category, navigate, location.search],
   );
 
-  const handlePageMovement = useCallback(() => {
-    const numericVal = parseInt(page.toString(), 10);
+  const handlePageMovement = (pageNumber: number) => {
     const searchParams = new URLSearchParams(location.search);
-    searchParams.set("page", numericVal.toString());
+    searchParams.set("page", pageNumber.toString());
 
     // Generate the updated URL with all existing parameters plus the new page value
     const updatedUrl = `${category === "all" ? `` : `/${category}`}/?${searchParams.toString()}`;
-    setPage(numericVal);
+    setPage(pageNumber);
     navigate(updatedUrl, { replace: true });
-  }, [page, category, navigate, location.search]);
+  };
 
   const handleFilter = useCallback(
     (filters: Filter) => {
       const { subCategory, brand, minPrice, maxPrice, onSale, color, specs } =
         filters;
       setPage(1);
-      const searchParams = new URLSearchParams(location.search);
+      const searchParams = new URLSearchParams();
       if (subCategory && subCategory.length > 0) {
         searchParams.set("subCategory", subCategory.join(","));
       }
@@ -197,7 +181,7 @@ const Product_List: React.FC<Category> = ({ category }) => {
 
       navigate(updatedUrl, { replace: true });
     },
-    [location.search, category, navigate],
+    [category, navigate],
   );
 
   const toggleFilter = () => {
@@ -217,10 +201,6 @@ const Product_List: React.FC<Category> = ({ category }) => {
   useEffect(() => {
     setFilter(false); // Close filter when category changes
   }, [category]);
-
-  useEffect(() => {
-    handlePageMovement();
-  }, [page, handlePageMovement]);
 
   return (
     <div className="relative mb-4 mt-2 flex flex-col gap-2">
@@ -265,31 +245,36 @@ const Product_List: React.FC<Category> = ({ category }) => {
         {variants.length > 0 && (
           <>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-              {loading
-                ? Array.from({ length: limit }, (_, index) => (
-                    <CardLoadingSkeleton key={index} />
-                  ))
-                : variants.map((variant) => (
-                    <ProductCard
-                      key={variant._id}
-                      id={variant.productId}
-                      name={variant.productName}
-                      variantId={variant._id}
-                      price={variant.variantPrice}
-                      salePrice={variant.saleId?.salePrice ?? null}
-                      brand={variant.productBrand}
-                      thumbnail={variant.variantImgs[0]}
-                      variantName={variant.variantName}
-                      color={variant.variantColor}
-                    />
-                  ))}
+              {variants.map((variant) => (
+                <ProductCard
+                  key={variant._id}
+                  id={variant.productId}
+                  name={variant.productName}
+                  variantId={variant._id}
+                  price={variant.variantPrice}
+                  salePrice={variant.saleId?.salePrice ?? null}
+                  brand={variant.productBrand}
+                  thumbnail={variant.variantImgs[0]}
+                  variantName={variant.variantName}
+                  color={variant.variantColor}
+                />
+              ))}
+              {loading &&
+                Array.from({ length: limit }, (_, index) => (
+                  <CardLoadingSkeleton key={`skeleton-${index}`} />
+                ))}
             </div>
+
             <div className="border-t-[1px] border-zinc-300">
-              <Pagination
+              <p className="mt-4 text-center text-sm font-bold tracking-wide">
+                {variants.length ?? 0} of {total ?? 0}
+              </p>
+              <LoadMore
                 total={total}
                 limit={limit}
                 page={page}
                 setPage={setPage}
+                handlePageMovement={handlePageMovement}
               />
             </div>
           </>

@@ -5,7 +5,7 @@ export interface Filter {
     brand: string[];
     minPrice: number | null;
     maxPrice: number | null;
-    onSale: boolean;
+    onSale: boolean | null;
     color: string[];
     specs: Attributes[];
 }

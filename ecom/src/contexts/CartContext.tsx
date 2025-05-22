@@ -123,7 +123,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
 
   useEffect(() => {
     fetchUserCart();
-  }, [fetchUserCart, token]);
+  }, [fetchUserCart]);
 
   /*   useEffect(() => {
     const calculatedTotal = cartInfo.reduce(
