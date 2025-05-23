@@ -143,7 +143,6 @@ const archiveProducts = async (req, res) => {
 const getVariants = async (req, res) => {
   const {
     page = 1,
-    limit = 10,
     sort = "default",
     subCategory,
     brand,
@@ -153,7 +152,7 @@ const getVariants = async (req, res) => {
     colors,
     specs,
   } = req.query;
-
+  const limit = 15;
   const category = req.headers["category"];
 
   try {
@@ -169,7 +168,7 @@ const getVariants = async (req, res) => {
         filters.push({ [`specifications.${key}`]: specifications[key] });
       });
     }
-   
+
     const rawResults = await Product.aggregate([
       ...(filters.length > 0 ? [{ $match: { $and: filters } }] : []),
       { $match: { isArchived: false } },

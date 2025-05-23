@@ -38,9 +38,9 @@ const MiniAuth = () => {
 
   return (
     <>
-      {registerModal && (
-        <>
-          <AnimatePresence>
+      <>
+        <AnimatePresence>
+          {registerModal && (
             <motion.div
               className="absolute left-0 top-0 z-50 backdrop-blur-[2px]"
               variants={variants}
@@ -60,30 +60,32 @@ const MiniAuth = () => {
               </span>
               <Register onSuccess={toggleCloseRegister} />
             </motion.div>
-          </AnimatePresence>
-        </>
-      )}
-      {loginModal && (
-        <>
-          <AnimatePresence>
+          )}
+        </AnimatePresence>
+      </>
+
+      <>
+        <AnimatePresence>
+          {loginModal && (
             <motion.div
               className="b absolute left-0 top-0 z-50 backdrop-blur-[2px]"
               variants={variants}
               initial="opacity-0"
               animate="opacity-1"
-              exit="scale-0"
+              exit="opacity-0"
             >
               <span
-                className={`material-symbols-outlined absolute right-5 top-5 z-50 text-white transition-all duration-100 ease-linear hover:cursor-pointer hover:text-zinc-300 ${loginModal ? "" : "invisible rotate-180 -scale-100 opacity-0"}`}
+                className={`material-symbols-outlined absolute right-5 top-5 z-50 text-zinc-300 transition-all duration-100 ease-linear hover:cursor-pointer hover:text-zinc-300 ${loginModal ? "" : "invisible rotate-180 -scale-100 opacity-0"}`}
                 onClick={toggleCloseLogin}
               >
                 close
               </span>
               <LogIn />
             </motion.div>
-          </AnimatePresence>
-        </>
-      )}
+          )}
+        </AnimatePresence>
+      </>
+
       <div className="flex flex-col justify-center">
         <div className="roboto-medium mb-2 flex justify-center self-center text-2xl text-zinc-800">
           Login/Register

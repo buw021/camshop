@@ -151,7 +151,7 @@ const Navbar = () => {
                   <div className="absolute bottom-0 flex w-full items-center justify-center">
                     <div className="w-[50%] overflow-hidden">
                       <div
-                        className={`h-[1px] w-full translate-x-20 bg-zinc-300 transition-all duration-300 ease-in group-hover:translate-x-0 ${categoryPath === category.toLowerCase() && "translate-x-0"}`}
+                        className={`h-[1px] w-full bg-zinc-300 transition-all duration-300 ease-in group-hover:translate-x-0 ${categoryPath === category.toLowerCase() ? "translate-x-0" : "translate-x-20"}`}
                       ></div>
                     </div>
                     <div className="w-[50%] overflow-hidden">

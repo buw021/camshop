@@ -13,7 +13,7 @@ export const LoadMore: React.FC<Params> = ({
   setPage,
   handlePageMovement,
 }) => {
-  const totalPages = Math.ceil(total / limit);
+  const totalPages = total / limit;
 
   const loadMore = () => {
     if (page < totalPages) {

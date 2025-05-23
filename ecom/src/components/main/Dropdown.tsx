@@ -88,7 +88,7 @@ const Dropdown: React.FC<Dropdown> = ({
       <AnimatePresence>
         {show && (
           <motion.div
-            className="absolute z-20 mt-8 rounded-md border-[1px] border-zinc-500 bg-white px-3 py-2"
+            className="absolute z-20 mt-2 rounded-md border-[1px] border-zinc-500 bg-white px-3 py-2"
             initial={{ opacity: 0, y: -5 }}
             exit={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
