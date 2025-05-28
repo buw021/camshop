@@ -32,7 +32,7 @@ const ProductCarousel = () => {
   });
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
-  
+
   const timerRef = useRef<number | null>(null);
 
   const clearAndRestartTimer = useCallback(() => {
@@ -116,8 +116,11 @@ const ProductCarousel = () => {
   }, [emblaApi]);
 
   return (
-    <div ref={emblaRef} className="flex flex-col overflow-hidden">
-      <div className="embla__container grid auto-cols-[50%] grid-flow-col border-b-2 border-zinc-100 sm:auto-cols-[33.333%] xl:auto-cols-[25%]">
+    <div
+      ref={emblaRef}
+      className="flex w-full flex-col overflow-hidden border-b-2 border-zinc-100"
+    >
+      <div className="embla__container grid auto-cols-[50%] grid-flow-col sm:auto-cols-[33.333%] xl:auto-cols-[25%]">
         {loading
           ? Array.from({ length: maxPreviews }, (_, index) => (
               <div key={index} className="">
@@ -141,9 +144,9 @@ const ProductCarousel = () => {
             ))}
       </div>
       <div
-        className={`mt-2 flex items-center justify-between ${products ? "" : "hidden"}`}
+        className={`mt-2 flex items-center justify-between self-end ${products ? "hidden" : "hidden"}`}
       >
-        <div className="flex items-center gap-1 self-end">
+        <div className="flex items-center gap-1">
           <button
             disabled={!canScrollPrev}
             className={`relative flex h-8 w-8 items-center justify-center rounded-l-md border-[1px] border-zinc-300 bg-zinc-200 text-sm font-medium text-zinc-700 drop-shadow-sm hover:cursor-pointer disabled:bg-zinc-100 disabled:text-zinc-500`}

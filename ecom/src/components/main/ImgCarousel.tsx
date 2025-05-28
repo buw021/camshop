@@ -1,12 +1,35 @@
 import useEmblaCarousel from "embla-carousel-react";
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import axiosInstance from "../../services/axiosInstance";
+interface Image {
+  filepath: string;
+  active: boolean;
+  _id: string;
+}
 
-const ImgCarousel: React.FC<{ imgs: string[] }> = () => {
+const ImgCarousel: React.FC<{ imgs: string[]; prev?: string }> = ({ prev }) => {
+  const [images, setImages] = useState<Image[]>();
+
   const [emblaRef, emblaApi] = useEmblaCarousel({
     loop: true, // Enable infinite looping
     align: "start", // Align slides to the start
     slidesToScroll: "auto", // Automatically determine the number of slides to scroll
   });
+
+  const fetchBanners = useCallback(async () => {
+    try {
+      const reponse = await axiosInstance.get("/get-banners");
+      if (reponse.status === 200) {
+        setImages(reponse.data);
+      }
+    } catch (error) {
+      console.error("Error fetching banners:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchBanners();
+  }, [fetchBanners]);
 
   const timerRef = React.useRef<number | null>(null);
 
@@ -44,18 +67,41 @@ const ImgCarousel: React.FC<{ imgs: string[] }> = () => {
   const scrollNext = useCallback(() => {
     if (emblaApi) emblaApi.scrollNext();
   }, [emblaApi]);
+
+  const optimizeCloudinaryUrl = (
+    url: string,
+    transformation = "f_auto,q_auto,w_800",
+  ) => {
+    return url.replace("/upload/", `/upload/${transformation}/`);
+  };
+
   return (
     <div
       ref={emblaRef}
       className="mb-2 flex w-full flex-col overflow-hidden border-b-2"
     >
-      <div className="embla__container flex h-52 flex-nowrap sm:h-56 md:h-96 lg:h-[30rem]">
-        <div className="big-banner flex h-full w-full flex-shrink-0 flex-grow-0 items-center">
-          <img src="http://localhost:3000/uploads/banners/C.jpg"></img>
-        </div>
-        <div className="big-banner flex h-full w-full flex-shrink-0 flex-grow-0 items-center">
-          <img src="http://localhost:3000/uploads/banners/R.jpg"></img>
-        </div>
+      <div
+        className={`embla__container ${prev ? "prev" : "flex h-52 flex-nowrap sm:h-56 md:h-96 lg:h-[30rem]"}`}
+      >
+        {images &&
+          images.map((img) => (
+            <div
+              key={img._id}
+              className="big-banner flex h-full w-full flex-shrink-0 flex-grow-0 items-center"
+            >
+              <img
+                alt=""
+                src={optimizeCloudinaryUrl(img.filepath, "f_auto,q_auto,w_600")}
+                srcSet={`
+    ${optimizeCloudinaryUrl(img.filepath, "f_auto,q_auto,w_400")} 400w,
+    ${optimizeCloudinaryUrl(img.filepath, "f_auto,q_auto,w_800")} 800w,
+    ${optimizeCloudinaryUrl(img.filepath, "f_auto,q_auto,w_1920")} 1200w
+  `}
+                sizes="(max-width: 640px) 400px, (max-width: 1024px) 800px, 1200px"
+                className="h-full w-full object-contain"
+              />
+            </div>
+          ))}
       </div>
       <div className="mt-2 hidden items-center justify-between">
         <div className="flex items-center gap-1 self-end">

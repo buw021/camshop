@@ -1,10 +1,6 @@
-const mongoose = require("mongoose");
-const path = require("path");
+
 const multer = require("multer");
-const sanitize = require("sanitize-filename");
-const fs = require("fs");
-const { type } = require("os");
-const sharp = require("sharp");
+
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const cloudinary = require("../helpers/cloudinary");
 

@@ -1,5 +1,5 @@
 import ProductCarousel from "../../components/main/ProductCarousel";
-import ImgCarousel from "../Admin/Components/PromoBanners/ImgCarousel";
+import ImgCarousel from "../../components/main/ImgCarousel";
 
 const Home = () => {
   return (
@@ -7,7 +7,10 @@ const Home = () => {
       <div className="flex flex-col items-center gap-2">
         <ImgCarousel imgs={[]}></ImgCarousel>
       </div>
-      <ProductCarousel></ProductCarousel>
+      <div className="flex w-full flex-col items-center gap-2">
+        <ProductCarousel></ProductCarousel>
+        <ProductCarousel></ProductCarousel>
+      </div>
     </div>
   );
 };

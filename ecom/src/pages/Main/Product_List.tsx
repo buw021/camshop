@@ -36,9 +36,8 @@ const Product_List: React.FC<{ category: string }> = ({ category }) => {
   const [variants, setVariants] = useState<ProductList[]>([]);
   const [page, setPage] = useState(pageParam);
   const [total, setTotal] = useState(0);
-  const [limit] = useState(10);
+  const [limit] = useState(15);
   const [sortCriteria, setSortCriteria] = useState(sortParam);
-  const [filter, setFilter] = useState(false);
   // Helper to parse filters from URL
   const getFiltersFromUrl = useCallback(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -101,7 +100,6 @@ const Product_List: React.FC<{ category: string }> = ({ category }) => {
       for (let p = 1; p <= page; p++) {
         const searchParams = new URLSearchParams(location.search);
         searchParams.set("page", p.toString());
-        searchParams.set("limit", limit.toString());
 
         const url = `/get-variants?${searchParams.toString()}`;
         const response = await axiosInstance.get(url, {
@@ -120,7 +118,7 @@ const Product_List: React.FC<{ category: string }> = ({ category }) => {
     } finally {
       setLoading(false);
     }
-  }, [page, location.search, limit, category]);
+  }, [page, location.search, category]);
 
   useEffect(() => {
     setPage(0); // Reset page to 1 when category changes
@@ -184,10 +182,6 @@ const Product_List: React.FC<{ category: string }> = ({ category }) => {
     [category, navigate],
   );
 
-  const toggleFilter = () => {
-    setFilter(!filter);
-  };
-
   useEffect(() => {
     setSortCriteria(sortParam);
     setPage(pageParam);
@@ -197,10 +191,6 @@ const Product_List: React.FC<{ category: string }> = ({ category }) => {
     setLoading(true);
     fetchProducts();
   }, [fetchProducts]);
-
-  useEffect(() => {
-    setFilter(false); // Close filter when category changes
-  }, [category]);
 
   return (
     <div className="relative mb-4 mt-2 flex flex-col gap-2">
@@ -214,33 +204,12 @@ const Product_List: React.FC<{ category: string }> = ({ category }) => {
               selectedValue={sortCriteria} // Pass sort criteria as prop
             ></Dropdown>
           </div>
-          <div className="relative flex gap-1">
-            {category !== "all" && (
-              <>
-                <span
-                  className={`material-symbols-outlined -mt-[3px] select-none text-lg transition-all duration-300 ${
-                    filter ? "opacity-100" : "rotate-180 opacity-0"
-                  }`}
-                >
-                  keyboard_arrow_down
-                </span>
-                <button
-                  className="roboto-medium relative flex text-sm text-zinc-700 underline underline-offset-4 group-hover:text-zinc-950"
-                  onClick={toggleFilter}
-                >
-                  Filter
-                </button>
 
-                <ProductFilter
-                  handleFilter={handleFilter}
-                  toggleFilter={toggleFilter}
-                  toggle={filter}
-                  category={category}
-                  selectedFilters={selectedFilters}
-                ></ProductFilter>
-              </>
-            )}
-          </div>
+          <ProductFilter
+            handleFilter={handleFilter}
+            category={category}
+            selectedFilters={selectedFilters}
+          ></ProductFilter>
         </div>
         {variants.length > 0 && (
           <>
