@@ -162,12 +162,7 @@ const applyPromoCode = async (req, res) => {
     if (totalPrice <= 0) {
       totalPrice = 0;
     }
-    console.log({
-      discountedItems,
-      fixedDiscount: discountAmount,
-      totalPrice,
-      code: promoCodeInput,
-    });
+
     res.json({
       discountedItems,
       fixedDiscount: discountAmount,

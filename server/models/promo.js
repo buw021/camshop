@@ -58,7 +58,6 @@ const promoCodeUsedSchema = new Schema({
       code: {
         type: String,
         required: true,
-        default: [],
       },
     },
   ],

@@ -9,6 +9,10 @@ const Order = require("../models/orders");
 const { PromoCode, PromoCodeUsed } = require("../models/promo");
 const Shipping = require("../models/shipping");
 const User = require("../models/user");
+const Payment = require("../models/payment");
+const Notification = require("../models/notification");
+const { getIO } = require("../helpers/socket");
+const io = getIO();
 
 const getProduct = async (productId, variantId) => {
   const product = await Product.findById(productId)
@@ -175,13 +179,9 @@ const handleCheckoutSessionCompleted = async (session) => {
   }
 
   await processPromoCode(userId, promoCode);
-  await updateStockLevels(order.items);
 
   order.totalAmount = session.amount_total / 100;
-  order.status = "ordered";
-  order.paymentStatus = true;
   order.paymentUrl = "";
-
   await order.save();
 };
 
@@ -202,7 +202,42 @@ const handleChargeSucceeded = async (charge) => {
   }
 
   order.receiptLink = charge.receipt_url;
+  order.status = "ordered";
+  order.paymentStatus = true;
+  await updateStockLevels(order.items);
   await order.save();
+
+  const existing = await Payment.findOne({ stripePaymentId: charge.id });
+  if (!existing) {
+    await Payment.create({
+      stripePaymentId: charge.id,
+      userId: order.userId,
+      orderId: order._id,
+      amount: order.originalTotalAmount,
+      totalAmount: charge.amount / 100,
+      shippingCost: order.shippingCost,
+      shippingMethod: order.shippingOption,
+      currency: charge.currency,
+      paymentStatus: charge.status,
+      paymentMethod: charge.payment_method_details?.type,
+      created: new Date(charge.created * 1000),
+      receiptUrl: charge.receipt_url,
+      email: charge.billing_details?.email || order.userEmail,
+    });
+  }
+
+  const notification = await Notification.create({
+    orderId: order._id,
+    customOrderId: customOrderId,
+    message: `Order ${customOrderId} has been Paid'`,
+    type: "paid",
+  });
+  const newCount = await Notification.countDocuments({ status: "unread" });
+  // Emit to WebSocket
+  io.emit("new-order", {
+    customOrderID: customOrderId,
+  });
+  io.emit("notification:unreadCount", { unreadCount: newCount });
 };
 
 const processPromoCode = async (userId, promoCode) => {
@@ -584,7 +619,11 @@ const createSession = async (
       userId: userId ? userId.toString() : null,
     },
     payment_intent_data: {
-      metadata: { customOrderId: customOrderId }, // Explicitly set metadata here
+      metadata: {
+        promoCode: promoCode ? promoCode.toString() : null,
+        customOrderId: customOrderId,
+        userId: userId ? userId.toString() : null,
+      }, // Explicitly set metadata here
       description: `Order ${customOrderId}'`, // Add a description
     },
   });

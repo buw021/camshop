@@ -101,8 +101,8 @@ const SFOptions = () => {
   }, [getShippingOptions]);
 
   return (
-    <div className="flex max-w-96 flex-col items-start gap-2 rounded-md border-[1px] border-zinc-200 px-4 py-4">
-      <p className="text-lg font-medium leading-3 tracking-wide">
+    <div className="flex w-full flex-col items-start gap-2 rounded-md border-[1px] border-zinc-200 p-6">
+      <p className="text-lg font-medium leading-4 tracking-wide">
         Shipping Options
       </p>
       {toggleEditShippingOption && (
@@ -121,9 +121,11 @@ const SFOptions = () => {
           action={addShippingOption}
         />
       )}
-      <div className="text-sm">
+      <div className="0 flex h-full w-full flex-col gap-2 text-sm">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-xs">Select to Edit a Shipping Option: </p>
+          <p className="text-xs text-zinc-500">
+            Select to Edit a Shipping Option:{" "}
+          </p>
           {shippingOptions.length < 3 && (
             <button
               type="button"
@@ -134,24 +136,26 @@ const SFOptions = () => {
             </button>
           )}
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex h-full w-full flex-col items-center gap-2">
           {shippingOptions.map((option) => (
             <button
               key={option.shippingType}
-              className={`flex w-36 flex-col rounded-md border-[1px] p-2.5 hover:bg-zinc-100 ${editShippingOption.shippingType === option.shippingType ? "bg-zinc-100" : ""}`}
+              className={`flex h-full w-full flex-col justify-center gap-1 rounded-md border-[1px] px-2.5 py-2 leading-3 hover:bg-zinc-100`}
               onClick={(e) => {
                 e.preventDefault();
                 setToggleEditShippingOption(true);
                 setEditShippingOption(option);
               }}
             >
-              <span className="w-full text-right font-medium capitalize tracking-wide">
-                {option.shippingLabel}
-              </span>
-              <span className="w-full text-right text-xs capitalize text-zinc-700">
-                {"("}
-                {option.shippingTime} business days{")"}
-              </span>
+              <div className="flex items-center justify-between">
+                <span className="w-full text-left font-medium capitalize leading-4 tracking-wide">
+                  {option.shippingLabel}
+                </span>
+                <span className="w-full text-right text-xs capitalize text-zinc-500">
+                  {"("}
+                  {option.shippingTime} business days{")"}
+                </span>
+              </div>
               <span className="w-full text-right font-medium">
                 €{option.shippingCost.toFixed(2)}
               </span>
