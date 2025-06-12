@@ -76,10 +76,7 @@ const ImgCarousel: React.FC<{ imgs: string[]; prev?: string }> = ({ prev }) => {
   };
 
   return (
-    <div
-      ref={emblaRef}
-      className="mb-2 flex w-full flex-col overflow-hidden border-b-2"
-    >
+    <div ref={emblaRef} className="flex w-full flex-col overflow-hidden">
       <div
         className={`embla__container ${prev ? "prev" : "flex h-52 flex-nowrap sm:h-56 md:h-96 lg:h-[30rem]"}`}
       >

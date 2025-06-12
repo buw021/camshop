@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from "react";
-import Admin_Searchbar from "./Admin_Searchbar";
-import { AnimatePresence, motion } from "framer-motion";
+import React, { useCallback, useEffect, useState } from "react";
+/* import { AnimatePresence, motion } from "framer-motion"; */
 import axios from "axios";
 import { Bounce, toast } from "react-toastify";
 import { useLocation, useNavigate } from "react-router-dom";
+import { socket } from "../Services/socket";
+import { showToast } from "./showToast";
+import axiosInstance from "../Services/axiosInstance";
 interface Navbar {
   expanded: boolean;
   setExpanded: React.Dispatch<React.SetStateAction<boolean>>;
@@ -30,26 +32,27 @@ const Admin_Navbar: React.FC<Navbar> = ({
   );
   const [expandSideBar, setExpandSideBar] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [notif, setNotif] = useState(false);
-  const [toggleProfile, setToggleProfile] = useState(false);
+  const [notif, setNotif] = useState<number>(0);
+  /*   const [toggleProfile, setToggleProfile] = useState(false); */
   const navigate = useNavigate();
   const handleLogout = async () => {
-    try {
-      await axios.post("/logout-admin");
-      window.location.reload();
-    } catch (error) {
-      toast.error("Logout failed. Please try again.", {
-        position: "bottom-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-        transition: Bounce,
-      });
-    }
+    if (window.confirm("Are you sure you want to logout ?"))
+      try {
+        await axios.post("/logout-admin");
+        window.location.reload();
+      } catch (error) {
+        toast.error("Logout failed. Please try again.", {
+          position: "bottom-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+          transition: Bounce,
+        });
+      }
   };
 
   const toggleSideBar = () => {
@@ -58,7 +61,7 @@ const Admin_Navbar: React.FC<Navbar> = ({
     setExpanded(!expanded);
   };
 
-  const variants = {
+  /* const variants = {
     entrance: {
       opacity: 1,
       x: 0,
@@ -89,7 +92,7 @@ const Admin_Navbar: React.FC<Navbar> = ({
       y: -10,
       transition: { ease: "linear", duration: 0.2 },
     },
-  };
+  }; */
 
   const transformTitle = (string: string) => {
     return string.charAt(0).toUpperCase() + string.slice(1);
@@ -164,6 +167,45 @@ const Admin_Navbar: React.FC<Navbar> = ({
     );
   });
 
+  useEffect(() => {
+    socket.on("connect", () => {
+      console.log("✅ Connected to WebSocket:", socket.id);
+    });
+
+    socket.on("new-order", (data) => {
+      console.log("🆕 New Order Notification:", data);
+
+      // Example: Show toast
+      showToast(`📦 New Order: ${data.customOrderID}`, "info");
+
+      // Optional: Update notification badge or list in state
+      // updateNotificationState(data);
+    });
+
+    socket.on("notification:unreadCount", (data) => {
+      setNotif(data.unreadCount);
+    });
+
+    return () => {
+      socket.off("connect");
+      socket.off("new-order");
+      socket.off("notification:unreadCount");
+    };
+  }, []);
+
+  const getUnreadCount = useCallback(async () => {
+    try {
+      const res = await axiosInstance.get("/get-unreadCount");
+      setNotif(res.data);
+    } catch (error) {
+      console.log(error);
+    }
+  }, []);
+
+  useEffect(() => {
+    getUnreadCount();
+  }, [getUnreadCount]);
+
   return (
     <>
       <div className="fixed z-[101] flex w-full">
@@ -214,7 +256,7 @@ const Admin_Navbar: React.FC<Navbar> = ({
           </ul>
         </nav>
         <nav
-          className={`sticky z-[103] flex h-14 w-full flex-grow-0 select-none flex-row items-center justify-between bg-white px-8 shadow transition-all duration-300`}
+          className={`sticky z-[103] flex h-14 w-full flex-grow-0 select-none flex-row items-center justify-between bg-white px-3 shadow transition-all duration-300`}
         >
           <div className="absolute -left-3 z-20 hidden sm:flex">
             {" "}
@@ -242,24 +284,43 @@ const Admin_Navbar: React.FC<Navbar> = ({
           <div
             className={`order-0 flex w-full flex-row items-center justify-between gap-4 transition-all duration-300`}
           >
-            <span
-              className={`material-symbols-outlined filled relative flex text-[23px] text-zinc-800 transition-all duration-200 ease-linear hover:cursor-pointer hover:text-zinc-500 sm:hidden`}
-            >
-              search
-            </span>
-            <Admin_Searchbar></Admin_Searchbar>
             <div
               className={`flex w-full flex-row items-center justify-end gap-4`}
             >
-              <span
-                className={`material-symbols-outlined filled relative text-[23px] text-zinc-800 transition-all duration-200 ease-linear hover:cursor-pointer hover:text-zinc-500`}
-              >
-                {notif ? "notifications_active" : "notifications"}
-              </span>
-
-              {/*PROFILE MENU!!!!!!! */}
-
               <button
+                className="group relative"
+                type="button"
+                title="notifications"
+                onClick={() => handleNavigate("notifications")}
+              >
+                {notif > 0 && (
+                  <span
+                    className={`absolute -right-1 -top-0 z-10 rounded-full bg-red-500 px-1 text-[8px] text-white transition-all duration-100 ease-linear group-hover:bg-red-400`}
+                  >
+                    {notif}
+                  </span>
+                )}
+                <span
+                  className={`material-symbols-outlined filled relative text-[23px] text-zinc-800 transition-all duration-200 ease-linear group-hover:cursor-pointer group-hover:text-zinc-500`}
+                >
+                  notifications
+                </span>
+              </button>
+
+              <p>|</p>
+              {/*PROFILE MENU!!!!!!! */}
+              <button
+                title="logout"
+                className="group relative flex flex-row items-center gap-1"
+                onClick={handleLogout}
+              >
+                <span
+                  className={`material-symbols-outlined filled text-zinc-800 transition-all duration-200 ease-linear group-hover:cursor-pointer group-hover:text-zinc-500`}
+                >
+                  logout
+                </span>
+              </button>
+              {/*  <button
                 className="group relative flex flex-row items-center gap-1"
                 onClick={() => {
                   setToggleProfile(!toggleProfile);
@@ -268,14 +329,9 @@ const Admin_Navbar: React.FC<Navbar> = ({
                 <span
                   className={`material-symbols-outlined filled text-zinc-800 transition-all duration-200 ease-linear group-hover:cursor-pointer group-hover:text-zinc-500`}
                 >
-                  {/*<span className="absolute transition-all  ease-linear duration-200 text-zinc-700 text-[68px] -top-[3.54rem] -right-[22px] group-hover:text-red-600">
-                .
-              </span>*/}
                   person
                 </span>
-                <span className="roboto-medium mt-1 text-base transition-all duration-200 ease-linear group-hover:cursor-pointer group-hover:text-zinc-500">
-                  Name
-                </span>
+
                 <span
                   className={`material-symbols-outlined filled -right-4 mt-[4.25px] text-base text-zinc-800 transition-all duration-200 ease-linear group-hover:cursor-pointer group-hover:text-zinc-500`}
                 >
@@ -312,7 +368,7 @@ const Admin_Navbar: React.FC<Navbar> = ({
                     </span>
                   </motion.div>
                 )}
-              </AnimatePresence>
+              </AnimatePresence> */}
               <span
                 className={`material-symbols-outlined absolute hidden text-zinc-800 transition-all duration-100 ease-linear hover:cursor-pointer hover:text-zinc-500`}
               >

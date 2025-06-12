@@ -123,10 +123,12 @@ const loginUser = async (req, res) => {
 
           res.cookie("usertoken", token, {
             httpOnly: true,
-            secure: false, // set this to true in production
+            secure: false,
             maxAge: rememberMe ? 7 * 24 * 60 * 60 * 1000 : undefined,
+            domain: "192.168.0.6", // your server IP address here
           });
-         /*  res.cookie("usertoken", token, {
+
+          /*  res.cookie("usertoken", token, {
             httpOnly: true,
             secure: true, // 🔐 Only sends over HTTPS (required for production)
             sameSite: "lax", // 🛡 Helps prevent CSRF
@@ -211,7 +213,7 @@ const mergeCarts = async (localCart, userCart) => {
         quantity: Math.min(item.quantity, maxAllowed),
       });
     }
-    console.log("Adjusted Cart:", adjustedCart);
+
     return adjustedCart;
   } catch (error) {
     console.error("Error merging carts:", error);
@@ -298,6 +300,7 @@ const loginAdmin = async (req, res) => {
               httpOnly: true,
               secure: false, // set this to true in production
               maxAge: rememberMe ? 7 * 24 * 60 * 60 * 1000 : undefined,
+              domain: "192.168.0.6", // your server IP address here
             })
             .json(user); // Set cookie expiration to 7 days if "Remember Me" is checked
         }

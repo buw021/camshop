@@ -354,6 +354,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
             code: response.data.code,
           }));
         }
+        showToast("Code Applied!", "success");
         fetchUserCart();
       } else {
         showToast(`Error applying promo code`, "error");

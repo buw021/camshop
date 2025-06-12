@@ -41,7 +41,7 @@ const TextBannerManager = () => {
   return (
     <>
       {/* {manageText && <ManageTextBanners close={() => setManageText(false)} />} */}
-      <div className="flex w-full max-w-96 flex-col items-start gap-2 rounded-md border-[1px] border-zinc-200 px-4 py-4">
+      <div className="flex w-full flex-col items-start gap-2 rounded-md border-[1px] border-zinc-200  md:col-span-3 lg:col-span-1 p-6">
         <div className="flex w-full items-center justify-between gap-1">
           <p className="text-lg font-medium leading-5 tracking-wide">
             Manage Text Banner
@@ -52,7 +52,7 @@ const TextBannerManager = () => {
               title="Edit Banner"
               onClick={() => setEditText(true)}
             >
-              <span className="material-symbols-outlined text-2xl leading-3">
+              <span className="material-symbols-outlined select-none text-2xl leading-3">
                 edit_square
               </span>
             </button>
@@ -61,8 +61,10 @@ const TextBannerManager = () => {
               title="Save"
               disabled={original === textBanner}
               onClick={async () => {
-                await saveBanner();
-                setEditText(false);
+                if (window.confirm("Save changes?")) {
+                  await saveBanner();
+                  setEditText(false);
+                }
               }}
             >
               <span className="material-symbols-outlined text-2xl leading-3">
@@ -97,7 +99,7 @@ const TextBannerManager = () => {
           disabled={!editText}
           value={textBanner}
           onChange={(e) => setTextBanner(e.target.value)}
-          className="h-[161px] w-full rounded border border-zinc-300 p-2 text-sm leading-4"
+          className="h-full min-h-44 w-full resize-none rounded border border-zinc-300 p-2 text-sm leading-4"
         ></textarea>
       </div>
     </>

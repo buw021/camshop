@@ -101,38 +101,41 @@ const validateProduct = [
 ];
 const validateImgs = (fieldName) => {
   return [
-    body(fieldName) // Use the dynamic field name here
+    body(fieldName)
       .optional()
       .custom((images) => {
-        if (!images || typeof images !== "object") {
-          throw new Error(
-            `${fieldName} must be an object with numeric keys or an empty array`
-          );
-        }
-        if (Array.isArray(images) && images.length === 0) {
-          return true; // Allow an empty array
-        }
-        Object.keys(images).forEach((key) => {
-          if (!/^\d+$/.test(key)) {
-            throw new Error(
-              `Each key in ${fieldName} must be a numeric string`
-            );
-          }
-          const imageArray = images[key];
-          if (!Array.isArray(imageArray)) {
-            throw new Error(
-              `Each value in ${fieldName} must be an array of strings`
-            );
-          }
-          imageArray.forEach((image) => {
-            if (typeof image !== "string") {
-              throw new Error(
-                `Each item in the ${fieldName}[${key}] array must be a string`
-              );
+        if (!images) return true;
+        // Accept both array of strings and object with arrays of strings
+        if (Array.isArray(images)) {
+          // Should be an array of strings
+          images.forEach((img) => {
+            if (typeof img !== "string") {
+              throw new Error(`${fieldName} must be an array of strings`);
             }
           });
-        });
-        return true; // Validation passed
+          return true;
+        }
+        if (typeof images === "object") {
+          Object.keys(images).forEach((key) => {
+            const imageArray = images[key];
+            if (!Array.isArray(imageArray)) {
+              throw new Error(
+                `Each value in ${fieldName} must be an array of strings`
+              );
+            }
+            imageArray.forEach((img) => {
+              if (typeof img !== "string") {
+                throw new Error(
+                  `Each item in the ${fieldName}[${key}] array must be a string`
+                );
+              }
+            });
+          });
+          return true;
+        }
+        throw new Error(
+          `${fieldName} must be an array of strings or an object with arrays of strings`
+        );
       }),
   ];
 };
